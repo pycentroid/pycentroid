@@ -41,14 +41,22 @@ class QueryField(dict):
         self.__setitem__(key, 1)
         return self;
     
+    def from_(self, collection: str):
+        return self.from_collection(collection)
+    
     def with_alias(self, alias: str):
         key :str= get_first_key(self)
         if key is None:
             raise 'Field name cannot be empty when defining an alias'
         value = self.__getitem__(key)
         self.__delitem__(key)
-        self.__setitem__(alias, value)
+        self.__setitem__(alias, {
+            key: value
+        })
         return self
+    
+    def as_(self, alias: str):
+        return self.with_alias(alias)
 
     def __use_datetime_function__(self, date_function, timezone = None):
         field :str= get_first_key(self)
