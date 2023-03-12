@@ -1,9 +1,18 @@
-[build-system]
-# AVOID CHANGING REQUIRES: IT WILL BE UPDATED BY PYSCAFFOLD!
-requires = ["setuptools>=46.1.0", "setuptools_scm[toml]>=5"]
-build-backend = "setuptools.build_meta"
+[project]
+name = "themost_framework"
+version = "1.0.1"
+authors = [
+  { name="Kyriakos Barbounakis", email="k.barbounakis@gmail.com" },
+]
+description = "themost-framework for python"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD-3-Clause",
+    "Operating System :: OS Independent",
+]
 
-[tool.setuptools_scm]
-# For smarter version schemes and other configuration options,
-# check out https://github.com/pypa/setuptools_scm
-version_scheme = "no-guess-dev"
+[project.urls]
+"Homepage" = "https://github.com/themost-framework/themost-framework-py"
+"Bug Tracker" = "https://github.com/pypa/themost-framework/themost-framework-py/issues"
