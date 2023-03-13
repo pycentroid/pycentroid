@@ -1,3 +1,4 @@
+from .query_field import QueryField, get_first_key, format_any_field_reference
 
 class UnknownPropertyException(Exception):
     """Query property not set"""
@@ -14,7 +15,7 @@ class QueryExpression:
     def where(self, name: str):
         self.__query = None
         # todo: validate object name
-        self.__left = '$' + name
+        self.__left = QueryField(name)
         return self
 
     def equal(self, value):
@@ -90,74 +91,50 @@ class QueryExpression:
         })
         return self
 
-    def also(self, name: str):
-        self.__left = name
+    def and_(self, name: str):
+        self.__left = QueryField(name)
         self.__last_logical = '$and'
         return self
 
-    def either(self, name: str):
-        self.__left = name
+    def or_(self, name: str):
+        self.__left = QueryField(name)
         self.__last_logical = '$or'
         return self
     
     def get_year(self, timezone = None):
-        self.__left = {
-            '$year': {
-                date: self.__left,
-                timezone: timezone
-            } 
-        }
+        self.__left:QueryField.get_year(timezone)
         return self
 
     def get_date(self, timezone = None):
-        self.__left = {
-            '$dayOfMonth': {
-                date: self.__left,
-                timezone: timezone
-            } 
-        }
+        self.__left:QueryField.get_date(timezone)
         return self
     
     def get_month(self, timezone = None):
-        self.__left = {
-            '$month': {
-                date: self.__left,
-                timezone: timezone
-            } 
-        }
+        self.__left:QueryField.get_month(timezone)
         return self
 
     def get_hours(self, timezone = None):
-        self.__left = {
-            '$hour': {
-                date: self.__left,
-                timezone: timezone
-            } 
-        }
+        self.__left:QueryField.get_hours(timezone)
         return self
     
     def hour(self, timezone = None):
-        return self.get_hours(timezone);
+        self.__left:QueryField.get_hours(timezone)
+        return self
     
     def get_minutes(self, timezone = None):
-        self.__left = {
-            '$minute': {
-                date: self.__left,
-                timezone: timezone
-            } 
-        }
+        self.__left:QueryField.get_year(timezone)
         return self
     
     def minute(self, timezone = None):
-        return self.get_minutes(timezone);
+        self.__left:QueryField.get_minutes(timezone)
+        return self
 
     def get_seconds(self, timezone = None):
-        self.__left = {
-            '$second': {
-                date: self.__left,
-                timezone: timezone
-            } 
-        }
+        self.__left:QueryField.get_seconds(timezone)
+        return self
+    
+    def second(self, timezone = None):
+        self.__left:QueryField.get_seconds(timezone)
         return self
     
     def index_of(self, value: str):
@@ -175,6 +152,22 @@ class QueryExpression:
     def length(self):
         self.__left = {
             '$length': [
+                self.__left
+            ]
+        }
+        return self
+
+    def to_lower(self):
+        self.__left = {
+            '$toLower': [
+                self.__left
+            ]
+        }
+        return self
+    
+    def to_upper(self):
+        self.__left = {
+            '$toUpper': [
                 self.__left
             ]
         }

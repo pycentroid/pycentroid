@@ -2,6 +2,7 @@ import pytest
 from unittest import TestCase
 
 from themost_framework.query.query_field import QueryField
+from themost_framework.query.query_value import QueryValue
 
 
 def test_create_field():
@@ -62,7 +63,7 @@ def test_use_get_year():
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').year().with_alias('yearCreated')
+    field = QueryField('dateCreated').from_('Product').year().as_('yearCreated')
     TestCase().assertDictEqual(field, {
         'yearCreated': {
             '$year': {
@@ -80,7 +81,7 @@ def test_use_get_hours():
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').hour().with_alias('hourCreated')
+    field = QueryField('dateCreated').from_('Product').hour().as_('hourCreated')
     TestCase().assertDictEqual(field, {
         'hourCreated': {
             '$hour': {
@@ -98,7 +99,7 @@ def test_use_get_minutes():
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').minute().with_alias('minuteCreated')
+    field = QueryField('dateCreated').from_('Product').minute().as_('minuteCreated')
     TestCase().assertDictEqual(field, {
         'minuteCreated': {
             '$minute': {
@@ -123,5 +124,42 @@ def test_use_get_seconds():
                 'date': '$Product.dateCreated',
                 'timezone': None
             } 
+        }
+    })
+
+def test_use_add():
+    field = QueryField('price').from_('Product').add(100).as_('discountPrice')
+    TestCase().assertDictEqual(field, {
+        'discountPrice': {
+            '$add': [
+                '$Product.price',
+                100
+            ]
+        }
+    })
+
+def test_use_multiply():
+    field = QueryField('price').from_('Product').multiply(0.75).as_('discountPrice')
+    TestCase().assertDictEqual(field, {
+        'discountPrice': {
+            '$multiply': [
+                '$Product.price',
+                0.75
+            ]
+        }
+    })
+
+def test_use_concat():
+    field = QueryField('familyName').from_('Person').concat(
+        ' ',
+        QueryField('givenName').from_('Person')
+    ).as_('name')
+    TestCase().assertDictEqual(field, {
+        'name': {
+            '$concat': [
+                '$Person.familyName',
+                ' ',
+                '$Person.givenName'
+            ]
         }
     })
