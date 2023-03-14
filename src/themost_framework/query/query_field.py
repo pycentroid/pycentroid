@@ -26,8 +26,9 @@ def get_first_key(any: dict):
         
 
 class QueryField(dict):
-    def __init__(self, name: str):
-        self.__setitem__(trim_field_reference(name), 1)
+    def __init__(self, name: str = None):
+        if type(name) is str:
+            self.__setitem__(trim_field_reference(name), 1)
 
     def from_(self, collection: str):
         key :str= get_first_key(self)
@@ -159,5 +160,8 @@ class QueryField(dict):
     
     def substring(self, start, length):
         return self.__use_method_call__('$substr', start, length);
+    
+    def index_of(self, search):
+        return self.__use_method_call__('$indexOfBytes', search);
 
 
