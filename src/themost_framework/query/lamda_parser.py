@@ -1,73 +1,128 @@
 import ast
+from dill.source import getsource
 from .query_expression import QueryExpression
 from ..common import expect
 
 class LamdaParser:
     
-    def parseFilter(self, func, params:dict = None):
+    def parse_filter(self, func, params:dict = None):
         module:ast.Module = ast.parse(getsource(func).strip())
         # set params
         self.params = params;
-        # get function
-        body: ast.Assign = module.body[0]
-        # get function arguments
-        self.args = body.value.args.args
+        # get function call
+        call: ast.Call = module.body[0].value
+        # the first argument is the lambda function
+        lambda_func:ast.Lambda = call.args[0]
+        # get arguments
+        self.args = lambda_func.args.args
         # get expression
-        innerBody = body.value.body
-        if innerBody is ast.BoolOp:
-            return self.parseLogical(expr)
+        result = self.parse_common(lambda_func.body)
+        return result
     
-    def parseLogical(self, expr: ast.BoolOp):
+    def parse_logical(self, expr: ast.BoolOp):
         op = None
-        op_type = type(expr.op)
-        if type(op_type) is ast.And:
+        if type(expr.op) is ast.And:
             op = '$and'
-        if type(op_type) is ast.Or:
+        if type(expr.op) is ast.Or:
             op = '$or'
-        expect(op).to_be_truthy('Logical operator is invalid or has not been implemented yet')
+        expect(op).to_be_truthy(Exception('Logical operator is invalid or has not been implemented yet'))
         result = dict()
         result[op] = [];
-        for value in values:
-            result[op].append(self.parseCommon(value))
+        for value in expr.values:
+            result[op].append(self.parse_common(value))
         return result
 
-    def parseComparison(self, expr: ast.Compare):
+    def parse_comparison(self, expr: ast.Compare):
         ops_type = type(expr.ops[0])
-        comparison = None
+        op = None
         if ops_type is ast.Eq or ops_type is ast.Is:
-            comparison = '$eq'
+            op = '$eq'
         elif ops_type is ast.NotEq  or ops_type is ast.IsNot:
-            comparison = '$ne'
+            op = '$ne'
         elif ops_type is ast.Gt:
-            comparison = '$gt'
+            op = '$gt'
         elif ops_type is ast.GtE:
-            comparison = '$ge'
+            op = '$ge'
         elif ops_type is ast.Lt:
-            comparison = '$lt'
+            op = '$lt'
         elif ops_type is ast.LtE:
-            comparison = '$lte'
+            op = '$lte'
         # validate operator
-        expect(comparison).to_be_truthy('Comparison operator is invalid or has not been implemented yet')
+        expect(op).to_be_truthy(Exception('Comparison operator is invalid or has not been implemented yet'))
         # format result
         result = dict()
-        result[comparison] = {
-            self.parseCommon(expr.left),
-            self.parseCommon(expr.comparators[0])
-        }
+        result[op] = [
+            self.parse_common(expr.left),
+            self.parse_common(expr.comparators[0])
+        ]
+        return result
 
-    def parseLiteral(self, expr:ast.Constant):
+    def parse_literal(self, expr:ast.Constant):
         return expr.value;
-
-    def parseCommon(self, expr):
-        # get expression type
-        expr_type = type(expr)
-        # and try to parse it base on type
-        if expr_type is ast.BoolOp:
-            return self.parseLogical(expr)
-        if expr_type is ast.Compare:
-            return self.parseComparison(expr)
-        if expr_type is ast.Constant:
-            return self.parseLiteral(expr)
     
+    def parse_member(self, expr:ast.Attribute):
+        attr:str = '$' + expr.attr
+        if type(expr.value) is ast.Name:
+            # a simple member reference like x.category
+            # expect object name to be the first argument of lamda function
+            obj:ast.Name = expr.value
+            expect(obj.id).to_equal(self.args[0].arg, Exception('Invalid member expression. Expected an expression which uses a member of the first argument'))
+            return attr
+        if type(expr.value) is ast.Attribute:
+            # a nested member like x.address.streetAddress
+            obj:ast.Attribute = expr.value
+            while type(obj) is ast.Attribute:
+                if type(obj.value) is ast.Name:
+                    attr = '$' + obj.attr + attr[1:]
+                # get next value
+                obj = obj.value
+            return attr
+
+
+    def parse_binary(self, expr:ast.BinOp):
+        # find binary operator
+        op = None
+        if type(expr) is ast.Add:
+            op = '$add'
+        if type(expr) is ast.Sub:
+            op = '$subtract'
+        if type(expr) is ast.Mult:
+            op = '$multiply'
+        if type(expr) is ast.Div:
+            op = '$divide'
+        # validate operator
+        expect(op).to_be_truthy(Exception('Binary operator is invalid or has not been implemented yet'))
+        result = dict()
+        result[op] = {
+            self.parse_common(expr.left),
+            self.parse_common(expr.right)
+        }
+        return result
+    
+    def parse_identifier(self, expr:ast.Name):
+        expect(expr.id in self.params).to_be_truthy(Exception('The specified param cannot be found'))
+        return self.params.get(expr.id);
+
+    def parse_common(self, expr):
+        # and try to parse it base on type
+        if type(expr) is ast.Attribute:
+            return self.parse_member(expr)
+        if type(expr) is ast.BoolOp:
+            return self.parse_logical(expr)
+        if type(expr) is ast.Compare:
+            return self.parse_comparison(expr)
+        if type(expr) is ast.Constant:
+            return self.parse_literal(expr)
+        if type(expr) is ast.BinOp:
+            return self.parse_binary(expr)
+        if type(expr) is ast.Attribute:
+            return self.parse_binary(expr)
+        if type(expr) is ast.Name:
+            return self.parse_identifier(expr)
+
+    
+
+
+
 
 

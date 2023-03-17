@@ -89,13 +89,5 @@ def test_use_not_equal():
                 ]
             })
 
-def test_func_source():
-    func = lambda x: x.category == 'Laptops' and x.price > 900
-    value:ast.Module = ast.parse(getsource(func).strip())
-    # get function
-    body: ast.Assign = value.body[0]
-    # get arguments
-    args = body.value.args.args;
-    TestCase().assertEqual(args[0].arg, 'x')
     
     
