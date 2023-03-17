@@ -1,11 +1,11 @@
-from .query_field import QueryField, get_first_key, format_any_field_reference
+from .query_field import QueryField, get_first_key, format_any_field_reference, get_field_expression
 from .query_entity import QueryEntity
 from themost_framework.common import expect, NoneError
 
 class QueryExpression:
     def __init__(self, collection = None):
-        self.__query__ = None
-        self.__left__ = None
+        self.__where__ = None
+        self.__left__:QueryField = None
         self.__last_logical = None
         self.from_(collection)
         return
@@ -35,9 +35,10 @@ class QueryExpression:
                 self.__select__.append(field)
             else:
                 raise 'Expected string, a dictionary object or an instance of QueryField class'
+        return self
 
     def where(self, name: str):
-        self.__query__ = None
+        self.__where__ = None
         # todo: validate object name
         self.__left__ = QueryField(name)
         return self
@@ -46,7 +47,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__append({
             '$eq': [
-                self.__left__,
+                get_field_expression(self.__left__),
                 value
             ]
         })
@@ -59,7 +60,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__append({
             '$ne': [
-                self.__left__,
+                get_field_expression(self.__left__),
                 value
             ]
         })
@@ -72,7 +73,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__append({
             '$gt': [
-                self.__left__,
+                get_field_expression(self.__left__),
                 value
             ]
         })
@@ -82,7 +83,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__append({
             '$gte': [
-                self.__left__,
+                get_field_expression(self.__left__),
                 value
             ]
         })
@@ -92,7 +93,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__append({
             '$lt': [
-                self.__left__,
+                get_field_expression(self.__left__),
                 value
             ]
         })
@@ -102,96 +103,176 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__append({
             '$lte': [
-                self.__left__,
+                get_field_expression(self.__left__),
                 value
             ]
         })
         return self
 
-    def and_(self, name: str):
+    def and_also(self, name: str):
         self.__left__ = QueryField(name)
         self.__last_logical = '$and'
         return self
 
-    def or_(self, name: str):
+    def or_else(self, name: str):
         self.__left__ = QueryField(name)
         self.__last_logical = '$or'
         return self
     
     def get_year(self, timezone = None):
-        self.__left__:QueryField.get_year(timezone)
+        self.__left__.get_year(timezone)
         return self
 
     def get_date(self, timezone = None):
-        self.__left__:QueryField.get_date(timezone)
+        self.__left__.get_date(timezone)
         return self
     
     def get_month(self, timezone = None):
-        self.__left__:QueryField.get_month(timezone)
+        self.__left__.get_month(timezone)
         return self
 
     def get_hours(self, timezone = None):
-        self.__left__:QueryField.get_hours(timezone)
+        self.__left__.get_hours(timezone)
         return self
     
     def hour(self, timezone = None):
-        self.__left__:QueryField.get_hours(timezone)
+        self.__left__.get_hours(timezone)
         return self
     
     def get_minutes(self, timezone = None):
-        self.__left__:QueryField.get_year(timezone)
+        self.__left__.get_year(timezone)
         return self
     
     def minute(self, timezone = None):
-        self.__left__:QueryField.get_minutes(timezone)
+        self.__left__.get_minutes(timezone)
         return self
 
     def get_seconds(self, timezone = None):
-        self.__left__:QueryField.get_seconds(timezone)
+        self.__left__.get_seconds(timezone)
         return self
     
     def second(self, timezone = None):
-        self.__left__:QueryField.get_seconds(timezone)
+        self.__left__.get_seconds(timezone)
         return self
     
     def index_of(self, search: str):
         assert self.__left__ is None, 'Left operand cannot be empty'
-        self.__left__:QueryField.index_of(search)
+        self.__left__.index_of(search)
+        return self
+    
+    def index_of(self, search: str):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.index_of(search)
         return self
 
     def index(self, search: str):
         return self.index_of(value);
     
-    def length(self):
-        self.__left__ = {
-            '$length': [
-                self.__left__
-            ]
-        }
+    def add(self, value):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.add(value)
         return self
+    
+    def subtract(self, value):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.subtract(value)
+        return self
+    
+    def divide(self, value):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.divide(value)
+    
+    def multiply(self, value):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.multiply(value)
+        return self
+    
+    def round(self, digits):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.round(digits)
+        return self
+    
+    def ceil(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.ceil()
+    
+    def floor(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.floor()
+    
+    def modulo(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.modulo()
+    
+    def length(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.length()
+        return self
+    
+    def len(self):
+        return self.length()
+    
+    def trim(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.trim()
+        return self
+    
+    def substring(self, start, length):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.substring(start, length)
+    
+    def concat(self, *args):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.concat(*args)
 
     def to_lower(self):
-        self.__left__ = {
-            '$toLower': [
-                self.__left__
-            ]
-        }
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.to_lower()
         return self
     
     def to_upper(self):
-        self.__left__ = {
-            '$toUpper': [
-                self.__left__
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.to_upper()
+        return self
+    
+    def get_min(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.get_min()
+        return self
+
+    def get_max(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.get_max()
+        return self
+    
+    def get_count(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.get_average()
+        return self
+
+    def get_average(self):
+        expect(self.__left__).to_be_truthy(NoneError)
+        self.__left__.get_average()
+        return self
+    
+    def startswith(self, search):
+        expect(self.__left__).to_be_truthy(NoneError)
+        left = self.__left__.index_of(search)
+        self.__left__ = QueryField('t0')
+        self.__left__['t0'] = {
+            '$eq': [
+                get_field_expression(left),
+                0
             ]
         }
         return self
 
     def __append(self, expr):
-        if self.__query__ is None:
-            self.__query__ = expr
+        if self.__where__ is None:
+            self.__where__ = expr
         else:
             # get first property of current query
-            property = list(self.__query__.keys())[0];
+            property = list(self.__where__.keys())[0];
             # get logical operator
             logical_operator = self.__last_logical
             # if last logical operator is equal with this property
@@ -199,11 +280,12 @@ class QueryExpression:
                 # append query expression
                 expr[property].append(expr)
             else:
-                self.__query__ = {
+                self.__where__ = {
                     logical_operator: [
-                        self.__query__.copy(),
+                        self.__where__.copy(),
                         expr
                     ]
                 }
+        self.__left__ = None
 
 

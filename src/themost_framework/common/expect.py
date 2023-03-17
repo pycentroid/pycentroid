@@ -29,6 +29,11 @@ class Expected:
         if self.__value__ is int and self.__value__ == 0:
             return
         raise error
+    
+    def to_equal(self, value, error):
+        if self.__value__ is value:
+            return
+        raise error
 
 def expect(value):
     return Expected(value)

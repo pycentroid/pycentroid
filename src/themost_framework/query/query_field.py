@@ -23,7 +23,13 @@ def get_first_key(any: dict):
     """
     for key in any:
         return key
-        
+
+def get_field_expression(object:dict):
+    key :str= get_first_key(object)
+    value = object[key]
+    if type(value) is int and value == 1:
+        return format_any_field_reference(key)
+    return value
 
 class QueryField(dict):
     def __init__(self, name: str = None):
@@ -163,5 +169,18 @@ class QueryField(dict):
     
     def index_of(self, search):
         return self.__use_method_call__('$indexOfBytes', search);
+
+    def get_min(self):
+        return self.__use_method_call__('$min');
+    
+    def get_count(self):
+        return self.__use_method_call__('$count');
+
+    def get_max(self):
+        return self.__use_method_call__('$max');
+    
+    def get_average(self):
+        return self.__use_method_call__('$avg');
+    
 
 
