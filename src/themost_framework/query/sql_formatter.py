@@ -17,6 +17,8 @@ class SqlDialect:
     From = 'FROM'
     Where = 'WHERE'
     Select = 'SELECT'
+    Update = 'UPDATE'
+    Set = 'SET'
     As = 'AS'
 
     def __init__(self, options = SqlDialectOptions()):
@@ -217,12 +219,39 @@ class SqlFormatter:
         if not query.__where__ is None:
             sql += SqlDialect.Space
             sql += SqlDialect.Where
-            sql += sSqlDialect.Space
+            sql += SqlDialect.Space
             sql += self.format_where(query.__where__)
         return sql
 
     def format_update(self, query:QueryExpression):
-        raise NotImplementedError()
+        expect(query.__collection__).to_be_truthy(Exception('Expected query collection'))
+        expect(query.__update__).to_be_truthy(Exception('Expected a valid update expression'))
+        sql = SqlDialect.Update
+        sql += SqlDialect.Space
+        sql += self.__dialect__.escape_name(query.__collection__.get_collection())
+        expect(query.__where__).to_be_truthy(Exception('Where expression cannot be empty while formatting an update expression'))
+        # format set
+        sql += SqlDialect.Space
+        sql += SqlDialect.Set
+        sql += SqlDialect.Space
+
+        items = None
+        if type(query.__update__) is dict:
+            items = query.__update__.items()
+        else:
+            items = query.__update__.__dict__.items()
+        update_obj = '';
+        for key, value in items:
+            final_key = self.__dialect__.escape_name(key)
+            final_value = self.__dialect__.escape(value)
+            update_obj += f',{final_key}={final_value}'
+        sql += update_obj[1:]
+        # format where
+        sql += SqlDialect.Space
+        sql += SqlDialect.Where
+        sql += SqlDialect.Space
+        sql += self.format_where(query.__where__)
+        return sql
     
     def format_delete(self, query:QueryExpression):
         raise NotImplementedError()

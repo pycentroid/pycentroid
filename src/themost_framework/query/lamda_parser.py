@@ -12,20 +12,32 @@ class LamdaParser:
         module:ast.Module = ast.parse(getsource(func).strip())
         # set params
         self.params = params;
-        # get function call
-        call: ast.Call = module.body[0].value
-        # the first argument is the lambda function
-        lambda_func:ast.Lambda = call.args[0]
-        # get arguments
-        self.args = lambda_func.args.args
-        # get expression
-        result = self.parse_common(lambda_func.body)
-        return result
+        if (type(module.body[0].value) is ast.Lambda):
+            # get func
+            lambda_func:ast.Lambda = module.body[0].value
+            # and args
+            self.args = lambda_func.args.args
+            # parse body
+            return self.parse_common(lambda_func.body)
+        if (type(module.body[0].value) is ast.Call):
+            # get function call
+            call: ast.Call = module.body[0].value
+            # the first argument is the lambda function
+            lambda_func:ast.Lambda = call.args[0]
+            # get arguments
+            self.args = lambda_func.args.args
+            # get expression
+            return self.parse_common(lambda_func.body)
+        raise TypeError('Invalid or unsupported lamda function')
 
     def parse_select(self, func, params:dict = None):
         module:ast.Module = ast.parse(getsource(func).strip())
         # set params
         self.params = params;
+        if (type(module.body[0].value) is ast.Lambda):
+            lambda_func:ast.Lambda = module.body[0].value
+            self.args = lambda_func.args.args
+            return self.parse_sequence(lambda_func.body)
         # get function call
         call: ast.Call = module.body[0].value
         # the first argument is the lambda function

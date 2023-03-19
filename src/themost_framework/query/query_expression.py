@@ -6,10 +6,15 @@ from typing import Callable
 import inspect
 
 
+class Empty:
+    pass
+
 class QueryExpression:
     def __init__(self, collection = None):
         self.__where__ = None
         self.__select__ = None
+        self.__insert__ = None
+        self.__update__ = None
         self.__left__:QueryField = None
         self.__last_logical = None
         if not collection is None:
@@ -27,7 +32,7 @@ class QueryExpression:
         return self.from_(collection)
 
     def select(self, *args):
-        if (type(args[0]) is Callable):
+        if inspect.isfunction(args[0]):
             self.__select__ = LamdaParser().parse_select(*args)
             return self
         self.__select__ = {}
@@ -282,6 +287,24 @@ class QueryExpression:
                 0
             ]
         }
+        return self
+    
+    def update(self, collection):
+        self.__select__ = None
+        if type(collection) is QueryEntity:
+            self.__collection__ = collection
+        else:
+            self.__collection__ = QueryEntity(collection)
+        return self
+
+    def set(self, object):
+        self.__update__ = Empty()
+        if type(object) is dict:
+            for key in object:
+                setattr(self.__update__, key, object[key])
+        else:
+            for key, value in object.__dict__.items():
+                setattr(self.__update__, key, object[key])
         return self
 
     def __append(self, expr):

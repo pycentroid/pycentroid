@@ -29,7 +29,7 @@ class SqlUtils:
         if type(value) is datetime:
             return SqlUtils.date_to_string(value, timezone)
         if type(value) is dict:
-            return SqlUtils.object_to_values(value, timezone)
+            return SqlUtils.dict_to_values(value, timezone)
         
         val = str(value)
         # surround with single quotes
@@ -85,7 +85,7 @@ class SqlUtils:
             raise TypeError('Expected a valid bytearray')
         return ''.join('{:02x}'.format(x) for x in value)
 
-    def object_to_values(value, timezone = None):
+    def dict_to_values(value, timezone = None):
         """Converts a dictionary object to an equivalent sequence of SQL fields values
 
         Args:
@@ -100,11 +100,33 @@ class SqlUtils:
         """
         if not type(value) is dict:
             raise TypeError('Expected a valid dictionary')
-        result = '';
+        result = ''
         for key in value:
             final_key = ObjectNameValidator().escape(key)
             final_value = SqlUtils.escape(value[key], timezone)
             result += f',{final_key}={final_value}'
+        return result[1:]
+
+    def object_to_values(value, timezone = None):
+        """Converts an object to an equivalent sequence of SQL fields values
+
+        Args:
+            value (obj): The object to convert
+            timezone (str, optional): An optional timezone expression to use while converting datetime values
+
+        Raises:
+            TypeError: Expected a valid object
+
+        Returns:
+            str: The equivalent SQL expression
+        """
+        if not type(value) is obj:
+            raise TypeError('Expected a valid object')
+        result = ''
+        for key, value in object.__dict__.items():
+                final_key = ObjectNameValidator().escape(key)
+                final_value = SqlUtils.escape(value, timezone)
+                result += f',{final_key}={final_value}'
         return result[1:]
 
     def date_to_string(value, timezone = None):
