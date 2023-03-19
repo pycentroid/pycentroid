@@ -1,9 +1,12 @@
 import ast
 from dill.source import getsource
-from .query_expression import QueryExpression
-from ..common import expect
+from ..common import expect, SyncSeriesEventEmitter
 
 class LamdaParser:
+    def __init__(self):
+        self.resolving_member = SyncSeriesEventEmitter()
+        self.resolving_join_member = SyncSeriesEventEmitter()
+        self.resolving_method = SyncSeriesEventEmitter()
     
     def parse_filter(self, func, params:dict = None):
         module:ast.Module = ast.parse(getsource(func).strip())
@@ -17,6 +20,20 @@ class LamdaParser:
         self.args = lambda_func.args.args
         # get expression
         result = self.parse_common(lambda_func.body)
+        return result
+
+    def parse_select(self, func, params:dict = None):
+        module:ast.Module = ast.parse(getsource(func).strip())
+        # set params
+        self.params = params;
+        # get function call
+        call: ast.Call = module.body[0].value
+        # the first argument is the lambda function
+        lambda_func:ast.Lambda = call.args[0]
+        # get arguments
+        self.args = lambda_func.args.args
+        # get expression
+        result = self.parse_sequence(lambda_func.body)
         return result
     
     def parse_logical(self, expr: ast.BoolOp):
@@ -73,12 +90,35 @@ class LamdaParser:
             obj:ast.Attribute = expr.value
             while type(obj) is ast.Attribute:
                 if type(obj.value) is ast.Name:
-                    attr = '$' + obj.attr + attr[1:]
+                    attr = '$' + obj.attr + '.' + attr[1:]
                 # get next value
                 obj = obj.value
             return attr
 
-
+    def parse_sequence(self, expr):
+        sequence = {};
+        if type(expr) is ast.List:
+            for elt in expr.elts:
+                attr = self.parse_common(elt)
+                if (type(attr) is str):
+                    sequence.__setitem__(attr[1:], 1)
+                elif (type(attr) is dict):
+                    for key in attr:
+                        sequence.__setitem__(key, attr[key])
+                        break
+                else:
+                    raise Exception('Invalid sequence attribute')
+            return sequence
+        if type(expr) is ast.Dict:
+            dict_expr:ast.Dict = expr
+            for i,key in dict_expr.keys:
+                expect(type(key)).to_equal(ast.Constant, Exception('Expected constant'))
+                attr = key.value
+                value = self.parse_common(dict_expr.values[i])
+                sequence.__setattr__(attr, value)
+            return sequence
+        raise Exception('Unsupported sequence expression')
+       
     def parse_binary(self, expr:ast.BinOp):
         # find binary operator
         op = None

@@ -1,6 +1,9 @@
 from .query_field import QueryField, get_first_key, format_any_field_reference, get_field_expression
 from .query_entity import QueryEntity
+from .lamda_parser import LamdaParser
 from themost_framework.common import expect, NoneError
+from typing import Callable
+
 
 class QueryExpression:
     def __init__(self, collection = None):
@@ -21,6 +24,9 @@ class QueryExpression:
         return self.from_(collection)
 
     def select(self, *args):
+        if (type(args[0]) is Callable):
+            self.__select__ = LamdaParser().parse_select(*args)
+            return self
         self.__select__ = []
         for arg in args:
             if type(arg) is str:
@@ -37,10 +43,17 @@ class QueryExpression:
                 raise 'Expected string, a dictionary object or an instance of QueryField class'
         return self
 
-    def where(self, name: str):
-        self.__where__ = None
-        # todo: validate object name
-        self.__left__ = QueryField(name)
+    def where(self, *args):
+        if type(args[0]) is str:
+            self.__where__ = None
+            # todo: validate object name
+            self.__left__ = QueryField(*args)
+        if type(args[0]) is Callable:
+            expr = args[0]
+            params = None
+            # parse callable as where statement
+            self.__where__ = LamdaParser().parse_filter(*args)
+        
         return self
 
     def equal(self, value):
