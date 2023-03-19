@@ -3,14 +3,17 @@ from .query_entity import QueryEntity
 from .lamda_parser import LamdaParser
 from themost_framework.common import expect, NoneError
 from typing import Callable
+import inspect
 
 
 class QueryExpression:
     def __init__(self, collection = None):
         self.__where__ = None
+        self.__select__ = None
         self.__left__:QueryField = None
         self.__last_logical = None
-        self.from_(collection)
+        if not collection is None:
+            self.from_collection(collection)
         return
 
     def from_(self, collection):
@@ -27,18 +30,19 @@ class QueryExpression:
         if (type(args[0]) is Callable):
             self.__select__ = LamdaParser().parse_select(*args)
             return self
-        self.__select__ = []
+        self.__select__ = {}
         for arg in args:
             if type(arg) is str:
-                self.__select__.append(QueryField(arg))
-            elif type(arg) is QueryField:
-                self.__select__.append(arg)
-            elif type(arg) is dict:
-                field = QueryField()
+                self.__select__.__setitem__(arg, 1)
+            elif type(arg) is QueryField or type(arg) is dict:
                 for key in arg:
-                    field[key] = arg[key]
+                    if arg[key] == 1:
+                        self.__select__.__setitem__(key, 1)
+                    elif arg[key] == 0:
+                        break
+                    else:
+                        self.__select__.__setitem__(key, arg[key])
                     break
-                self.__select__.append(field)
             else:
                 raise 'Expected string, a dictionary object or an instance of QueryField class'
         return self
@@ -48,7 +52,7 @@ class QueryExpression:
             self.__where__ = None
             # todo: validate object name
             self.__left__ = QueryField(*args)
-        if type(args[0]) is Callable:
+        if inspect.isfunction(args[0]):
             expr = args[0]
             params = None
             # parse callable as where statement
