@@ -182,5 +182,11 @@ class QueryField(dict):
     def get_average(self):
         return self.__use_method_call__('$avg');
     
+    def to_lower(self):
+        return self.__use_method_call__('$toLower');
+    
+    def to_upper(self):
+        return self.__use_method_call__('$toUpper');
+    
 
 
