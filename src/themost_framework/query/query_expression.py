@@ -15,13 +15,14 @@ class QueryExpression:
         self.__select__ = None
         self.__insert__ = None
         self.__update__ = None
+        self.__join__ = []
         self.__left__:QueryField = None
         self.__last_logical = None
         if not collection is None:
-            self.from_collection(collection)
+            self.__set_collection__(collection)
         return
 
-    def from_(self, collection):
+    def __set_collection__(self, collection):
         if type(collection) is QueryEntity:
             self.__collection__ = collection
         else:
@@ -29,7 +30,7 @@ class QueryExpression:
         return self
 
     def from_collection(self, collection):
-        return self.from_(collection)
+        return self.__set_collection__(collection)
 
     def select(self, *args):
         if inspect.isfunction(args[0]):
@@ -289,22 +290,111 @@ class QueryExpression:
         }
         return self
     
+    def skip(self, n):
+        self.__skip__ = n
+    
+    def take(self, n):
+        self.__limit__ = n
+    
     def update(self, collection):
         self.__select__ = None
-        if type(collection) is QueryEntity:
-            self.__collection__ = collection
-        else:
-            self.__collection__ = QueryEntity(collection)
+        self.__insert__ = None
+        self.__set_collection__(collection)
         return self
 
     def set(self, object):
-        self.__update__ = Empty()
+        self.__update__ = lambda: None
         if type(object) is dict:
             for key in object:
                 setattr(self.__update__, key, object[key])
         else:
             for key, value in object.__dict__.items():
-                setattr(self.__update__, key, object[key])
+                setattr(self.__update__, key, value)
+        return self
+
+    def insert(self, object):
+        self.__insert__ = lambda: None
+        if type(object) is dict:
+            for key in object:
+                setattr(self.__insert__, key, object[key])
+        else:
+            for key, value in object.__dict__.items():
+                setattr(self.__insert__, key, value)
+        return self
+    
+    def into(self, collection):
+        self.__select__ = None
+        self.__update__ = None
+        self.__set_collection__(collection)
+        return self
+
+    def join(self, collection, local_field, foreign_field, alias = None):
+        """Prepares a join expression with the given collection
+
+        Args:
+            collection (str): The collection to join
+            local_field (str): Specifies the local field in join expression
+            foreign_field (str): Specifies the foreign field in join expression
+            alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
+
+        Returns:
+            QueryExpression
+        """
+        self.__join__.append({
+            '$lookup': {
+                'from': collection,
+                'localField': local_field,
+                'foreignField': foreign_field,
+                'direction': 'inner',
+                'as': alias
+            }
+        })
+        return self
+    
+    def left_join(self, collection, local_field, foreign_field, alias = None):
+        """Prepares a left join expression with the given collection
+
+        Args:
+            collection (str): The collection to join
+            local_field (str): Specifies the local field in join expression
+            foreign_field (str): Specifies the foreign field in join expression
+            alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
+
+        Returns:
+            QueryExpression
+        """
+        self.__join__.append({
+            '$lookup': {
+                'from': collection,
+                'localField': local_field,
+                'foreignField': foreign_field,
+                'direction': 'left',
+                'as': alias
+            }
+        })
+        return self
+
+    def right_join(self, collection, local_field, foreign_field, alias = None):
+        """Prepares a right join expression with the given collection
+
+        Args:
+            collection (str): The collection to join
+            local_field (str): Specifies the local field in join expression
+            foreign_field (str): Specifies the foreign field in join expression
+            alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
+
+        Returns:
+            QueryExpression
+        """
+        self.__join__.append({
+            '$lookup': {
+                'from': collection,
+                'localField': local_field,
+                'foreignField': foreign_field,
+                'direction': 'right',
+                'as': alias
+            }
+        })
         return self
 
     def __append(self, expr):

@@ -1,6 +1,13 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import SqlFormatter, QueryExpression
+from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity
+
+class Product:
+    def __init__(self, name):
+        self.name = name
+    def set_offer(self, offer):
+        # do something here
+        return true
 
 def test_format_where():
     
@@ -31,9 +38,38 @@ def test_format_select():
 def test_format_update():
     
     query = QueryExpression().update('Product').set(
-        { 'status': 'updated' }
+        { 'name': 'Macbook Pro 13.3' }
         ).where(
-            lambda x: x.category == 'Laptops'
+            lambda x: x.id == 121
             )
     sql = SqlFormatter().format_update(query)
-    TestCase().assertEqual(sql, 'UPDATE Product SET status=\'updated\' WHERE category=\'Laptops\'')
+    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE id=121')
+
+    query = QueryExpression().update('Product').set(
+        Product('Macbook Pro 13.3')
+        ).where(
+            lambda x: x.id == 121
+            )
+    sql = SqlFormatter().format_update(query)
+    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE id=121')
+
+def test_format_insert():
+    
+    object = lambda: None
+    object.name = 'Lenovo Yoga 2'
+    products = QueryEntity('ProductData')
+    query = QueryExpression().insert(
+        object
+    ).into(products)
+    sql = SqlFormatter().format_insert(query)
+    TestCase().assertEqual(sql, 'INSERT INTO Product(name) VALUES (\'Lenovo Yoga 2\')')
+
+def test_format_join():
+    
+    object = lambda: None
+    object.name = 'Lenovo Yoga 2'
+    query = QueryExpression('OrderData').select(
+        'id', 'customer', 'orderDate', 'orderedItem'
+    ).join('ProductData', 'orderedItem', 'id')
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,customer,orderDate,orderedItem FROM OrderData INNER JOIN ProductData ON OrderData.orderedItem=ProductData.id')

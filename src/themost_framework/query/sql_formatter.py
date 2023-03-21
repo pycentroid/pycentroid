@@ -18,6 +18,9 @@ class SqlDialect:
     Where = 'WHERE'
     Select = 'SELECT'
     Update = 'UPDATE'
+    Insert = 'INSERT INTO'
+    Values = 'VALUES'
+    Join = 'JOIN'
     Set = 'SET'
     As = 'AS'
 
@@ -192,9 +195,42 @@ class SqlDialect:
 class SqlFormatter:
     def __init__(self, dialect = None):
         self.__dialect__ = SqlDialect() if dialect is None else dialect
+
+    def format_join(self, query:QueryExpression):
+        expect(query.__collection__).to_be_truthy(Exception('Expected query collection'))
+        sql = '';
+        if hasattr(query, '__join__'):
+            collection = query.__collection__.collection
+            alias = query.__collection__.alias
+            joins = getattr(query, '__join__')
+            for join in joins:
+                local_field = join['$lookup']['localField']
+                foreign_field = join['$lookup']['foreignField']
+                from_collection = join['$lookup']['from']
+                as_collection = join['$lookup']['as']
+                sql = join['$lookup']['direction'].upper() # LEFT INNER or RIGHT
+                sql += SqlDialect.Space
+                sql += SqlDialect.Join
+                sql += SqlDialect.Space
+                sql += self.__dialect__.escape_name(from_collection)
+                if not as_collection is None:
+                    sql += SqlDialect.Space
+                    sql += self.__dialect__.escape_name(as_collection)
+                sql += SqlDialect.Space
+                sql += 'ON'
+                sql += SqlDialect.Space
+                sql += self.__dialect__.escape_name((alias or collection) + '.' + local_field)
+                sql += '='
+                sql += self.__dialect__.escape_name((as_collection or from_collection) + '.' + foreign_field)
+        return sql
     
     def format_select(self, query:QueryExpression):
         expect(query.__collection__).to_be_truthy(Exception('Expected query collection'))
+        # get collection name
+        collection = query.__collection__.collection
+        # and collection alias
+        collection_alias = query.__collection__.alias
+
         sql = SqlDialect.Select
         if query.__select__ is None:
             sql +=' * ' # wildcard select
@@ -215,12 +251,22 @@ class SqlFormatter:
         sql += SqlDialect.From
         sql += SqlDialect.Space
         
-        sql += self.__dialect__.escape_name(query.__collection__.get_collection())
+        sql += self.__dialect__.escape_name(collection)
+        # append alias, if any
+        if not collection_alias is None:
+            sql += SqlDialect.Space
+            sql += self.__dialect__.escape_name(collection_alias)
+            sql += SqlDialect.Space
         if not query.__where__ is None:
             sql += SqlDialect.Space
             sql += SqlDialect.Where
             sql += SqlDialect.Space
             sql += self.format_where(query.__where__)
+        
+        join_sql = self.format_join(query)
+        if len(join_sql) > 0:
+            sql += SqlDialect.Space
+            sql += join_sql
         return sql
 
     def format_update(self, query:QueryExpression):
@@ -228,7 +274,7 @@ class SqlFormatter:
         expect(query.__update__).to_be_truthy(Exception('Expected a valid update expression'))
         sql = SqlDialect.Update
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_name(query.__collection__.get_collection())
+        sql += self.__dialect__.escape_name(query.__collection__.collection)
         expect(query.__where__).to_be_truthy(Exception('Where expression cannot be empty while formatting an update expression'))
         # format set
         sql += SqlDialect.Space
@@ -252,11 +298,43 @@ class SqlFormatter:
         sql += SqlDialect.Space
         sql += self.format_where(query.__where__)
         return sql
+
+    def format_insert(self, query:QueryExpression):
+        expect(query.__collection__).to_be_truthy(Exception('Expected query collection'))
+        expect(query.__insert__).to_be_truthy(Exception('Expected a valid update expression'))
+        sql = SqlDialect.Insert
+        sql += SqlDialect.Space
+        sql += self.__dialect__.escape_name(query.__collection__.collection)
+
+        values = []
+        keys = []
+        pairs = None
+        # get keys and values
+        if type(query.__insert__) is dict:
+            pairs = query.__insert__.items()
+        else:
+            pairs = query.__insert__.__dict__.items()
+        for key, value in pairs:
+            keys.append(self.__dialect__.escape_name(key))
+            values.append(self.__dialect__.escape(value))
+
+        # format keys
+        sql += '('
+        sql += ','.join(keys)
+        sql += ')'
+
+        # format values
+        sql += SqlDialect.Space
+        sql += SqlDialect.Values
+        sql += SqlDialect.Space
+
+        sql += '('
+        sql += ','.join(values)
+        sql += ')'
+
+        return sql
     
     def format_delete(self, query:QueryExpression):
-        raise NotImplementedError()
-    
-    def format_insert(self, query:QueryExpression):
         raise NotImplementedError()
     
     def format_where(self, where):
