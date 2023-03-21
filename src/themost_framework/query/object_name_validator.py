@@ -1,9 +1,11 @@
 import re
 
+
 class InvalidObjectNameError(Exception):
     def __init__(self):
         self.message = 'Invalid database object name.'
         super().__init__(self.message)
+
 
 class ValidatorPatterns:
 
@@ -14,31 +16,31 @@ class ValidatorPatterns:
     Cyrillic = '([\u0030-\u0039\u0041-\u007A\u0061-\u007A\u0400-\u04FF\u005F]+)'
     Hebrew = '([\u0030-\u0039\u0041-\u005A\u0061-\u007A\u05D0-\u05F2\u005F]+)'
 
-class ObjectNameValidator:
-    def __init__(self, pattern = ValidatorPatterns.Default):
-        self.pattern = pattern
-        self.qualified_pattern = f'\*$|^{pattern}((\.){pattern})*(\.\*)?$'
 
-    def test(self, name, qualified = True, throw_error = True):
-        result = None
-        if (qualified == True):
+class ObjectNameValidator:
+    def __init__(self, pattern=ValidatorPatterns.Default):
+        self.pattern = pattern
+        self.qualified_pattern = f'\\*$|^{pattern}((\\.){pattern})*(\\.\\*)?$'
+
+    def test(self, name, qualified=True, throw_error=True):
+        if qualified:
             result = re.match(self.qualified_pattern, name)
         else:
             result = re.match(f'^{self.pattern}$', name)
-        if not result is None:
+        if result is not None:
             return True
         if throw_error:
             raise InvalidObjectNameError()
         return False
     
-    def escape(self, name, format = r'\1'):
+    def escape(self, name, format_string=r'\1'):
         """Escapes a database object name based on the given format
         Args:
             name (str): An object name expression to escape
-            format (str, optional): Object name format expression
+            format_string (str, optional): Object name format expression
 
         Returns:
                 str: An object name expression to escape
         """
         self.test(name)
-        return re.sub(self.pattern, format, name)
+        return re.sub(self.pattern, format_string, name)

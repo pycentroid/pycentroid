@@ -1,24 +1,27 @@
-from .query_field import QueryField, get_first_key, format_any_field_reference, get_field_expression
-from .query_entity import QueryEntity
-from .lamda_parser import LamdaParser
-from themost_framework.common import expect, NoneError
-from typing import Callable
 import inspect
+
+from themost_framework.common import expect, NoneError
+from .lamda_parser import LamdaParser
+from .query_entity import QueryEntity
+from .query_field import QueryField, get_field_expression
 
 
 class Empty:
     pass
 
+
 class QueryExpression:
-    def __init__(self, collection = None):
+    def __init__(self, collection=None):
         self.__where__ = None
         self.__select__ = None
         self.__insert__ = None
         self.__update__ = None
         self.__join__ = []
-        self.__left__:QueryField = None
+        self.__left__: QueryField or None = None
         self.__last_logical = None
-        if not collection is None:
+        self.__skip__ = 0
+        self.__limit__ = 0
+        if collection is not None:
             self.__set_collection__(collection)
         return
 
@@ -59,8 +62,6 @@ class QueryExpression:
             # todo: validate object name
             self.__left__ = QueryField(*args)
         if inspect.isfunction(args[0]):
-            expr = args[0]
-            params = None
             # parse callable as where statement
             self.__where__ = LamdaParser().parse_filter(*args)
         
@@ -142,45 +143,40 @@ class QueryExpression:
         self.__last_logical = '$or'
         return self
     
-    def get_year(self, timezone = None):
+    def get_year(self, timezone=None):
         self.__left__.get_year(timezone)
         return self
 
-    def get_date(self, timezone = None):
+    def get_date(self, timezone=None):
         self.__left__.get_date(timezone)
         return self
     
-    def get_month(self, timezone = None):
+    def get_month(self, timezone=None):
         self.__left__.get_month(timezone)
         return self
 
-    def get_hours(self, timezone = None):
+    def get_hours(self, timezone=None):
         self.__left__.get_hours(timezone)
         return self
     
-    def hour(self, timezone = None):
+    def hour(self, timezone=None):
         self.__left__.get_hours(timezone)
         return self
     
-    def get_minutes(self, timezone = None):
+    def get_minutes(self, timezone=None):
         self.__left__.get_year(timezone)
         return self
     
-    def minute(self, timezone = None):
+    def minute(self, timezone=None):
         self.__left__.get_minutes(timezone)
         return self
 
-    def get_seconds(self, timezone = None):
+    def get_seconds(self, timezone=None):
         self.__left__.get_seconds(timezone)
         return self
     
-    def second(self, timezone = None):
+    def second(self, timezone=None):
         self.__left__.get_seconds(timezone)
-        return self
-    
-    def index_of(self, search: str):
-        assert self.__left__ is None, 'Left operand cannot be empty'
-        self.__left__.index_of(search)
         return self
     
     def index_of(self, search: str):
@@ -189,7 +185,7 @@ class QueryExpression:
         return self
 
     def index(self, search: str):
-        return self.index_of(value);
+        return self.index_of(search)
     
     def add(self, value):
         expect(self.__left__).to_be_truthy(NoneError)
@@ -302,23 +298,23 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def set(self, object):
+    def set(self, source):
         self.__update__ = lambda: None
-        if type(object) is dict:
-            for key in object:
-                setattr(self.__update__, key, object[key])
+        if type(source) is dict:
+            for key in source:
+                setattr(self.__update__, key, source[key])
         else:
-            for key, value in object.__dict__.items():
+            for key, value in source.__dict__.items():
                 setattr(self.__update__, key, value)
         return self
 
-    def insert(self, object):
+    def insert(self, source):
         self.__insert__ = lambda: None
-        if type(object) is dict:
-            for key in object:
-                setattr(self.__insert__, key, object[key])
+        if type(source) is dict:
+            for key in source:
+                setattr(self.__insert__, key, source[key])
         else:
-            for key, value in object.__dict__.items():
+            for key, value in source.__dict__.items():
                 setattr(self.__insert__, key, value)
         return self
     
@@ -328,7 +324,7 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def join(self, collection, local_field, foreign_field, alias = None):
+    def join(self, collection, local_field, foreign_field, alias=None):
         """Prepares a join expression with the given collection
 
         Args:
@@ -351,7 +347,7 @@ class QueryExpression:
         })
         return self
     
-    def left_join(self, collection, local_field, foreign_field, alias = None):
+    def left_join(self, collection, local_field, foreign_field, alias=None):
         """Prepares a left join expression with the given collection
 
         Args:
@@ -374,7 +370,7 @@ class QueryExpression:
         })
         return self
 
-    def right_join(self, collection, local_field, foreign_field, alias = None):
+    def right_join(self, collection, local_field, foreign_field, alias=None):
         """Prepares a right join expression with the given collection
 
         Args:
@@ -402,13 +398,13 @@ class QueryExpression:
             self.__where__ = expr
         else:
             # get first property of current query
-            property = list(self.__where__.keys())[0];
+            prop = list(self.__where__.keys())[0]
             # get logical operator
             logical_operator = self.__last_logical
             # if last logical operator is equal with this property
-            if (property == logical_operator):
+            if prop == logical_operator:
                 # append query expression
-                expr[property].append(expr)
+                expr[prop].append(expr)
             else:
                 self.__where__ = {
                     logical_operator: [
@@ -417,5 +413,3 @@ class QueryExpression:
                     ]
                 }
         self.__left__ = None
-
-

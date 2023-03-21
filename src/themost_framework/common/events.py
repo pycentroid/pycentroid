@@ -1,4 +1,3 @@
-from typing import Callable
 
 
 class SyncEventHandler:
@@ -7,6 +6,7 @@ class SyncEventHandler:
 
     def execute(self, *args):
         self.handler(*args)
+
 
 class OnceSyncEventHandler(SyncEventHandler):
     def __init__(self, handler):
@@ -19,6 +19,7 @@ class OnceSyncEventHandler(SyncEventHandler):
         super().execute(*args)
         self.fired = True
 
+
 class SyncSubscription:
     def __init__(self, emitter, handler):
         self.__emitter__ = emitter
@@ -26,6 +27,7 @@ class SyncSubscription:
 
     def unsubscribe(self):
         self.__emitter__.unsubscribe(self.__handler__)
+
 
 class SyncSeriesEventEmitter:
 
@@ -65,6 +67,3 @@ class SyncSeriesEventEmitter:
     def emit(self, *args):
         for handler in self.__handlers__:
             handler.execute(*args)
-
-
-

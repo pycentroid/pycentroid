@@ -2,52 +2,55 @@ import ast
 from dill.source import getsource
 from ..common import expect, SyncSeriesEventEmitter
 
+
 class LamdaParser:
     def __init__(self):
         self.resolving_member = SyncSeriesEventEmitter()
         self.resolving_join_member = SyncSeriesEventEmitter()
         self.resolving_method = SyncSeriesEventEmitter()
-    
-    def parse_filter(self, func, params:dict = None):
-        module:ast.Module = ast.parse(getsource(func).strip())
+        self.args = []
+        self.params = {}
+
+    def parse_filter(self, func, params: dict = None):
+        module: ast.Module = ast.parse(getsource(func).strip())
         # set params
-        self.params = params;
-        if (type(module.body[0].value) is ast.Lambda):
+        self.params = params
+        if type(module.body[0].value) is ast.Lambda:
             # get func
-            lambda_func:ast.Lambda = module.body[0].value
+            lambda_func: ast.Lambda = module.body[0].value
             # and args
             self.args = lambda_func.args.args
             # parse body
             return self.parse_common(lambda_func.body)
-        if (type(module.body[0].value) is ast.Call):
+        if type(module.body[0].value) is ast.Call:
             # get function call
-            call: ast.Call = module.body[0].value
+            call = module.body[0].value
             # the first argument is the lambda function
-            lambda_func:ast.Lambda = call.args[0]
+            lambda_func = call.args[0]
             # get arguments
             self.args = lambda_func.args.args
             # get expression
             return self.parse_common(lambda_func.body)
         raise TypeError('Invalid or unsupported lamda function')
 
-    def parse_select(self, func, params:dict = None):
-        module:ast.Module = ast.parse(getsource(func).strip())
+    def parse_select(self, func, params: dict = None):
+        module: ast.Module = ast.parse(getsource(func).strip())
         # set params
-        self.params = params;
-        if (type(module.body[0].value) is ast.Lambda):
-            lambda_func:ast.Lambda = module.body[0].value
+        self.params = params
+        if type(module.body[0].value) is ast.Lambda:
+            lambda_func: ast.Lambda = module.body[0].value
             self.args = lambda_func.args.args
             return self.parse_sequence(lambda_func.body)
         # get function call
-        call: ast.Call = module.body[0].value
+        call = module.body[0].value
         # the first argument is the lambda function
-        lambda_func:ast.Lambda = call.args[0]
+        lambda_func = call.args[0]
         # get arguments
         self.args = lambda_func.args.args
         # get expression
         result = self.parse_sequence(lambda_func.body)
         return result
-    
+
     def parse_logical(self, expr: ast.BoolOp):
         op = None
         if type(expr.op) is ast.And:
@@ -56,7 +59,7 @@ class LamdaParser:
             op = '$or'
         expect(op).to_be_truthy(Exception('Logical operator is invalid or has not been implemented yet'))
         result = dict()
-        result[op] = [];
+        result[op] = []
         for value in expr.values:
             result[op].append(self.parse_common(value))
         return result
@@ -66,7 +69,7 @@ class LamdaParser:
         op = None
         if ops_type is ast.Eq or ops_type is ast.Is:
             op = '$eq'
-        elif ops_type is ast.NotEq  or ops_type is ast.IsNot:
+        elif ops_type is ast.NotEq or ops_type is ast.IsNot:
             op = '$ne'
         elif ops_type is ast.Gt:
             op = '$gt'
@@ -86,20 +89,22 @@ class LamdaParser:
         ]
         return result
 
-    def parse_literal(self, expr:ast.Constant):
-        return expr.value;
-    
-    def parse_member(self, expr:ast.Attribute):
-        attr:str = '$' + expr.attr
+    # noinspection PyMethodMayBeStatic
+    def parse_literal(self, expr: ast.Constant) -> object:
+        return expr.value
+
+    def parse_member(self, expr: ast.Attribute):
+        attr: str = '$' + expr.attr
         if type(expr.value) is ast.Name:
             # a simple member reference like x.category
             # expect object name to be the first argument of lamda function
-            obj:ast.Name = expr.value
-            expect(obj.id).to_equal(self.args[0].arg, Exception('Invalid member expression. Expected an expression which uses a member of the first argument'))
+            obj = expr.value
+            expect(obj.id).to_equal(self.args[0].arg, Exception('Invalid member expression. Expected an expression '
+                                                                'which uses a member of the first argument'))
             return attr
         if type(expr.value) is ast.Attribute:
             # a nested member like x.address.streetAddress
-            obj:ast.Attribute = expr.value
+            obj = expr.value
             while type(obj) is ast.Attribute:
                 if type(obj.value) is ast.Name:
                     attr = '$' + obj.attr + '.' + attr[1:]
@@ -108,13 +113,13 @@ class LamdaParser:
             return attr
 
     def parse_sequence(self, expr):
-        sequence = {};
+        sequence = {}
         if type(expr) is ast.List:
             for elt in expr.elts:
                 attr = self.parse_common(elt)
-                if (type(attr) is str):
+                if type(attr) is str:
                     sequence.__setitem__(attr[1:], 1)
-                elif (type(attr) is dict):
+                elif type(attr) is dict:
                     for key in attr:
                         sequence.__setitem__(key, attr[key])
                         break
@@ -122,16 +127,16 @@ class LamdaParser:
                     raise Exception('Invalid sequence attribute')
             return sequence
         if type(expr) is ast.Dict:
-            dict_expr:ast.Dict = expr
-            for i,key in dict_expr.keys:
+            dict_expr: ast.Dict = expr
+            for i, key in dict_expr.keys:
                 expect(type(key)).to_equal(ast.Constant, Exception('Expected constant'))
                 attr = key.value
                 value = self.parse_common(dict_expr.values[i])
                 sequence.__setattr__(attr, value)
             return sequence
         raise Exception('Unsupported sequence expression')
-       
-    def parse_binary(self, expr:ast.BinOp):
+
+    def parse_binary(self, expr: ast.BinOp):
         # find binary operator
         op = None
         if type(expr) is ast.Add:
@@ -150,10 +155,10 @@ class LamdaParser:
             self.parse_common(expr.right)
         }
         return result
-    
-    def parse_identifier(self, expr:ast.Name):
+
+    def parse_identifier(self, expr: ast.Name):
         expect(expr.id in self.params).to_be_truthy(Exception('The specified param cannot be found'))
-        return self.params.get(expr.id);
+        return self.params.get(expr.id)
 
     def parse_common(self, expr):
         # and try to parse it base on type
@@ -171,10 +176,3 @@ class LamdaParser:
             return self.parse_binary(expr)
         if type(expr) is ast.Name:
             return self.parse_identifier(expr)
-
-    
-
-
-
-
-
