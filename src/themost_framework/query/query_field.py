@@ -44,7 +44,7 @@ class QueryField(dict):
         if type(name) is str:
             self.__setitem__(trim_field_reference(name), 1)
 
-    def from_(self, collection: str):
+    def from_collection(self, collection: str):
         key: str = get_first_key(self)
         if key is None:
             raise 'Field name cannot be empty when defining collection'

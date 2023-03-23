@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity
+from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity, QueryField
 
 class Product:
     def __init__(self, name):
@@ -62,7 +62,7 @@ def test_format_insert():
         object
     ).into(products)
     sql = SqlFormatter().format_insert(query)
-    TestCase().assertEqual(sql, 'INSERT INTO Product(name) VALUES (\'Lenovo Yoga 2\')')
+    TestCase().assertEqual(sql, 'INSERT INTO ProductData(name) VALUES (\'Lenovo Yoga 2\')')
 
 def test_format_join():
     
@@ -70,6 +70,12 @@ def test_format_join():
     object.name = 'Lenovo Yoga 2'
     query = QueryExpression('OrderData').select(
         'id', 'customer', 'orderDate', 'orderedItem'
-    ).join('ProductData', 'orderedItem', 'id')
+    ).join( collection= 'ProductData').on(
+        QueryExpression().where(
+            'orderedItem'
+        ).equal(
+            QueryField('id').from_collection('ProductData')
+            )
+    )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT id,customer,orderDate,orderedItem FROM OrderData INNER JOIN ProductData ON OrderData.orderedItem=ProductData.id')
+    TestCase().assertEqual(sql, 'SELECT id,customer,orderDate,orderedItem FROM OrderData INNER JOIN ProductData ON orderedItem=ProductData.id')

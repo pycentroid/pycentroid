@@ -11,16 +11,19 @@ class Empty:
 
 
 class QueryExpression:
+
+    __where__ = None
+    __select__ = None
+    __insert__ = None
+    __update__ = None
+    __skip__ = 0
+    __limit__ = 0
+    __lookup__ = []
+    __joining__ = None
+    
     def __init__(self, collection=None):
-        self.__where__ = None
-        self.__select__ = None
-        self.__insert__ = None
-        self.__update__ = None
-        self.__join__ = []
         self.__left__: QueryField or None = None
         self.__last_logical = None
-        self.__skip__ = 0
-        self.__limit__ = 0
         if collection is not None:
             self.__set_collection__(collection)
         return
@@ -72,7 +75,7 @@ class QueryExpression:
         self.__append({
             '$eq': [
                 get_field_expression(self.__left__),
-                value
+                get_field_expression(value) if type(value) is QueryField else value
             ]
         })
         return self
@@ -85,7 +88,7 @@ class QueryExpression:
         self.__append({
             '$ne': [
                 get_field_expression(self.__left__),
-                value
+                get_field_expression(value) if type(value) is QueryField else value
             ]
         })
         return self
@@ -324,28 +327,48 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def join(self, collection, local_field, foreign_field, alias=None):
+    def join(self, collection, alias=None):
         """Prepares a join expression with the given collection
 
         Args:
             collection (str): The collection to join
-            local_field (str): Specifies the local field in join expression
-            foreign_field (str): Specifies the foreign field in join expression
             alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
 
         Returns:
             QueryExpression
         """
-        self.__join__.append({
+        self.__joining__ = {
             '$lookup': {
                 'from': collection,
-                'localField': local_field,
-                'foreignField': foreign_field,
                 'direction': 'inner',
                 'as': alias
             }
-        })
+        }
         return self
+    
+    def on(self, expr):
+        """Finalizes a join expression by appending a lookup expression
+
+        Args:
+            expr (QueryExpression): An instance of query expression which contains a where expression that is going to be used while combining collections
+
+        Returns:
+            QueryExpression
+        """
+        expect(self.__joining__).to_be_truthy(Exception('Joining expression is empty'))
+        lookup = self.__joining__['$lookup']
+        # add pipelien
+        lookup.__setitem__('pipeline', {
+            '$match': {
+                '$expr': expr.__where__
+            }
+        })
+        # append join expression
+        self.__lookup__.append(self.__joining__)
+        # cleanup joining expression
+        self.__joining__ = None
+        return self
+        
     
     def left_join(self, collection, local_field, foreign_field, alias=None):
         """Prepares a left join expression with the given collection
@@ -359,7 +382,7 @@ class QueryExpression:
         Returns:
             QueryExpression
         """
-        self.__join__.append({
+        self.__lookup__.append({
             '$lookup': {
                 'from': collection,
                 'localField': local_field,
@@ -382,7 +405,7 @@ class QueryExpression:
         Returns:
             QueryExpression
         """
-        self.__join__.append({
+        self.__lookup__.append({
             '$lookup': {
                 'from': collection,
                 'localField': local_field,

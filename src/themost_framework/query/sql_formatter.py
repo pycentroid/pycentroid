@@ -1,4 +1,4 @@
-from .query_expression import QueryExpression
+from .query_expression import QueryExpression, QueryField
 from .query_field import get_first_key
 from ..common import expect
 from .utils import SqlUtils
@@ -201,16 +201,18 @@ class SqlFormatter:
     def format_join(self, query: QueryExpression):
         expect(query.__collection__).to_be_truthy(Exception('Expected query collection'))
         sql = ''
-        if hasattr(query, '__join__'):
+        if hasattr(query, '__lookup__'):
             collection = query.__collection__.collection
             alias = query.__collection__.alias
-            joins = getattr(query, '__join__')
+            joins = getattr(query, '__lookup__')
             for join in joins:
-                local_field = join['$lookup']['localField']
-                foreign_field = join['$lookup']['foreignField']
-                from_collection = join['$lookup']['from']
-                as_collection = join['$lookup']['as']
-                sql = join['$lookup']['direction'].upper()  # LEFT INNER or RIGHT
+                lookup: dict = join['$lookup']
+                local_field = lookup.__getitem__('localField') if lookup.__contains__('localField') else None
+                foreign_field = lookup.__getitem__('foreignField') if lookup.__contains__('foreignField') else None
+                pipeline = lookup.__getitem__('pipeline') if lookup.__contains__('pipeline') else None
+                from_collection = lookup['from']
+                as_collection = lookup['as']
+                sql = lookup['direction'].upper()  # LEFT INNER or RIGHT
                 sql += SqlDialect.Space
                 sql += SqlDialect.Join
                 sql += SqlDialect.Space
@@ -221,9 +223,16 @@ class SqlFormatter:
                 sql += SqlDialect.Space
                 sql += 'ON'
                 sql += SqlDialect.Space
-                sql += self.__dialect__.escape_name((alias or collection) + '.' + local_field)
-                sql += '='
-                sql += self.__dialect__.escape_name((as_collection or from_collection) + '.' + foreign_field)
+                if local_field is not None:
+                    sql += self.__dialect__.escape_name((alias or collection) + '.' + local_field)
+                    sql += '='
+                    sql += self.__dialect__.escape_name((as_collection or from_collection) + '.' + foreign_field)
+                elif pipeline is not None:
+                    match = pipeline['$match']
+                    expect(match).to_be_truthy(TypeError('Pipeline match expression cannot be empty'))
+                    expr = match['$expr']
+                    expect(expr).to_be_truthy(TypeError('Expected a valid match express'))
+                    sql += self.format_where(expr)
         return sql
 
     def format_select(self, query: QueryExpression):

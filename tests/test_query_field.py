@@ -12,24 +12,24 @@ def test_create_field():
     }
 
 def test_use_from_collection():
-    field = QueryField('name').from_('Product')
+    field = QueryField('name').from_collection('Product')
     assert not field is {
         'Product.name': 1
     }
-    field = QueryField('name').from_('$Product')
+    field = QueryField('name').from_collection('$Product')
     assert not field is {
         'Product.name': 1
     }
 
 def test_use_get_date():
-    field = QueryField('dateCreated').from_('Product').get_date()
+    field = QueryField('dateCreated').from_collection('Product').get_date()
     assert not field is {
         '$dayOfMonth': {
                 'date': '$Product.dateCreated',
                 'timezone': None
             } 
     }
-    field = QueryField('dateCreated').from_('Product').day()
+    field = QueryField('dateCreated').from_collection('Product').day()
     assert not field is {
         '$dayOfMonth': {
                 'date': '$Product.dateCreated',
@@ -38,14 +38,14 @@ def test_use_get_date():
     }
 
 def test_use_get_month():
-    field = QueryField('dateCreated').from_('Product').get_month()
+    field = QueryField('dateCreated').from_collection('Product').get_month()
     assert not field is {
         '$month': {
                 'date': '$Product.dateCreated',
                 'timezone': None
             } 
     }
-    field = QueryField('dateCreated').from_('Product').month().as_('monthCreated')
+    field = QueryField('dateCreated').from_collection('Product').month().as_('monthCreated')
     assert not field is {
         'monthCreated': {
             '$month': {
@@ -56,14 +56,14 @@ def test_use_get_month():
     }
 
 def test_use_get_year():
-    field = QueryField('dateCreated').from_('Product').get_year()
+    field = QueryField('dateCreated').from_collection('Product').get_year()
     TestCase().assertDictEqual(field, {
         '$year': {
             'date': '$Product.dateCreated',
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').year().as_('yearCreated')
+    field = QueryField('dateCreated').from_collection('Product').year().as_('yearCreated')
     TestCase().assertDictEqual(field, {
         'yearCreated': {
             '$year': {
@@ -74,14 +74,14 @@ def test_use_get_year():
     })
 
 def test_use_get_hours():
-    field = QueryField('dateCreated').from_('Product').get_hours()
+    field = QueryField('dateCreated').from_collection('Product').get_hours()
     TestCase().assertDictEqual(field, {
         '$hour': {
             'date': '$Product.dateCreated',
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').hour().as_('hourCreated')
+    field = QueryField('dateCreated').from_collection('Product').hour().as_('hourCreated')
     TestCase().assertDictEqual(field, {
         'hourCreated': {
             '$hour': {
@@ -92,14 +92,14 @@ def test_use_get_hours():
     })
 
 def test_use_get_minutes():
-    field = QueryField('dateCreated').from_('Product').get_minutes()
+    field = QueryField('dateCreated').from_collection('Product').get_minutes()
     TestCase().assertDictEqual(field, {
         '$minute': {
             'date': '$Product.dateCreated',
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').minute().as_('minuteCreated')
+    field = QueryField('dateCreated').from_collection('Product').minute().as_('minuteCreated')
     TestCase().assertDictEqual(field, {
         'minuteCreated': {
             '$minute': {
@@ -110,14 +110,14 @@ def test_use_get_minutes():
     })
 
 def test_use_get_seconds():
-    field = QueryField('dateCreated').from_('Product').get_seconds()
+    field = QueryField('dateCreated').from_collection('Product').get_seconds()
     TestCase().assertDictEqual(field, {
         '$second': {
             'date': '$Product.dateCreated',
             'timezone': None
         } 
     })
-    field = QueryField('dateCreated').from_('Product').second().as_('secondCreated')
+    field = QueryField('dateCreated').from_collection('Product').second().as_('secondCreated')
     TestCase().assertDictEqual(field, {
         'secondCreated': {
             '$second': {
@@ -128,7 +128,7 @@ def test_use_get_seconds():
     })
 
 def test_use_add():
-    field = QueryField('price').from_('Product').add(100).as_('discountPrice')
+    field = QueryField('price').from_collection('Product').add(100).as_('discountPrice')
     TestCase().assertDictEqual(field, {
         'discountPrice': {
             '$add': [
@@ -139,7 +139,7 @@ def test_use_add():
     })
 
 def test_use_multiply():
-    field = QueryField('price').from_('Product').multiply(0.75).as_('discountPrice')
+    field = QueryField('price').from_collection('Product').multiply(0.75).as_('discountPrice')
     TestCase().assertDictEqual(field, {
         'discountPrice': {
             '$multiply': [
@@ -150,9 +150,9 @@ def test_use_multiply():
     })
 
 def test_use_concat():
-    field = QueryField('familyName').from_('Person').concat(
+    field = QueryField('familyName').from_collection('Person').concat(
         ' ',
-        QueryField('givenName').from_('Person')
+        QueryField('givenName').from_collection('Person')
     ).as_('name')
     TestCase().assertDictEqual(field, {
         'name': {
