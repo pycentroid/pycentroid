@@ -1,0 +1,12 @@
+adapterTypes:
+  -
+    name: "SQLite Data Adapter"
+    invariantName: "sqlite"
+    type: "themost_framework.sqlite#SqliteAdpate"
+adapters:
+  -
+    name: "test"
+    invariantName: "sqlite"
+    default: true
+    options:
+      database: "tests/db/local.db"

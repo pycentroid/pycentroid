@@ -21,6 +21,7 @@ class QueryExpression:
         self.__select__ = None
         self.__insert__ = None
         self.__update__ = None
+        self.___delete___ = None
         self.__skip__ = 0
         self.__limit__ = 0
         self.__lookup__ = []
@@ -43,6 +44,9 @@ class QueryExpression:
         return self.__set_collection__(collection)
 
     def select(self, *args):
+        self.__update__ = None
+        self.__insert__ = None
+        self.___delete___ = None
         if inspect.isfunction(args[0]):
             self.__select__ = LamdaParser().parse_select(*args)
             return self
@@ -351,6 +355,7 @@ class QueryExpression:
     def update(self, collection):
         self.__select__ = None
         self.__insert__ = None
+        self.___delete___ = None
         self.__set_collection__(collection)
         return self
 
@@ -377,6 +382,7 @@ class QueryExpression:
     def into(self, collection):
         self.__select__ = None
         self.__update__ = None
+        self.___delete___ = None
         self.__set_collection__(collection)
         return self
 
@@ -551,6 +557,14 @@ class QueryExpression:
                     break
             else:
                 raise Exception('Expected string or a dictionary object')
+        return self
+
+    def delete(self, collection):
+        self.__select__ = None
+        self.__update__ = None
+        self.__insert__ = None
+        self.___delete___ = True
+        self.__set_collection__(collection)
         return self
 
     def __append(self, expr):

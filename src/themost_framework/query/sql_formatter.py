@@ -17,6 +17,7 @@ class SqlDialect:
     Where = 'WHERE'
     Select = 'SELECT'
     Update = 'UPDATE'
+    Delete = 'DELETE'
     Insert = 'INSERT INTO'
     OrderBy = 'ORDER BY'
     GroupBy = 'GROUP BY'
@@ -429,7 +430,50 @@ class SqlFormatter:
         return sql
 
     def format_delete(self, query: QueryExpression):
-        raise NotImplementedError()
+        expect(query.__collection__).to_be_truthy(Exception('Expected query collection'))
+        # get collection name
+        collection = query.__collection__.collection
+        # and collection alias
+        collection_alias = query.__collection__.alias
+        sql = ''
+        sql += SqlDialect.Delete
+        sql += SqlDialect.Space
+        sql += SqlDialect.From
+        sql += SqlDialect.Space
+        sql += self.__dialect__.escape_name(collection)
+        if collection_alias is not None:
+            sql += SqlDialect.Space
+            sql += self.__dialect__.escape_name(collection_alias)
+        # append join statement
+        join_sql = self.format_join(query)
+        if len(join_sql) > 0:
+            sql += SqlDialect.Space
+            sql += join_sql
+        # validate where    
+        expect(query.__where__).to_be_truthy(
+            Exception('Where expression cannot be empty while formatting a delete expression'))
+         # format where
+        sql += SqlDialect.Space
+        sql += SqlDialect.Where
+        sql += SqlDialect.Space
+        sql += self.format_where(query.__where__)
+        return sql
+
 
     def format_where(self, where):
         return self.__dialect__.escape(where)
+
+    def format(self, query: QueryExpression):
+        if query.__where__ is not None:
+            if query.__limit__ > 0:
+                return self.format_limit_select(query)
+            else:
+                return self.format_select(query)
+        elif query.__update__ is not None:
+            return self.format_update(query)
+        elif query.__insert__ is not None:
+            return self.format_insert(query)
+        elif query.___delete___ == True:
+            return self.format_delete(query)
+        else:
+            TypeError('Expected a valid query expression')
