@@ -18,10 +18,15 @@ class SqlDialect:
     Select = 'SELECT'
     Update = 'UPDATE'
     Insert = 'INSERT INTO'
+    OrderBy = 'ORDER BY'
+    GroupBy = 'GROUP BY'
     Values = 'VALUES'
     Join = 'JOIN'
     Set = 'SET'
     As = 'AS'
+    Inner = 'INNER'
+    Left = 'LEFT'
+    Right = 'RIGHT'
 
     def __init__(self, options=SqlDialectOptions()):
         self.options = options
@@ -105,6 +110,21 @@ class SqlDialect:
         result += ' OR '.join(exprs)
         result += ')'
         return result
+
+    def __count__(self, expr):
+        return f'COUNT({self.escape(expr)})'
+    
+    def __min__(self, expr):
+        return f'MIN({self.escape(expr)})'
+    
+    def __max__(self, expr):
+        return f'MAX({self.escape(expr)})'
+    
+    def __avg__(self, expr):
+        return f'AVG({self.escape(expr)})'
+    
+    def __sum__(self, expr):
+        return f'SUM({self.escape(expr)})'
 
     def __length__(self, expr):
         return f'LENGTH({self.escape(expr)})'
@@ -206,12 +226,12 @@ class SqlFormatter:
             alias = query.__collection__.alias
             joins = getattr(query, '__lookup__')
             for join in joins:
-                lookup: dict = join['$lookup']
-                local_field = lookup.__getitem__('localField') if lookup.__contains__('localField') else None
-                foreign_field = lookup.__getitem__('foreignField') if lookup.__contains__('foreignField') else None
-                pipeline = lookup.__getitem__('pipeline') if lookup.__contains__('pipeline') else None
-                from_collection = lookup['from']
-                as_collection = lookup['as']
+                lookup = join.get('$lookup')
+                local_field = lookup.get('localField')
+                foreign_field = lookup.get('foreignField')
+                pipeline = lookup.get('pipeline')
+                from_collection = lookup.get('from')
+                as_collection = lookup.get('as')
                 sql = lookup['direction'].upper()  # LEFT INNER or RIGHT
                 sql += SqlDialect.Space
                 sql += SqlDialect.Join
@@ -228,11 +248,53 @@ class SqlFormatter:
                     sql += '='
                     sql += self.__dialect__.escape_name((as_collection or from_collection) + '.' + foreign_field)
                 elif pipeline is not None:
-                    match = pipeline['$match']
+                    match = pipeline.get('$match')
                     expect(match).to_be_truthy(TypeError('Pipeline match expression cannot be empty'))
-                    expr = match['$expr']
+                    expr = match.get('$expr')
                     expect(expr).to_be_truthy(TypeError('Expected a valid match express'))
                     sql += self.format_where(expr)
+        return sql
+
+    def format_order(self, query: QueryExpression):
+        sql = ''
+        if query.__order_by__ is None:
+            return sql;
+        if len(query.__order_by__) is 0:
+            return sql
+        sql += SqlDialect.OrderBy
+        sql += SqlDialect.Space
+        index = 0;
+        for item in query.__order_by__:
+            # get direction
+            direction = item.get('direction') # 1=ASC, -1=DESC
+            if index > 0:
+                sql += ','
+            sql += self.__dialect__.escape(item.get('$expr'))
+            sql += SqlDialect.Space
+            if direction is -1:
+                sql += 'DESC'
+            else:
+                sql += 'ASC'
+            index += 1
+        return sql
+    
+    def format_group_by(self, query: QueryExpression):
+        sql = ''
+        if query.__group_by__ is None:
+            return sql
+        if len(query.__group_by__) is 0:
+            return sql
+        sql += SqlDialect.GroupBy
+        sql += SqlDialect.Space
+        index = 0
+        for item in query.__group_by__:
+            if index > 0:
+                sql += ','
+            if type(item) is str:
+                sql += self.__dialect__.escape(item)
+            else:
+                sql += self.__dialect__.escape(item.get('$expr'))
+            index += 1
         return sql
 
     def format_select(self, query: QueryExpression):
@@ -267,17 +329,39 @@ class SqlFormatter:
         if collection_alias is not None:
             sql += SqlDialect.Space
             sql += self.__dialect__.escape_name(collection_alias)
+        
+        # append join statement
+        join_sql = self.format_join(query)
+        if len(join_sql) > 0:
             sql += SqlDialect.Space
+            sql += join_sql
+        # append where statement, if any
         if query.__where__ is not None:
             sql += SqlDialect.Space
             sql += SqlDialect.Where
             sql += SqlDialect.Space
             sql += self.format_where(query.__where__)
-
-        join_sql = self.format_join(query)
-        if len(join_sql) > 0:
+        
+        if query.__order_by__ is not None:
             sql += SqlDialect.Space
-            sql += join_sql
+            sql += self.format_order(query)
+
+        if query.__group_by__ is not None:
+            sql += SqlDialect.Space
+            sql += self.format_group_by(query)
+
+        return sql
+
+    def format_limit_select(self, query: QueryExpression):
+        sql = self.format_select(query);
+        if query.__limit__ > 0:
+            sql += SqlDialect.Space
+            sql += 'LIMIT'
+            sql += SqlDialect.Space
+            sql += str(query.__limit__)
+            if query.__skip__ > 0:
+                sql += ','
+                sql += str(query.__skip__)
         return sql
 
     def format_update(self, query: QueryExpression):

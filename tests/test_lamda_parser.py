@@ -120,5 +120,5 @@ def test_parse_sequence():
         'id': 1,
         'givenName': 1,
         'familyName': 1,
-        'streetAddress': 1
+        'address.streetAddress': 1
     })

@@ -79,3 +79,36 @@ def test_format_join():
     )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,customer,orderDate,orderedItem FROM OrderData INNER JOIN ProductData ON orderedItem=ProductData.id')
+
+def test_format_order_by():
+    
+    query = QueryExpression().select('id', 'name', 'category', 'releaseDate', 'price')\
+        .from_collection('ProductData').order_by('name').then_by('category')
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC')
+
+    query = QueryExpression().select(
+        lambda x: [x.id, x.name, x.category, x.releaseDate, x.price]
+    ).from_collection('ProductData').order_by(
+            lambda x: [x.name, x.category]
+        )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC')
+
+
+def test_format_limit_select():
+    
+    query = QueryExpression().select('id', 'name', 'category', 'releaseDate', 'price')\
+        .from_collection('ProductData').take(5).skip(5).order_by('name').then_by('category')
+    sql = SqlFormatter().format_limit_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC LIMIT 5,5')
+
+def test_format_group_by():
+    
+    query = QueryExpression().select(
+        QueryField('id').get_count().as_('total'),
+        QueryField('category')
+    ).from_collection('ProductData').group_by(QueryField('category'))
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT COUNT(id) AS total,category FROM ProductData GROUP BY category')
+

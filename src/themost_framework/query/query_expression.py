@@ -3,7 +3,7 @@ import inspect
 from themost_framework.common import expect, NoneError
 from .lamda_parser import LamdaParser
 from .query_entity import QueryEntity
-from .query_field import QueryField, get_field_expression
+from .query_field import QueryField, get_field_expression, format_field_reference
 
 
 class Empty:
@@ -13,6 +13,8 @@ class Empty:
 class QueryExpression:
 
     __where__ = None
+    __order_by__ = None
+    __group_by__ = None
     __select__ = None
     __insert__ = None
     __update__ = None
@@ -290,10 +292,28 @@ class QueryExpression:
         return self
     
     def skip(self, n):
+        """Defines the number of records to skip on an expression which limits results
+
+        Args:
+            n (int): The number of records to skip
+
+        Returns:
+            QueryExpression
+        """
         self.__skip__ = n
+        return self
     
     def take(self, n):
+        """Prepares an expression which limits the number of results
+
+        Args:
+            n (int): The number of records to return
+
+        Returns:
+            QueryExpression
+        """
         self.__limit__ = n
+        return self
     
     def update(self, collection):
         self.__select__ = None
@@ -414,6 +434,90 @@ class QueryExpression:
                 'as': alias
             }
         })
+        return self
+
+    def __append_order__(self, expr, direction):
+        if self.__order_by__ is None:
+            self.__order_by__ = []
+        if type(expr) is str:
+            self.__order_by__.append({
+                '$expr': format_field_reference(expr),
+                'direction': direction
+            })
+        elif type(expr) is dict:
+            for key in expr:
+                value = expr[key]
+                if type(value) is int and expr[key] is 1:
+                    self.__order_by__.append({
+                        '$expr': format_field_reference(key),
+                        'direction': direction
+                    })
+                elif type(value) is int and expr[key] is 0:
+                    break;
+                else:
+                    self.__order_by__.append({
+                        '$expr': value,
+                        'direction': direction
+                    })
+        else:
+            TypeError('Order by expression must be a string or an instance of dictionary object.')
+        return self
+    
+    def order_by(self, expr):
+        if inspect.isfunction(expr):
+            arguments = LamdaParser().parse_select(expr)
+            for arg in arguments:
+                self.__append_order__(arg, 1)
+            return self
+        return self.__append_order__(expr, 1)
+
+    def order_by_descending(self, expr):
+        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or then_by() first.'))
+        if inspect.isfunction(expr):
+            arguments = LamdaParser().parse_select(expr)
+            for arg in arguments:
+                self.__append_order__(arg, -1)
+            return self
+        return self.__append_order__(expr, -1)
+    
+    def then_by(self, expr):
+        if inspect.isfunction(expr):
+            arguments = LamdaParser().parse_select(expr)
+            for arg in arguments:
+                self.__append_order__(arg, -1)
+            return self
+        return self.__append_order__(expr, 1)
+
+    def then_by_descending(self, expr):
+        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or then_by() first.'))
+        if inspect.isfunction(expr):
+            arguments = LamdaParser().parse_select(expr)
+            for arg in arguments:
+                self.__append_order__(arg, -1)
+            return self
+        return self.__append_order__(expr, -1)
+
+    def group_by(self, *args):
+        arguments = args
+        if inspect.isfunction(args[0]):
+            arguments = LamdaParser().parse_select(*args)
+        self.__group_by__ = []
+        for arg in arguments:
+            if type(arg) is str:
+                self.__group_by__.append(format_field_reference(arg))
+            elif isinstance(arg, dict):
+                for key in arg:
+                    if arg[key] == 1:
+                        self.__group_by__.append(format_field_reference(key))
+                    elif arg[key] == 0:
+                        break
+                    else:
+                        self.__group_by__.append({
+                            '$expr': arg[key]
+                        })
+                    break
+            else:
+                raise Exception('Expected string or a dictionary object')
         return self
 
     def __append(self, expr):

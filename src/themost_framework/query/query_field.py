@@ -139,7 +139,7 @@ class QueryField(dict):
 
     def len(self):
         return self.__use_method_call__('$size')
-
+    
     def trim(self):
         return self.__use_method_call__('$trim')
 
@@ -181,9 +181,12 @@ class QueryField(dict):
 
     def get_count(self):
         return self.__use_method_call__('$count')
+    
+    def get_count(self):
+        return self.__use_method_call__('$count')
 
-    def get_max(self):
-        return self.__use_method_call__('$max')
+    def get_sum(self):
+        return self.__use_method_call__('$sum')
 
     def get_average(self):
         return self.__use_method_call__('$avg')
