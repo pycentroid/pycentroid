@@ -11,20 +11,21 @@ class Empty:
 
 
 class QueryExpression:
-
-    __where__ = None
-    __prepared__ = None
-    __order_by__ = None
-    __group_by__ = None
-    __select__ = None
-    __insert__ = None
-    __update__ = None
-    __skip__ = 0
-    __limit__ = 0
-    __lookup__ = []
-    __joining__ = None
     
     def __init__(self, collection=None):
+
+        self.__where__ = None
+        self.__prepared__ = None
+        self.__order_by__ = None
+        self.__group_by__ = None
+        self.__select__ = None
+        self.__insert__ = None
+        self.__update__ = None
+        self.__skip__ = 0
+        self.__limit__ = 0
+        self.__lookup__ = []
+        self.__joining__ = None
+
         self.__left__: QueryField or None = None
         self.__last_logical = None
         if collection is not None:

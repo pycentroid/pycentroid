@@ -94,10 +94,10 @@ def test_select_map():
         ).where('category').not_equal('Laptops')
     
     TestCase().assertEqual(q.__select__, {
-                'id': '$id',
-                'name': '$name',
-                'category': '$category',
-                'price': '$price'
+                'id': 1,
+                'name': 1,
+                'category': 1,
+                'price':1
             })
 
     
