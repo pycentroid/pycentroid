@@ -13,6 +13,7 @@ class Empty:
 class QueryExpression:
 
     __where__ = None
+    __prepared__ = None
     __order_by__ = None
     __group_by__ = None
     __select__ = None
@@ -70,6 +71,37 @@ class QueryExpression:
             # parse callable as where statement
             self.__where__ = LamdaParser().parse_filter(*args)
         
+        return self
+    
+    def prepare(self, useOr = False):
+        """Stores the underlying filter expression for further processing
+        
+        Args:
+            useOr (bool, optional): Use logical "or" expression while cancatenating an already stored expression
+
+        Returns:
+            _type_: Query
+        """
+        if self.__where__ is not None:
+            if self.__prepared__ is not None:
+                prepared = self.__prepared__
+                if useOr == False:
+                    self.__prepared__ = {
+                        '$and': [
+                            prepared,
+                            self.__where__
+                        ]
+                    }
+                else:
+                    self.__prepared__ = {
+                        '$or': [
+                            prepared,
+                            self.__where__
+                        ]
+                    }
+            else:
+                self.__prepared__ = self.__where__
+            self.__where__ = None
         return self
 
     def equal(self, value):

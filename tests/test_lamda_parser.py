@@ -1,9 +1,30 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import LamdaParser, QueryExpression, QueryField
+from themost_framework.query import LamdaParser, QueryExpression, QueryField, select
 from dill.source import getsource
 import ast
 
+def test_select_func():
+
+    func = lambda x: select( productName = x.name, productCategory = x.category)
+    # get module
+    module:ast.Module = ast.parse(getsource(func).strip())
+    # get function
+    body: ast.Assign = module.body[0]
+    TestCase().assertEqual(type(body.value.body), ast.Call)
+    # get arguments
+    selectFunc = body.value.body.func;
+    TestCase().assertEqual(type(selectFunc), ast.Name)
+    TestCase().assertEqual(selectFunc.id, 'select')
+
+    selectArgs = body.value.body.keywords;
+    TestCase().assertEqual(type(selectArgs), list)
+
+    arg0 = selectArgs[0]
+    TestCase().assertEqual(type(arg0), ast.keyword)
+    TestCase().assertEqual(arg0.arg, 'productName')
+    TestCase().assertEqual(type(arg0.value), ast.Attribute)
+    
 def test_func():
 
     func = lambda x,category: x.category == category and x.price + 100 > 900

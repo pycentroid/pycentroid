@@ -3,6 +3,13 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from .object_name_validator import ObjectNameValidator
 
+class SelectMap:
+    def __init__(self, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+def select(**kwargs):
+    return SelectMap(**kwargs)
 
 class SqlUtils:
 

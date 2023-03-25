@@ -1,8 +1,7 @@
 import pytest
 from unittest import TestCase
 
-from themost_framework.query.query_expression import QueryExpression
-from themost_framework.query.query_field import QueryField
+from themost_framework.query import QueryExpression, QueryField, select
 from dill.source import getsource
 import ast
 
@@ -87,6 +86,18 @@ def test_use_not_equal():
                     '$category',
                     'Laptops'
                 ]
+            })
+
+def test_select_map():
+    q = QueryExpression('Product').select(
+        lambda x: select(id = x.id, name = x.name, category = x.category, price = x.price)
+        ).where('category').not_equal('Laptops')
+    
+    TestCase().assertEqual(q.__select__, {
+                'id': '$id',
+                'name': '$name',
+                'category': '$category',
+                'price': '$price'
             })
 
     

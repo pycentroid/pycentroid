@@ -114,6 +114,19 @@ class LamdaParser:
 
     def parse_sequence(self, expr):
         sequence = {}
+        if type(expr) is ast.Call:
+            expect(type(expr.keywords)).to_equal(list, 'Sequence call expression must be an array of named params')
+            for keyword in expr.keywords:
+                keyword_expr = self.parse_common(keyword.value)
+                if type(keyword_expr) is str:
+                    if keyword_expr == '$' + keyword.arg:
+                        # simplify expression
+                        sequence[keyword.arg] = 1
+                    else:
+                        sequence[keyword.arg] = keyword_expr
+                else:
+                    sequence[keyword.arg] = keyword_expr
+            return sequence
         if type(expr) is ast.List:
             for elt in expr.elts:
                 attr = self.parse_common(elt)

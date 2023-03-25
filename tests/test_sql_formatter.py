@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity, QueryField
+from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
 
 class Product:
     def __init__(self, name):
@@ -34,6 +34,17 @@ def test_format_select():
             )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,category,price FROM Product WHERE (category=\'Laptops\' OR category=\'Desktops\')')
+
+def test_format_select_with_map():
+    
+    query = QueryExpression('Product').select(
+            lambda x: select(id = x.id, productName = x.name, category = x.category)
+        ).where(
+            lambda x: x.category == 'Laptops' or x.category == 'Desktops'
+            )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name AS productName,category FROM Product WHERE (category=\'Laptops\' OR category=\'Desktops\')')
+
 
 def test_format_update():
     
