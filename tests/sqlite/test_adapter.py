@@ -108,3 +108,28 @@ def test_create_view():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+def test_create_index():
+    db = SqliteAdapter(connection_options)
+    def execute():
+        db.table('Table1').create([
+            DataColumn(name='id', type='Counter'),
+            DataColumn(name='name', type='Text', nullable=False, size=255),
+            DataColumn(name='description', type='Text', size=512),
+            DataColumn(name='dateCreated', type='DateTime'),
+            DataColumn(name='dateModified', type='DateTime')
+        ])
+        indexes = db.indexes('Table1').list()
+        TestCase().assertEqual(len(indexes), 0)
+        db.indexes('Table1').create('INDEX_NAME', [
+            DataColumn(name='name')
+        ])
+        indexes = db.indexes('Table1').list()
+        TestCase().assertEqual(len(indexes), 1)
+        db.indexes('Table1').drop('INDEX_NAME')
+        indexes = db.indexes('Table1').list()
+        TestCase().assertEqual(len(indexes), 0)
+        db.table('Table1').drop()
+
+    TestUtils(db).execute_in_transaction(execute)
+    db.close()
+

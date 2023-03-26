@@ -6,22 +6,51 @@ import time
 from typing import Callable
 from themost_framework.common import expect, ObjectMap
 
-class SqliteTableIndex:
+class SqliteTableIndex(DataTableIndex):
 
     def __init__(self, table, adapter):
         super().__init__(table, adapter)
 
     def create(self, name: str, columns: list):
-        raise NotImplementedError()
+        self.drop(name)
+        sql = 'CREATE INDEX'
+        sql += SqliteDialect.Space
+        sql += SqliteDialect().escape_name(name)
+        sql += SqliteDialect.Space
+        sql += 'ON'
+        sql += SqliteDialect.Space
+        sql += SqliteDialect().escape_name(self.table)
+        sql += '('
+        sql += ','.join(map(lambda x:SqliteDialect().escape_name(x.name), columns))
+        sql += ');'
+        self.__adapter__.execute(sql)
 
     def exists(self, name: str):
-        raise NotImplementedError()
+        table = SqliteDialect().escape_name(self.table)
+        results = self.__adapter__.execute(f'PRAGMA INDEX_LIST({table})')
+        return next(filter(lambda x:x.origin=='c' and x.name==name, results), None) is not None
 
     def drop(self, name: str):
-        raise NotImplementedError()
+        exists = self.exists(name)
+        if exists:
+            index = SqliteDialect().escape_name(name)
+            self.__adapter__.execute(f'DROP INDEX {index}')
 
     def list(self):
-        raise NotImplementedError()
+        table = SqliteDialect().escape_name(self.table)
+        # get index list
+        results = self.__adapter__.execute(f'PRAGMA INDEX_LIST({table})')
+        # prepare index list
+        filtered = filter(lambda x:x.origin=='c', results)
+        # with name and columns
+        indexes = list(map(lambda x:ObjectMap(name=x.name,columns=[]), filtered))
+        # enumerate indexes
+        for index in indexes:
+            # and get column list
+            columns = self.__adapter__.execute(f'PRAGMA INDEX_INFO({index.name})')
+            index.columns = list(map(lambda x:ObjectMap(name=x.name), columns))
+        return indexes
+
 
 class SqliteTable(DataTable):
     def __init__(self, table, adapter):
@@ -281,6 +310,9 @@ class SqliteAdapter(DataAdapter):
     
     def view(self, view: str) -> SqliteView:
         return SqliteView(view, self)
+    
+    def indexes(self, table: str) -> SqliteTableIndex:
+        return SqliteTableIndex(table, self)
 
 
 
