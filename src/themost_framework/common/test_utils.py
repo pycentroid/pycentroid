@@ -1,4 +1,3 @@
-from .data import DataAdapter
 from typing import Callable
 
 class CancelTransactionError(Exception):
@@ -6,7 +5,7 @@ class CancelTransactionError(Exception):
         super().__init__('cancel')
 
 class TestUtils:
-    def __init__(self, db: DataAdapter):
+    def __init__(self, db):
         self.__adapter__ = db
 
     def execute_in_transaction(self, func: Callable):

@@ -1,12 +1,8 @@
 from typing import Callable
 from abc import abstractmethod
+from themost_framework.common import ObjectMap
 
-class ObjectMap:
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-
-class DataField(ObjectMap):
+class DataColumn(ObjectMap):
     def __init__(self, **kwargs):
         self.name = None
         self.type = None
@@ -45,7 +41,7 @@ class DataAdapter:
     def upgrade(self, table_upgrade):
         pass
 
-class DatabaseTable:
+class DataTable:
 
     def __init__(self,table: str, adapter: DataAdapter):
         self.table = table
@@ -79,8 +75,7 @@ class DatabaseTable:
     def indexes(self):
         pass
 
-
-class DatabaseTableIndexes:
+class DataTableIndex:
 
     def __init__(self,table: str, adapter: DataAdapter):
         self.table = table
@@ -102,7 +97,7 @@ class DatabaseTableIndexes:
     def list(self):
         pass
 
-class DatabaseView:
+class DataView:
 
     def __init__(self,view: str, adapter: DataAdapter):
         self.view = view

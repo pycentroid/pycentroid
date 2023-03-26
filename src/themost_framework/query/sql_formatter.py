@@ -34,7 +34,7 @@ class SqlDialect:
         self.options = options
         self.types = dict()
 
-    def format_type(self, name: str, type: str, nullable = True, size = None, scale = None):
+    def format_type(self, name: str, type: str, nullable = True, size = None, scale = None, ordinal = None, primary = False):
         # get type definition
         expr = self.types[type]
         if expr is None:
@@ -56,7 +56,7 @@ class SqlDialect:
                 expr = re.sub(size_scale_expr, f'({size},{scale})', expr)
             else:
                 expr = re.sub(size_scale_expr, '', expr)
-        result = name;
+        result = self.escape_name(name);
         result += SqlDialect.Space
         result += expr
         result += SqlDialect.Space

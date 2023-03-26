@@ -6,3 +6,4 @@ from .utils import SqlUtils, SelectMap, select
 from .object_name_validator import ObjectNameValidator, ValidatorPatterns, InvalidObjectNameError
 from .sql_formatter import SqlDialect, SqlFormatter, SqlDialectOptions
 from .lamda_parser import LamdaParser
+from .data_objects import DataAdapter, DataTable, DataView, DataTableIndex, DataColumn

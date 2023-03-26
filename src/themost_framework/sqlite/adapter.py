@@ -1,12 +1,12 @@
 from .dialect import SqliteDialect, SqliteFormatter
-from themost_framework.query import QueryExpression
+from themost_framework.query import QueryExpression, DataAdapter, DataTable, DataView, DataTableIndex
 import sqlite3
-import re;
+import re
+import time
 from typing import Callable
-from themost_framework.common import ObjectMap, DataAdapter, DatabaseTable, DatabaseView, DatabaseTableIndexes
+from themost_framework.common import expect, ObjectMap
 
-
-class SqliteTableIndexes:
+class SqliteTableIndex:
 
     def __init__(self, table, adapter):
         super().__init__(table, adapter)
@@ -23,7 +23,7 @@ class SqliteTableIndexes:
     def list(self):
         raise NotImplementedError()
 
-class SqliteTable(DatabaseTable):
+class SqliteTable(DataTable):
     def __init__(self, table, adapter):
         super().__init__(table, adapter)
     
@@ -40,7 +40,75 @@ class SqliteTable(DatabaseTable):
         return self.__adapter__.execute(sql)
     
     def change(self, fields: list):
-        raise NotImplementedError()
+        exists = self.__adapter__.table(self.table).exists();
+        if exists == False:
+            return self.create(fields)
+        # get table fields
+        existing_fields = self.columns()
+        dialect = SqliteDialect()
+        sqls = [];
+        table = dialect.escape_name(self.table)
+        should_copy_table = False
+        for field in fields:
+            existing_field = next(filter(lambda x:x.name==field.name, existing_fields),None)
+            if existing_field is not None:
+                if existing_field.primary == False:
+                    existing_field_type = dialect.escape_name(existing_field.name)
+                    existing_field_type += SqliteDialect.Space
+                    existing_field_type = existing_field.type
+                    existing_field_type += SqliteDialect.Space
+                    if existing_field.nullable == False:
+                        existing_field_type += 'NOT NULL'
+                    else:
+                        existing_field_type += 'NULL'
+                    args = field.__dict__
+                    new_field_type = dialect.format_type(**args)
+                    if new_field_type != existing_field_type:
+                        # important note: ALTER COLUMN is not supported by SQLite
+                        # so we should try table copy operation
+                        should_copy_table = True
+                        break;
+            else:
+                args = field.__dict__
+                new_field_type = dialect.format_type(**args)
+                # add column
+                sqls.append(f'ALTER TABLE {table} ADD COLUMN {new_field_type};')
+        if should_copy_table == True:
+            # rename table (with a random name)
+            rename = dialect.escape_name('__' + self.table + '_' + str(int(time.time())) + '__')
+            self.__adapter__.execute(f'ALTER TABLE {table} RENAME TO {rename}')
+            # create new table
+            self.create(fields)
+            # get all existing fields that are existing also into the new table
+            insert_fields = []
+            for existing_field in existing_fields:
+                    insert_field = next(filter(lambda x:x.name==existing_field.name, fields),None)
+                    if insert_field is not None:
+                        insert_fields.append(insert_field)
+            # copy data
+            sql = 'INSERT INTO'
+            sql += SqliteDialect.Space
+            sql += table
+            sql += SqliteDialect.Space
+            sql += '('
+            sql += ','.join(map(lambda x:dialect.escape_name(x.name), insert_fields))
+            sql += ')'
+            sql += SqliteDialect.Space
+            sql += 'SELECT'
+            sql += SqliteDialect.Space
+            sql += ','.join(map(lambda x:dialect.escape_name(x.name), insert_fields))
+            sql += SqliteDialect.Space
+            sql += 'FROM'
+            sql += SqliteDialect.Space
+            sql += rename
+            self.__adapter__.execute(sql)
+            # important note: the renamed table is not being dropped for security reasons
+            # this cleanup operation may be done by using SQLite data tools
+            return
+
+        if len(sqls) > 0:
+            for sql in sqls:
+                self.__adapter__.execute(sql)
     
     def exists(self):
         table = self.table
@@ -69,25 +137,48 @@ class SqliteTable(DatabaseTable):
         for result in results:
             col = ObjectMap(name=result.name, ordinal=result.cid, type=result.type,
                 nullable = False if result.notnull == 1 else True, primary = (result.pk == 1))
+            col.size = None
+            col.scale = None
+            matches = re.match(r'(\w+)\((\d+)\,?(\d+)?\)', col.type)
+            if matches is not None:
+                col.size = int(matches.group(2))
+                if matches.group(3) is not None:
+                    col.scale = int(matches.group(3))
             cols.append(col)
         return cols
 
     def indexes(self):
-        return SqliteTableIndexes(self.table, self.__adapter__)
+        return SqliteTableIndex(self.table, self.__adapter__)
 
-class SqliteView(DatabaseView):
+class SqliteView(DataView):
 
     def __init__(self,view: str, adapter: DataAdapter):
-        super().__init__(table, adapter)
+        super().__init__(view, adapter)
 
-    def create(self, query):
-        raise NotImplementedError()
+    def create(self, query: QueryExpression):
+        # drop view if exists
+        self.drop()
+        ## and create
+        sql = 'CREATE VIEW'
+        sql += SqliteDialect.Space
+        sql += SqliteDialect().escape_name(self.view)
+        sql += SqliteDialect.Space
+        sql += 'AS'
+        sql += SqliteDialect.Space
+        sql += SqliteFormatter().format_select(query)
+        return self.__adapter__.execute(sql)
 
     def exists(self):
-        raise NotImplementedError()
+        view = self.view
+        results = self.__adapter__.execute(f'SELECT COUNT(*) count FROM sqlite_master WHERE name=\'{view}\' AND type=\'view\';')
+        if type(results) is list:
+            if len(results) > 0:
+                return results[0].count > 0
+        return false
 
     def drop(self):
-        raise NotImplementedError()
+        view = SqliteDialect().escape_name(self.view)
+        return self.__adapter__.execute(f'DROP VIEW IF EXISTS {view};')
 
 class SqliteAdapter(DataAdapter):
     
