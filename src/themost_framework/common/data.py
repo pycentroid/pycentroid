@@ -6,6 +6,15 @@ class ObjectMap:
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+class DataField(ObjectMap):
+    def __init__(self, **kwargs):
+        self.name = None
+        self.type = None
+        self.nullable = True
+        self.size = None
+        self.scale = None
+        super().__init__(**kwargs)
+
 class DataAdapter:
 
     @abstractmethod

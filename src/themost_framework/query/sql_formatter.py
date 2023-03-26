@@ -3,6 +3,7 @@ from .query_field import get_first_key
 from ..common import expect
 from .utils import SqlUtils
 from .object_name_validator import ObjectNameValidator
+import re
 
 
 class SqlDialectOptions:
@@ -31,6 +32,37 @@ class SqlDialect:
 
     def __init__(self, options=SqlDialectOptions()):
         self.options = options
+        self.types = dict()
+
+    def format_type(self, name: str, type: str, nullable = True, size = None, scale = None):
+        # get type definition
+        expr = self.types[type]
+        if expr is None:
+            Exception('Field type cannot be determined. Use wildcard to define a default field type')
+        # search for size only expression => (?)
+        size_expr = '\\(\\?\\)'
+        match = re.search(size_expr, expr)
+        if match is not None:
+            if size is not None:
+                expr = re.sub(size_expr, f'({size})', expr)
+            else:
+                expr = re.sub(size_expr, '', expr)
+                
+        # search for size ans scale expression => (?,?)
+        size_scale_expr = '\\(\\?,(\s+)?\\?\\)'
+        match = re.search(size_scale_expr, expr)
+        if match is not None:
+            if size is not None and scale is not None:
+                expr = re.sub(size_scale_expr, f'({size},{scale})', expr)
+            else:
+                expr = re.sub(size_scale_expr, '', expr)
+        result = name;
+        result += SqlDialect.Space
+        result += expr
+        result += SqlDialect.Space
+        # set null
+        result += 'NULL' if nullable == True else 'NOT NULL'
+        return result
 
     # noinspection PyUnusedLocal
     def escape(self, value, unquoted=True):

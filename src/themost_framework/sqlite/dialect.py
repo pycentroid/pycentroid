@@ -1,10 +1,36 @@
-from themost_framework.query import SqlDialect, SqlFormatter
+from themost_framework.query import SqlDialect, SqlFormatter, SqlDialectOptions
 
+SqlDialectTypes = [
+        ['Boolean', 'INTEGER(0,1)'],
+        ['Byte', 'INTEGER(0,1)'],
+        ['Number', 'REAL'],
+        ['Number', 'REAL'],
+        ['Counter', 'INTEGER PRIMARY KEY AUTOINCREMENT'],
+        ['Currency', 'NUMERIC(19,4)'],
+        ['Decimal', 'NUMERIC(?,?)'],
+        ['Date', 'NUMERIC'],
+        ['DateTime', 'NUMERIC'],
+        ['Time', 'TEXT(18,0)'],
+        ['Long', 'NUMERIC'],
+        ['Duration', 'TEXT(48)'],
+        ['Integer', 'INTEGER(?)'],
+        ['Url', 'TEXT(?)'],
+        ['Text', 'TEXT(?)'],
+        ['Note', 'TEXT(?)'],
+        ['Image', 'BLOB'],
+        ['Binary', 'BLOB'],
+        ['Guid', 'TEXT(36,0)'],
+        ['Short', 'INTEGER(2,0)']
+    ]
 
 class SqliteDialect(SqlDialect):
     def __init__(self):
-        super().__init__(name_format=r'"\1"', force_alias=True)
-    
+        super().__init__(SqlDialectOptions(name_format=r'"\1"', force_alias=True))
+        # set field type definitions
+        self.types = dict()
+        for item in SqlDialectTypes:
+            self.types[item[0]] = item[1]
+
     def __ceil__(self, expr):
         return f'CEIL({self.escape(expr)})'
 

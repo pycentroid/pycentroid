@@ -28,7 +28,16 @@ class SqliteTable(DatabaseTable):
         super().__init__(table, adapter)
     
     def create(self, fields: list):
-        raise NotImplementedError()
+        if len(fields) == 0:
+            Exception('Field collection cannot be empty while creating a database table.')
+        dialect = SqliteDialect()
+        sql = 'CREATE TABLE'
+        sql += SqliteDialect.Space
+        sql += dialect.escape_name(self.table)
+        sql += '('
+        sql += ','.join(map(lambda x: dialect.format_type(name=x.name, type=x.type, nullable=x.nullable, size=x.size, scale=x.scale), fields))
+        sql += ')'
+        return self.__adapter__.execute(sql)
     
     def change(self, fields: list):
         raise NotImplementedError()
@@ -42,14 +51,26 @@ class SqliteTable(DatabaseTable):
         return false
 
     def drop(self):
-        raise NotImplementedError()
+        return self.__adapter__.execute(f'DROP TABLE IF EXISTS {self.table};')
 
     def version(self):
-        raise NotImplementedError()
+        migration_exists = self.__adapter__.table('migrations').exists();
+        if (migration_exists == False):
+            return None
+        table = SqliteDialect().escape(self.table)
+        results = self.__adapter__.execute(f'SELECT MAX(version) AS version FROM migrations WHERE appliesTo={table}')
+        if len(results) > 0:
+            return results[0].version
+        return None
 
     def columns(self):
-        results = self.__adapter__.execute(f'PRAGMA table_info({self.table})')
-        return results
+        results = self.__adapter__.execute(f'PRAGMA table_info({self.table});')
+        cols = []
+        for result in results:
+            col = ObjectMap(name=result.name, ordinal=result.cid, type=result.type,
+                nullable = False if result.notnull == 1 else True, primary = (result.pk == 1))
+            cols.append(col)
+        return cols
 
     def indexes(self):
         return SqliteTableIndexes(self.table, self.__adapter__)
@@ -152,9 +173,9 @@ class SqliteAdapter(DataAdapter):
         try:
             func()
             self.__raw_connection__.execute('COMMIT;');
-        except ex:
+        except Exception as error:
             self.__raw_connection__.execute('ROLLBACK;');
-            raise ex
+            raise error
         finally:
             self.__transaction__ = False
 
