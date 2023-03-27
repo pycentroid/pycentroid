@@ -107,6 +107,11 @@ class InstanceMethodParserDialect(InstanceMethodParser):
             '$year': list(args)
         }
     
+    def __month__(self, *args):
+        return {
+            '$month': list(args)
+        }
+    
     def __day__(self, *args):
         return {
             '$dayOfMonth': list(args)

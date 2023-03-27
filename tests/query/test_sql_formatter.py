@@ -161,3 +161,10 @@ def test_use_datetime_year():
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,YEAR(releaseDate) AS releaseYear FROM ProductData')
 
+def test_use_datetime_month():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name,releaseMonth=x.releaseDate.month)
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,MONTH(releaseDate) AS releaseMonth FROM ProductData')
+
