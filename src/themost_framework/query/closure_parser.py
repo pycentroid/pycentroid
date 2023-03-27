@@ -3,6 +3,7 @@ from dill.source import getsource
 from ..common import expect, SyncSeriesEventEmitter, object
 from .query_field import is_qualified_reference, format_any_field_reference
 
+
 class ClosureParser:
     def __init__(self):
         self.resolving_member = SyncSeriesEventEmitter()

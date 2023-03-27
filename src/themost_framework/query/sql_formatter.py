@@ -183,6 +183,9 @@ class SqlDialect:
     def __toLower__(self, expr):
         return f'(LOWER({self.escape(expr)})'
 
+    def __toUpper__(self, expr):
+        return f'(UPPER({self.escape(expr)})'
+
     def __year__(self, expr):
         return f'(YEAR({self.escape(expr)})'
 
