@@ -11,6 +11,8 @@ class MethodParserDialect():
         self.resolver = resolver
         
         def resolving_method(event):
+            if event.instance_method==True:
+                return
             if event.method is not None:
                 method = trim_field_reference(event.method)
                 if hasattr(self, '__' + method + '__') == True:
@@ -59,18 +61,22 @@ class MethodParserDialect():
         return {
             '$floor': list(args)
         }
-    
 
-class InstantMethodParserDialect():
+class InstanceMethodParser():
+    def __init__(self, resolver):
+        self.resolver = resolver
+
+class InstanceMethodParserDialect(InstanceMethodParser):
     def __init__(self, resolver):
         """Initializes an instant method parser dialect
 
         Args:
             resolver (MethodResolver)
         """
-        self.resolver = resolver
-        
+        super().__init__(resolver)
         def resolving_method(event):
+            if event.instance_method==False:
+                return
             if event.method is not None:
                 method = trim_field_reference(event.method)
                 func = None

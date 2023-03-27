@@ -2,7 +2,7 @@ import ast
 from dill.source import getsource
 from ..common import expect, SyncSeriesEventEmitter, object
 from .query_field import is_qualified_reference, format_any_field_reference
-from .method_parser import MethodParserDialect, InstantMethodParserDialect
+from .method_parser import MethodParserDialect, InstanceMethodParserDialect
 
 class ClosureParser:
     def __init__(self):
@@ -14,7 +14,7 @@ class ClosureParser:
         # add method parsers
         self.__parsers__ = [
             MethodParserDialect(self),
-            InstantMethodParserDialect(self)
+            InstanceMethodParserDialect(self)
         ]
 
     def parse_filter(self, func, params: dict = None):
@@ -195,11 +195,17 @@ class ClosureParser:
         return self.params.get(expr.id)
 
     def parse_method_call(self, expr: ast.Call):
-        method = format_any_field_reference(expr.func.id)
         arguments = []
+        instance_method = False
+        if type(expr.func) is ast.Attribute:
+            method = expr.func.attr
+            instance_method = True
+            arguments.append(self.parse_common(expr.func.value))
+        else:
+            method = format_any_field_reference(expr.func.id)
         for arg in expr.args:
             arguments.append(self.parse_common(arg))
-        event = object(target=self,method=method)
+        event = object(target=self,method=method,instance_method=instance_method)
         self.resolving_method.emit(event)
         if event.resolve is not None:
             return event.resolve(*arguments)

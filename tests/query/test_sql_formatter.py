@@ -140,3 +140,10 @@ def test_use_floor():
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,FLOOR(price) AS price FROM ProductData')
 
+def test_use_trim():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name,category=x.category.upper())
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,UPPER(category) AS category FROM ProductData')
+

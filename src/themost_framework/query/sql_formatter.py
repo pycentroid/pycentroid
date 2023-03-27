@@ -177,32 +177,32 @@ class SqlDialect:
 
     def __substr__(self, expr, pos, length=None):
         if length is None:
-            return f'(SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1))'
-        return f'(SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1, {self.escape(length)}))'
+            return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1)'
+        return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1, {self.escape(length)})'
 
     def __toLower__(self, expr):
-        return f'(LOWER({self.escape(expr)})'
+        return f'LOWER({self.escape(expr)})'
 
     def __toUpper__(self, expr):
-        return f'(UPPER({self.escape(expr)})'
+        return f'UPPER({self.escape(expr)})'
 
     def __year__(self, expr):
-        return f'(YEAR({self.escape(expr)})'
+        return f'YEAR({self.escape(expr)})'
 
     def __month__(self, expr):
-        return f'(MONTH({self.escape(expr)})'
+        return f'MONTH({self.escape(expr)})'
 
     def __dayOfMonth__(self, expr):
-        return f'(DAY({self.escape(expr)})'
+        return f'DAY({self.escape(expr)})'
 
     def __hour__(self, expr):
-        return f'(HOUR({self.escape(expr)})'
+        return f'HOUR({self.escape(expr)})'
 
     def __minute__(self, expr):
-        return f'(MINUTE({self.escape(expr)})'
+        return f'MINUTE({self.escape(expr)})'
 
     def __second__(self, expr):
-        return f'(SECOND({self.escape(expr)})'
+        return f'SECOND({self.escape(expr)})'
 
     def __add__(self, **args):
         exprs = []
