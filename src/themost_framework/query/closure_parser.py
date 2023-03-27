@@ -123,6 +123,19 @@ class ClosureParser:
                     attr = '$' + obj.attr + '.' + attr[1:]
                 # get next value
                 obj = obj.value
+            if type(obj) is ast.Name:
+                # try to find argument
+                arg = next(filter(lambda x:x.arg==obj.id, self.args), None)
+                if arg is not None:
+                    # try to check if the last argument is an object property like datetime.year
+                    # split attribute
+                    attrs = attr.split('.')
+                    if len(attrs) == 2: # e.g. ['$releaseDate', 'year']
+                        # try to resolve member
+                        event = object(target = self, method = attrs[1],instance_method=True)
+                        self.resolving_method.emit(event)
+                        if event.resolve is not None:
+                            return event.resolve(attrs[0])
             # emit event
             event = object(target = self, member = attr)
             if is_qualified_reference(attr):

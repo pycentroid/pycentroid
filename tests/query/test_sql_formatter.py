@@ -147,3 +147,17 @@ def test_use_trim():
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,UPPER(category) AS category FROM ProductData')
 
+def test_use_trim():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name.strip(),category=x.category.upper())
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,TRIM(name) AS name,UPPER(category) AS category FROM ProductData')
+
+def test_use_datetime_year():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name,releaseYear=x.releaseDate.year)
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,YEAR(releaseDate) AS releaseYear FROM ProductData')
+

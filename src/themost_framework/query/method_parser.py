@@ -132,11 +132,6 @@ class InstanceMethodParserDialect(InstanceMethodParser):
             '$trim': list(args)
         }
     
-    def __strip__(self, *args):
-        return {
-            '$trim': list(args)
-        }
-    
     def __startswith__(self, *args):
         return {
             '$eq': [
