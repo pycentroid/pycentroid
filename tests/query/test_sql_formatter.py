@@ -133,3 +133,10 @@ def test_use_round():
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,ROUND(price,2) AS price FROM ProductData')
 
+def test_use_floor():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name,price=floor(x.price))
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,FLOOR(price) AS price FROM ProductData')
+

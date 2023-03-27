@@ -2,7 +2,7 @@ import ast
 from dill.source import getsource
 from ..common import expect, SyncSeriesEventEmitter, object
 from .query_field import is_qualified_reference, format_any_field_reference
-
+from .method_parser import MethodParserDialect, InstantMethodParserDialect
 
 class ClosureParser:
     def __init__(self):
@@ -11,6 +11,11 @@ class ClosureParser:
         self.resolving_method = SyncSeriesEventEmitter()
         self.args = []
         self.params = {}
+        # add method parsers
+        self.__parsers__ = [
+            MethodParserDialect(self),
+            InstantMethodParserDialect(self)
+        ]
 
     def parse_filter(self, func, params: dict = None):
         module: ast.Module = ast.parse(getsource(func).strip())
@@ -196,10 +201,10 @@ class ClosureParser:
             arguments.append(self.parse_common(arg))
         event = object(target=self,method=method)
         self.resolving_method.emit(event)
-        method = event.method
-        return {
-            method: arguments
-        }
+        if event.resolve is not None:
+            return event.resolve(*arguments)
+        else:
+            Exception(f'{event.method}[] method has not yet implemented.')
 
     def parse_common(self, expr):
         # and try to parse it base on type

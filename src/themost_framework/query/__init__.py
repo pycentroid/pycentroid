@@ -6,6 +6,6 @@ from .utils import SqlUtils, SelectMap, select, CancelTransactionError, TestUtil
 from .object_name_validator import ObjectNameValidator, ValidatorPatterns, InvalidObjectNameError
 from .sql_formatter import SqlDialect, SqlFormatter, SqlDialectOptions
 from .resolvers import MemberResolver, MethodResolver
+from .method_parser import MethodParserDialect, InstantMethodParserDialect
 from .closure_parser import ClosureParser
-
 from .data_objects import DataAdapter, DataTable, DataView, DataTableIndex, DataColumn
