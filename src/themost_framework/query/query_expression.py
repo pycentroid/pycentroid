@@ -1,7 +1,7 @@
 import inspect
 
 from themost_framework.common import expect, NoneError
-from .lamda_parser import LamdaParser
+from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
 
@@ -48,7 +48,7 @@ class QueryExpression:
         self.__insert__ = None
         self.___delete___ = None
         if inspect.isfunction(args[0]):
-            self.__select__ = LamdaParser().parse_select(*args)
+            self.__select__ = ClosureParser().parse_select(*args)
             return self
         self.__select__ = {}
         for arg in args:
@@ -74,7 +74,7 @@ class QueryExpression:
             self.__left__ = QueryField(*args)
         if inspect.isfunction(args[0]):
             # parse callable as where statement
-            self.__where__ = LamdaParser().parse_filter(*args)
+            self.__where__ = ClosureParser().parse_filter(*args)
         
         return self
     
@@ -504,7 +504,7 @@ class QueryExpression:
     
     def order_by(self, expr):
         if inspect.isfunction(expr):
-            arguments = LamdaParser().parse_select(expr)
+            arguments = ClosureParser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, 1)
             return self
@@ -513,7 +513,7 @@ class QueryExpression:
     def order_by_descending(self, expr):
         expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or then_by() first.'))
         if inspect.isfunction(expr):
-            arguments = LamdaParser().parse_select(expr)
+            arguments = ClosureParser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
@@ -521,7 +521,7 @@ class QueryExpression:
     
     def then_by(self, expr):
         if inspect.isfunction(expr):
-            arguments = LamdaParser().parse_select(expr)
+            arguments = ClosureParser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
@@ -530,7 +530,7 @@ class QueryExpression:
     def then_by_descending(self, expr):
         expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or then_by() first.'))
         if inspect.isfunction(expr):
-            arguments = LamdaParser().parse_select(expr)
+            arguments = ClosureParser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
@@ -539,7 +539,7 @@ class QueryExpression:
     def group_by(self, *args):
         arguments = args
         if inspect.isfunction(args[0]):
-            arguments = LamdaParser().parse_select(*args)
+            arguments = ClosureParser().parse_select(*args)
         self.__group_by__ = []
         for arg in arguments:
             if type(arg) is str:

@@ -1,7 +1,6 @@
 import pytest
 from themost_framework.sqlite import SqliteAdapter
-from themost_framework.query import DataColumn, QueryExpression, select
-from themost_framework.common import TestUtils
+from themost_framework.query import DataColumn, QueryExpression, select, TestUtils
 from unittest import TestCase
 
 __author__ = "Kyriakos Barbounakis"

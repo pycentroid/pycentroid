@@ -1,9 +1,9 @@
 import ast
 from dill.source import getsource
-from ..common import expect, SyncSeriesEventEmitter
+from ..common import expect, SyncSeriesEventEmitter, object
+from .query_field import is_qualified_reference, format_any_field_reference
 
-
-class LamdaParser:
+class ClosureParser:
     def __init__(self):
         self.resolving_member = SyncSeriesEventEmitter()
         self.resolving_join_member = SyncSeriesEventEmitter()
@@ -101,6 +101,13 @@ class LamdaParser:
             obj = expr.value
             expect(obj.id).to_equal(self.args[0].arg, Exception('Invalid member expression. Expected an expression '
                                                                 'which uses a member of the first argument'))
+            event = object(target = self, member = attr)
+            if is_qualified_reference(attr):
+                self.resolving_join_member.emit(event)
+            else:
+                self.resolving_member.emit(event)
+            if event.member != attr:
+                return event.member
             return attr
         if type(expr.value) is ast.Attribute:
             # a nested member like x.address.streetAddress
@@ -110,6 +117,14 @@ class LamdaParser:
                     attr = '$' + obj.attr + '.' + attr[1:]
                 # get next value
                 obj = obj.value
+            # emit event
+            event = object(target = self, member = attr)
+            if is_qualified_reference(attr):
+                self.resolving_join_member.emit(event)
+            else:
+                self.resolving_member.emit(event)
+            if event.member != attr:
+                return event.member
             return attr
 
     def parse_sequence(self, expr):
@@ -173,10 +188,24 @@ class LamdaParser:
         expect(expr.id in self.params).to_be_truthy(Exception('The specified param cannot be found'))
         return self.params.get(expr.id)
 
+    def parse_method_call(self, expr: ast.Call):
+        method = format_any_field_reference(expr.func.id)
+        arguments = []
+        for arg in expr.args:
+            arguments.append(self.parse_common(arg))
+        event = object(target=self,method=method)
+        self.resolving_method.emit(event)
+        method = event.method
+        return {
+            method: arguments
+        }
+
     def parse_common(self, expr):
         # and try to parse it base on type
         if type(expr) is ast.Attribute:
             return self.parse_member(expr)
+        if type(expr) is ast.Call:
+            return self.parse_method_call(expr)
         if type(expr) is ast.BoolOp:
             return self.parse_logical(expr)
         if type(expr) is ast.Compare:

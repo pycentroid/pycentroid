@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import LamdaParser, QueryExpression, QueryField, select
+from themost_framework.query import ClosureParser, QueryExpression, QueryField, select
 from dill.source import getsource
 import ast
 
@@ -70,7 +70,7 @@ def test_sequence_dict():
         TestCase().assertEqual(type(attribute), ast.Attribute)
 
 def test_parse_filter():
-    parser = LamdaParser()
+    parser = ClosureParser()
     result = parser.parse_filter(lambda x: x.category == 'Laptops' 
         and x.price > 900)
     TestCase().assertEqual(result, {
@@ -89,7 +89,7 @@ def test_parse_filter():
     })
 
 def test_parse_or():
-    parser = LamdaParser()
+    parser = ClosureParser()
     result = parser.parse_filter(lambda x: x.category == 'Laptops' or x.category == 'Desktops')
     TestCase().assertEqual(result, {
         '$or': [
@@ -107,7 +107,7 @@ def test_parse_or():
     })
 
 def test_parse_with_params():
-    parser = LamdaParser()
+    parser = ClosureParser()
     result = parser.parse_filter(lambda x,category,otherCategory: x.category == category or x.category == otherCategory, {
         'category': 'Laptops',
         'otherCategory': 'Desktops'
@@ -128,7 +128,7 @@ def test_parse_with_params():
     })
 
 def test_parse_sequence():
-    parser = LamdaParser()
+    parser = ClosureParser()
     result = parser.parse_select(lambda x: [ x.id, x.name, x.price ])
     TestCase().assertEqual(result, {
         'id': 1,

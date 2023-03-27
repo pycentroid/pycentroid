@@ -4,7 +4,7 @@ import sqlite3
 import re
 import time
 from typing import Callable
-from themost_framework.common import expect, ObjectMap
+from themost_framework.common import expect, AnyObject
 
 class SqliteTableIndex(DataTableIndex):
 
@@ -43,12 +43,12 @@ class SqliteTableIndex(DataTableIndex):
         # prepare index list
         filtered = filter(lambda x:x.origin=='c', results)
         # with name and columns
-        indexes = list(map(lambda x:ObjectMap(name=x.name,columns=[]), filtered))
+        indexes = list(map(lambda x:AnyObject(name=x.name,columns=[]), filtered))
         # enumerate indexes
         for index in indexes:
             # and get column list
             columns = self.__adapter__.execute(f'PRAGMA INDEX_INFO({index.name})')
-            index.columns = list(map(lambda x:ObjectMap(name=x.name), columns))
+            index.columns = list(map(lambda x:AnyObject(name=x.name), columns))
         return indexes
 
 
@@ -164,7 +164,7 @@ class SqliteTable(DataTable):
         results = self.__adapter__.execute(f'PRAGMA table_info({self.table});')
         cols = []
         for result in results:
-            col = ObjectMap(name=result.name, ordinal=result.cid, type=result.type,
+            col = AnyObject(name=result.name, ordinal=result.cid, type=result.type,
                 nullable = False if result.notnull == 1 else True, primary = (result.pk == 1))
             col.size = None
             col.scale = None
@@ -254,7 +254,7 @@ class SqliteAdapter(DataAdapter):
                 for description in cur.description:
                     cols.append(description[0])
                 for result in results:
-                    item = ObjectMap()
+                    item = AnyObject()
                     i = 0
                     for col in cols:
                         setattr(item, col, result[i])

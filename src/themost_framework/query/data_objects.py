@@ -1,8 +1,8 @@
 from typing import Callable
 from abc import abstractmethod
-from themost_framework.common import ObjectMap
+from themost_framework.common import AnyObject
 
-class DataColumn(ObjectMap):
+class DataColumn(AnyObject):
     def __init__(self, **kwargs):
         self.name = None
         self.type = None

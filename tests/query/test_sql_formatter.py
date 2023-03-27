@@ -1,6 +1,7 @@
 import pytest
 from unittest import TestCase
 from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
+from datetime import datetime
 
 class Product:
     def __init__(self, name):
@@ -27,13 +28,15 @@ def test_format_select():
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT * FROM Product WHERE (category=\'Laptops\' OR category=\'Desktops\')')
 
-    query = QueryExpression('Product').select(
+def test_format_select_with_lambda():
+    
+    query = QueryExpression('ProductData').select(
         lambda x: [ x.id, x.name, x.category, x.price ]
         ).where(
             lambda x: x.category == 'Laptops' or x.category == 'Desktops'
             )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,category,price FROM Product WHERE (category=\'Laptops\' OR category=\'Desktops\')')
+    TestCase().assertEqual(sql, 'SELECT id,name,category,price FROM ProductData WHERE (category=\'Laptops\' OR category=\'Desktops\')')
 
 def test_format_select_with_map():
     
@@ -122,4 +125,11 @@ def test_format_group_by():
     ).from_collection('ProductData').group_by(QueryField('category'))
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT COUNT(id) AS total,category FROM ProductData GROUP BY category')
+
+def test_use_round():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name,price=round(x.price,2))
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,ROUND(price,2) AS price FROM ProductData')
 

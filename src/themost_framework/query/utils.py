@@ -1,7 +1,9 @@
 import re
+from typing import Callable
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from .object_name_validator import ObjectNameValidator
+from .data_objects import DataAdapter
 
 class SelectMap:
     def __init__(self, **kwargs):
@@ -10,6 +12,25 @@ class SelectMap:
 
 def select(**kwargs):
     return SelectMap(**kwargs)
+
+class CancelTransactionError(Exception):
+    def __init__(self):
+        super().__init__('cancel')
+
+class TestUtils:
+    def __init__(self, db: DataAdapter):
+        self.__adapter__ = db
+
+    def execute_in_transaction(self, func: Callable):
+        try:
+            def execute():
+                func()
+                raise CancelTransactionError()
+            # execute in transaction
+            self.__adapter__.execute_in_transaction(execute)
+        except Exception as error:
+            if type(error) is not CancelTransactionError:
+                raise error
 
 class SqlUtils:
 
