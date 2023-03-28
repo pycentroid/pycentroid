@@ -61,6 +61,36 @@ class MethodParserDialect():
         return {
             '$floor': list(args)
         }
+    
+    def __year__(self, *args):
+        return {
+            '$year': list(args)
+        }
+    
+    def __month__(self, *args):
+        return {
+            '$month': list(args)
+        }
+    
+    def __day__(self, *args):
+        return {
+            '$dayOfMonth': list(args)
+        }
+    
+    def __hour__(self, *args):
+        return {
+            '$hour': list(args)
+        }
+
+    def __minute__(self, *args):
+        return {
+            '$minute': list(args)
+        }
+    
+    def __second__(self, *args):
+        return {
+            '$second': list(args)
+        }
 
 class InstanceMethodParser():
     def __init__(self, resolver):
@@ -100,36 +130,6 @@ class InstanceMethodParserDialect(InstanceMethodParser):
     def __index__(self, *args):
         return {
             '$indexOfBytes': list(args)
-        }
-    
-    def __year__(self, *args):
-        return {
-            '$year': list(args)
-        }
-    
-    def __month__(self, *args):
-        return {
-            '$month': list(args)
-        }
-    
-    def __day__(self, *args):
-        return {
-            '$dayOfMonth': list(args)
-        }
-    
-    def __hour__(self, *args):
-        return {
-            '$hour': list(args)
-        }
-
-    def __minute__(self, *args):
-        return {
-            '$minute': list(args)
-        }
-    
-    def __second__(self, *args):
-        return {
-            '$second': list(args)
         }
     
     def __strip__(self, *args):

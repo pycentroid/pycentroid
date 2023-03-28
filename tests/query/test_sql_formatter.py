@@ -1,6 +1,7 @@
 import pytest
 from unittest import TestCase
 from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
+from themost_framework.common import year, month
 from datetime import datetime
 
 class Product:
@@ -156,14 +157,14 @@ def test_use_trim():
 
 def test_use_datetime_year():
     query = QueryExpression('ProductData').select(
-        lambda x:select(id=x.id,name=x.name,releaseYear=x.releaseDate.year)
+        lambda x:select(id=x.id,name=x.name,releaseYear=year(x.releaseDate))
     )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,YEAR(releaseDate) AS releaseYear FROM ProductData')
 
 def test_use_datetime_month():
     query = QueryExpression('ProductData').select(
-        lambda x:select(id=x.id,name=x.name,releaseMonth=x.releaseDate.month)
+        lambda x:select(id=x.id,name=x.name,releaseMonth=month(x.releaseDate))
     )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,MONTH(releaseDate) AS releaseMonth FROM ProductData')
