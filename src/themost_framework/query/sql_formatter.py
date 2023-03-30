@@ -269,6 +269,9 @@ class SqlDialect:
         result += ')'
         return result
 
+    def __cond__(self, *args):
+        return f'(CASE {self.escape(args[0])} WHEN 1 THEN {self.escape(args[1])} ELSE {self.escape(args[2])} END)'
+
 
 class SqlFormatter:
     def __init__(self, dialect=None):

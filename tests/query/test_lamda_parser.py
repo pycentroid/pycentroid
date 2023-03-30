@@ -81,6 +81,24 @@ def test_substring_expr():
     TestCase().assertEqual(type(substr), ast.Subscript)
 
     TestCase().assertEqual(substr.slice.upper.n, 5)
+
+def test_if_then_else_expr():
+
+    func = lambda x: ['active' if x.active == True else 'inactive']
+    # get module
+    module:ast.Module = ast.parse(getsource(func).strip())
+    # get function
+    body: ast.Assign = module.body[0]
+    # get attribute
+    select: ast.List = body.value.body;
+    TestCase().assertEqual(type(select), ast.List)
+
+    if_expr = select.elts[0];
+    TestCase().assertEqual(type(if_expr), ast.IfExp)
+    TestCase().assertEqual(type(if_expr.test), ast.Compare)
+    TestCase().assertEqual(type(if_expr.body), ast.Constant)
+    TestCase().assertEqual(type(if_expr.orelse), ast.Constant)
+    
     
 
 def test_sequence_dict():

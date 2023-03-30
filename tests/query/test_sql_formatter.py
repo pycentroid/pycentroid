@@ -177,17 +177,29 @@ def test_use_substring():
     TestCase().assertEqual(sql, 'SELECT id,SUBSTRING(name,0 + 1,6) AS name FROM ProductData')
 
 def test_startswith():
-    query = QueryExpression('ProductData').where(lambda x: x.name.startswith('Apple') == True)
+    query = QueryExpression('ProductData').where(
+        lambda x: x.name.startswith('Apple') == True
+        )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'^Apple\')=1)=true)')
 
 def test_endswith():
-    query = QueryExpression('ProductData').where(lambda x: x.name.endswith('Printer') == True)
+    query = QueryExpression('ProductData').where(
+        lambda x: x.name.endswith('Printer') == True
+        )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'Printer$\')=1)=true)')
 
 def test_contains():
-    query = QueryExpression('ProductData').where(lambda x: x.name.__contains__('Printer') == True)
+    query = QueryExpression('ProductData').where(
+        lambda x: x.name.__contains__('Printer') == True
+    )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'Printer\')=1)=true)')
 
+def test_if_expr():
+    query = QueryExpression('ProductData').select(
+        lambda x: select(id=x.id,name=x.name,priceStatus=('expensive' if x.price > 800 else 'normal'))
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,name,(CASE (price>800) WHEN 1 THEN \'expensive\' ELSE \'normal\' END) AS priceStatus FROM ProductData')

@@ -231,7 +231,7 @@ class ClosureParser:
 
     def parse_subscript(self, expr: ast.Subscript):
         expr1 = self.parse_common(expr.value) 
-        # getstart
+        # get start
         start = 0 if expr.slice.lower is None else expr.slice.lower.n
         result = {
             '$substr': [
@@ -239,10 +239,24 @@ class ClosureParser:
                 start
             ]
         }
+        # get length
         length = 0 if expr.slice.upper is None else expr.slice.upper.n
+        # and append param
         if length > 0:
             result['$substr'].append(length)
         return result
+
+    def parse_if(self, expr: ast.IfExp):
+        if_expr = self.parse_common(expr.test)
+        then_expr = self.parse_common(expr.body)
+        else_expr =  self.parse_common(expr.orelse)
+        return {
+            '$cond': [
+                if_expr,
+                then_expr,
+                else_expr
+            ]
+        }
 
     def parse_common(self, expr):
         # and try to parse it base on type
@@ -250,6 +264,8 @@ class ClosureParser:
             return self.parse_member(expr)
         if type(expr) is ast.Subscript:
             return self.parse_subscript(expr)
+        if type(expr) is ast.IfExp:
+            return self.parse_if(expr)
         if type(expr) is ast.Call:
             return self.parse_method_call(expr)
         if type(expr) is ast.BoolOp:
