@@ -199,3 +199,33 @@ class QueryField(dict):
 
     def to_upper(self):
         return self.__use_method_call__('$toUpper')
+
+    def __search__(self, pattern):
+        field: str = get_first_key(self)
+        value = self.__getitem__(field)
+        # check if field expression is simple e.g. { "givenName": 1 }
+        if type(value) is int and value == 1:
+            # use field reference e.g. $givenName
+            field = None
+            value = format_any_field_reference(field)
+        self.__delitem__(field)
+        regex_match = {
+            'input': value,
+            'regex': pattern
+        }
+        if field is None:
+            self['$regexMatch'] = regex_match
+        else:
+            self[field] = {
+                '$regexMatch': regex_match
+            }
+        return self
+
+    def startswith(self, search: str):
+       return self.__search__('^' + re.escape(search))
+    
+    def endswith(self, search: str):
+        return self.__search__(re.escape(search) + '$')
+    
+    def contains(self, search: str):
+        return self.__search__(re.escape(search))

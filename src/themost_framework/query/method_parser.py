@@ -1,3 +1,4 @@
+import re
 from .resolvers import MemberResolver, MethodResolver
 from .query_field import trim_field_reference
 
@@ -86,6 +87,7 @@ class MethodParserDialect():
         return {
             '$minute': list(args)
         }
+        
     
     def __second__(self, *args):
         return {
@@ -132,18 +134,16 @@ class InstanceMethodParserDialect(InstanceMethodParser):
             '$indexOfBytes': list(args)
         }
     
-    def __strip__(self, *args):
-        return {
-            '$trim': list(args)
-        }
-    
     def __startswith__(self, *args):
         return {
             '$eq': [
                 {
-                    '$indexOfBytes': list(args)
+                    '$regexMatch': {
+                        'input': args[0],
+                        'regex': '^' + re.escape(args[1])
+                    }
                 },
-                0
+                1
             ]
         }
     
@@ -151,8 +151,49 @@ class InstanceMethodParserDialect(InstanceMethodParser):
         return {
             '$eq': [
                 {
-                    '$indexOfBytes': args
+                    '$regexMatch': {
+                        'input': args[0],
+                        'regex': re.escape(args[1]) + '$'
+                    }
                 },
-                0
+                1
             ]
         }
+    
+    def ____contains____(self, *args):
+        return {
+            '$eq': [
+                {
+                    '$regexMatch': {
+                        'input': args[0],
+                        'regex': re.escape(args[1])
+                    }
+                },
+                1
+            ]
+        }
+    
+    def __strip__(self, *args):
+        return {
+            '$trim': list(args)
+        }
+    
+    # def __startswith__(self, *args):
+    #     return {
+    #         '$eq': [
+    #             {
+    #                 '$indexOfBytes': list(args)
+    #             },
+    #             0
+    #         ]
+    #     }
+    
+    # def __endswith__(self, *args):
+    #     return {
+    #         '$eq': [
+    #             {
+    #                 '$indexOfBytes': args
+    #             },
+    #             0
+    #         ]
+    #     }

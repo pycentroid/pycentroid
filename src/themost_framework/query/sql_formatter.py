@@ -11,8 +11,11 @@ class SqlDialectOptions:
         self.name_format = name_format
         self.force_alias = force_alias
 
+LogicalOperators = [ '$and', '$or']
+ComparisonOperators = [ '$eq', '$ne', '$gt', '$gte', '$lt', '$lte' ]
 
 class SqlDialect:
+
     Space = ' '
     From = 'FROM'
     Where = 'WHERE'
@@ -64,6 +67,18 @@ class SqlDialect:
         result += 'NULL' if nullable == True else 'NOT NULL'
         return result
 
+    def __is_logical_expression__(expr):
+        if expr is None:
+            return False
+        op = get_first_key(expr)
+        return op in LogicalOperators
+    
+    def __is_comparison_expression__(expr):
+        if expr is None:
+            return False
+        op = get_first_key(expr)
+        return op in ComparisonOperators
+
     # noinspection PyUnusedLocal
     def escape(self, value, unquoted=True):
         if type(value) is dict:
@@ -74,8 +89,10 @@ class SqlDialect:
                     params = value[key]
                     if type(params) is list:
                         return func(*params)
+                    elif type(params) is dict:
+                        return func(**params)
                     else:
-                        return func(self, params)
+                        return func(params)
             elif value[key] == 1:
                 # return object name
                 return self.escape_name(key)
@@ -96,26 +113,26 @@ class SqlDialect:
         final_right = self.escape(right)
         if final_right == 'NULL':
             return f'{self.escape(left)} IS NULL'
-        return f'{self.escape(left)}={final_right}'
+        return f'({self.escape(left)}={final_right})'
 
     # noinspection PyMethodOverriding
     def __ne__(self, left, right):
         final_right = self.escape(right)
         if final_right == 'NULL':
             return f'NOT {self.escape(left)} IS NULL'
-        return f'{self.escape(left)}<>{final_right}'
+        return f'(NOT {self.escape(left)}<>{final_right})'
 
     def __gt__(self, left, right):
-        return f'{self.escape(left)}>{self.escape(right)}'
+        return f'({self.escape(left)}>{self.escape(right)})'
 
     def __gte__(self, left, right):
-        return f'{self.escape(left)}>={self.escape(right)}'
+        return f'({self.escape(left)}>={self.escape(right)})'
 
     def __lt__(self, left, right):
-        return f'{self.escape(left)}<{self.escape(right)}'
+        return f'({self.escape(left)}<{self.escape(right)})'
 
     def __lte__(self, left, right):
-        return f'{self.escape(left)}<={self.escape(right)}'
+        return f'({self.escape(left)}<={self.escape(right)})'
 
     def __floor__(self, expr):
         return f'FLOOR({self.escape(expr)})'
@@ -179,6 +196,9 @@ class SqlDialect:
         if length is None:
             return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1)'
         return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1,{self.escape(length)})'
+
+    def __regexMatch__(self, input, regex):
+        return f'({self.escape(input)} REGEX {self.escape(regex)})'
 
     def __toLower__(self, expr):
         return f'LOWER({self.escape(expr)})'

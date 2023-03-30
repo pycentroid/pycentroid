@@ -15,19 +15,19 @@ def test_format_where():
     
     query = QueryExpression().where(lambda x: x.category == 'Laptops')
     sql = SqlFormatter().format_where(query.__where__)
-    TestCase().assertEqual(sql, 'category=\'Laptops\'')
+    TestCase().assertEqual(sql, '(category=\'Laptops\')')
 
     query = QueryExpression('Product').where(lambda x: x.category == 'Laptops' \
         or x.category == 'Desktops')
     sql = SqlFormatter().format_where(query.__where__)
-    TestCase().assertEqual(sql, '(category=\'Laptops\' OR category=\'Desktops\')')
+    TestCase().assertEqual(sql, '((category=\'Laptops\') OR (category=\'Desktops\'))')
 
 def test_format_select():
     
     query = QueryExpression('Product').where(lambda x: x.category == 'Laptops' \
         or x.category == 'Desktops')
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM Product WHERE (category=\'Laptops\' OR category=\'Desktops\')')
+    TestCase().assertEqual(sql, 'SELECT * FROM Product WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
 
 def test_format_select_with_lambda():
     
@@ -37,7 +37,7 @@ def test_format_select_with_lambda():
             lambda x: x.category == 'Laptops' or x.category == 'Desktops'
             )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,category,price FROM ProductData WHERE (category=\'Laptops\' OR category=\'Desktops\')')
+    TestCase().assertEqual(sql, 'SELECT id,name,category,price FROM ProductData WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
 
 def test_format_select_with_map():
     
@@ -47,7 +47,7 @@ def test_format_select_with_map():
             lambda x: x.category == 'Laptops' or x.category == 'Desktops'
             )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT id,name AS productName,category FROM Product WHERE (category=\'Laptops\' OR category=\'Desktops\')')
+    TestCase().assertEqual(sql, 'SELECT id,name AS productName,category FROM Product WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
 
 
 def test_format_update():
@@ -58,7 +58,7 @@ def test_format_update():
             lambda x: x.id == 121
             )
     sql = SqlFormatter().format_update(query)
-    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE id=121')
+    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE (id=121)')
 
     query = QueryExpression().update('Product').set(
         Product('Macbook Pro 13.3')
@@ -66,7 +66,7 @@ def test_format_update():
             lambda x: x.id == 121
             )
     sql = SqlFormatter().format_update(query)
-    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE id=121')
+    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE (id=121)')
 
 def test_format_insert():
     
@@ -93,7 +93,7 @@ def test_format_join():
             )
     )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT id,customer,orderDate,orderedItem FROM OrderData INNER JOIN ProductData ON orderedItem=ProductData.id')
+    TestCase().assertEqual(sql, 'SELECT id,customer,orderDate,orderedItem FROM OrderData INNER JOIN ProductData ON (orderedItem=ProductData.id)')
 
 def test_format_order_by():
     
@@ -175,4 +175,19 @@ def test_use_substring():
     )
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,SUBSTRING(name,0 + 1,6) AS name FROM ProductData')
+
+def test_startswith():
+    query = QueryExpression('ProductData').where(lambda x: x.name.startswith('Apple') == True)
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'^Apple\')=1)=true)')
+
+def test_endswith():
+    query = QueryExpression('ProductData').where(lambda x: x.name.endswith('Printer') == True)
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'Printer$\')=1)=true)')
+
+def test_contains():
+    query = QueryExpression('ProductData').where(lambda x: x.name.__contains__('Printer') == True)
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'Printer\')=1)=true)')
 
