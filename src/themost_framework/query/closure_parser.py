@@ -4,6 +4,10 @@ from ..common import expect, SyncSeriesEventEmitter, object
 from .query_field import is_qualified_reference, format_any_field_reference
 from .method_parser import MethodParserDialect, InstanceMethodParserDialect
 
+
+def count(field):
+    pass
+
 class ClosureParser:
     def __init__(self):
         self.resolving_member = SyncSeriesEventEmitter()
@@ -225,10 +229,27 @@ class ClosureParser:
         else:
             Exception(f'{event.method}[] method has not yet implemented.')
 
+    def parse_subscript(self, expr: ast.Subscript):
+        expr1 = self.parse_common(expr.value) 
+        # getstart
+        start = 0 if expr.slice.lower is None else expr.slice.lower.n
+        result = {
+            '$substr': [
+                expr1,
+                start
+            ]
+        }
+        length = 0 if expr.slice.upper is None else expr.slice.upper.n
+        if length > 0:
+            result['$substr'].append(length)
+        return result
+
     def parse_common(self, expr):
         # and try to parse it base on type
         if type(expr) is ast.Attribute:
             return self.parse_member(expr)
+        if type(expr) is ast.Subscript:
+            return self.parse_subscript(expr)
         if type(expr) is ast.Call:
             return self.parse_method_call(expr)
         if type(expr) is ast.BoolOp:

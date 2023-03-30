@@ -178,7 +178,7 @@ class SqlDialect:
     def __substr__(self, expr, pos, length=None):
         if length is None:
             return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1)'
-        return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1, {self.escape(length)})'
+        return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1,{self.escape(length)})'
 
     def __toLower__(self, expr):
         return f'LOWER({self.escape(expr)})'

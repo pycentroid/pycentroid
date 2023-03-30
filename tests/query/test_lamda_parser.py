@@ -53,6 +53,35 @@ def test_sequence_list():
     TestCase().assertEqual(type(select), ast.List)
     for attribute in select.elts:
         TestCase().assertEqual(type(attribute), ast.Attribute)
+    
+def test_substring_expr():
+
+    func = lambda x:  [x.category[1:]]
+    # get module
+    module:ast.Module = ast.parse(getsource(func).strip())
+    # get function
+    body: ast.Assign = module.body[0]
+    # get attribute
+    select: ast.List = body.value.body;
+    TestCase().assertEqual(type(select), ast.List)
+    substr = select.elts[0];
+    TestCase().assertEqual(type(substr), ast.Subscript)
+
+    TestCase().assertEqual(substr.slice.lower.n, 1)
+
+    func = lambda x:  [x.category[:5]]
+    # get module
+    module:ast.Module = ast.parse(getsource(func).strip())
+    # get function
+    body: ast.Assign = module.body[0]
+    # get attribute
+    select: ast.List = body.value.body;
+    TestCase().assertEqual(type(select), ast.List)
+    substr = select.elts[0];
+    TestCase().assertEqual(type(substr), ast.Subscript)
+
+    TestCase().assertEqual(substr.slice.upper.n, 5)
+    
 
 def test_sequence_dict():
 

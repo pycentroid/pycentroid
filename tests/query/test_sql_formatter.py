@@ -169,3 +169,10 @@ def test_use_datetime_month():
     sql = SqlFormatter().format_select(query)
     TestCase().assertEqual(sql, 'SELECT id,name,MONTH(releaseDate) AS releaseMonth FROM ProductData')
 
+def test_use_substring():
+    query = QueryExpression('ProductData').select(
+        lambda x:select(id=x.id,name=x.name[:6])
+    )
+    sql = SqlFormatter().format_select(query)
+    TestCase().assertEqual(sql, 'SELECT id,SUBSTRING(name,0 + 1,6) AS name FROM ProductData')
+

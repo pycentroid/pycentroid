@@ -7,5 +7,5 @@ from .object_name_validator import ObjectNameValidator, ValidatorPatterns, Inval
 from .sql_formatter import SqlDialect, SqlFormatter, SqlDialectOptions
 from .resolvers import MemberResolver, MethodResolver
 from .method_parser import MethodParserDialect, InstanceMethodParser, InstanceMethodParserDialect
-from .closure_parser import ClosureParser
+from .closure_parser import ClosureParser, count
 from .data_objects import DataAdapter, DataTable, DataView, DataTableIndex, DataColumn
