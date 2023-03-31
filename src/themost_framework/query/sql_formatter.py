@@ -323,7 +323,7 @@ class SqlFormatter:
         sql = ''
         if query.__order_by__ is None:
             return sql;
-        if len(query.__order_by__) is 0:
+        if len(query.__order_by__) == 0:
             return sql
         sql += SqlDialect.OrderBy
         sql += SqlDialect.Space

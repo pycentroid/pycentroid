@@ -5,6 +5,7 @@ import re
 import time
 from typing import Callable
 from themost_framework.common import expect, AnyObject
+import logging
 
 class SqliteTableIndex(DataTableIndex):
 
@@ -266,10 +267,11 @@ class SqliteAdapter(DataAdapter):
             if type(query) is str:
                 sql = query
             elif type(query) is QueryExpression:
-                sql = SqliteFormatter().format_select(query)
+                sql = SqliteFormatter().format(query)
             else:
                 TypeError('Expected string or an instance of query expression')
             # execute query
+            logging.debug('SQL >' + sql)
             cur.execute(sql)
             # if query is SELECT or PRAGMA
             if re.search('^(SELECT|PRAGMA)', sql, re.DOTALL) is not None:
