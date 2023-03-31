@@ -105,6 +105,13 @@ class SqliteTable(DataTable):
         if should_copy_table == True:
             # rename table (with a random name)
             rename = dialect.escape_name('__' + self.table + '_' + str(int(time.time())) + '__')
+
+            # drop indexes
+            table_indexes = self.indexes()
+            indexes = table_indexes.list()
+            for index in indexes:
+                table_indexes.drop(index.name)
+
             self.__adapter__.execute(f'ALTER TABLE {table} RENAME TO {rename}')
             # create new table
             self.create(fields)
@@ -209,6 +216,23 @@ class SqliteView(DataView):
         view = SqliteDialect().escape_name(self.view)
         return self.__adapter__.execute(f'DROP VIEW IF EXISTS {view};')
 
+
+def regexp_like(value, pattern, match_type = None):
+    if value is None:
+        return None
+    flags = re.MULTILINE | re.UNICODE
+    if match_type is not None:
+        if match_type.__contains__('i'): # i: Case-insensitive matching.
+            flags = flags | re.IGNORECASE
+        if match_type.__contains__('n'): # n: The . character matches line terminators. The default is for . matching to stop at the end of a line.
+            flags = flags | re.DOTALL
+    pattern = re.compile(pattern)
+    return 1 if pattern.search(value) is not None else 0
+
+def regexp(value, pattern):
+    return regexp_like(value, pattern)
+
+
 class SqliteAdapter(DataAdapter):
     
     def __init__(self, options):
@@ -220,6 +244,8 @@ class SqliteAdapter(DataAdapter):
     def open(self):
         if self.__raw_connection__ is None:
             self.__raw_connection__ = sqlite3.connect(self.options.database)
+            self.__raw_connection__.create_function('REGEXP', 2, regexp)
+            self.__raw_connection__.create_function('REGEXP_LIKE', 3, regexp_like)
     
     def close(self):
         if (self.__raw_connection__):
@@ -244,7 +270,7 @@ class SqliteAdapter(DataAdapter):
             else:
                 TypeError('Expected string or an instance of query expression')
             # execute query
-            cur.execute(query)
+            cur.execute(sql)
             # if query is SELECT or PRAGMA
             if re.search('^(SELECT|PRAGMA)', sql, re.DOTALL) is not None:
                 ## fetch records

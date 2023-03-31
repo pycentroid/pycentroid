@@ -1,14 +1,15 @@
 import pytest
 from themost_framework.sqlite import SqliteAdapter
-from themost_framework.query import DataColumn, QueryExpression, select, TestUtils
+from themost_framework.common import object
+from themost_framework.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
 from unittest import TestCase
+import re
 
 __author__ = "Kyriakos Barbounakis"
 __copyright__ = "Kyriakos Barbounakis"
 __license__ = "BSD-3-Clause"
 
-connection_options = lambda: None
-connection_options.database = 'tests/db/local.db'
+connection_options = object(database='tests/db/local.db')
 
 
 def test_create_connection():
@@ -132,3 +133,13 @@ def test_create_index():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+def test_sqlite_regex():
+    db = SqliteAdapter(connection_options)
+    db.open()
+    Products = QueryEntity('ProductData')
+    items = db.execute(
+        QueryExpression(Products).where(lambda x: x.name.__contains__('Apple') == True)
+    )
+    TestCase().assertGreater(len(items), 0)
+    for item in items:
+        TestCase().assertEqual(item.name.__contains__('Apple'), True)

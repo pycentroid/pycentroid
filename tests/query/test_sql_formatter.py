@@ -181,21 +181,21 @@ def test_startswith():
         lambda x: x.name.startswith('Apple') == True
         )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'^Apple\')=1)=true)')
+    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'^Apple\', \'m\')=1)=true)')
 
 def test_endswith():
     query = QueryExpression('ProductData').where(
         lambda x: x.name.endswith('Printer') == True
         )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'Printer$\')=1)=true)')
+    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer$\', \'m\')=1)=true)')
 
 def test_contains():
     query = QueryExpression('ProductData').where(
         lambda x: x.name.__contains__('Printer') == True
     )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE (((name REGEX \'Printer\')=1)=true)')
+    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer\', \'m\')=1)=true)')
 
 def test_if_expr():
     query = QueryExpression('ProductData').select(

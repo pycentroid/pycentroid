@@ -1,4 +1,5 @@
 from themost_framework.query import SqlDialect, SqlFormatter, SqlDialectOptions
+import re
 
 SqlDialectTypes = [
         ['Boolean', 'INTEGER(0,1)'],
@@ -73,7 +74,18 @@ class SqliteDialect(SqlDialect):
     def __to_string__(self, expr):
         return f'CAST({self.escape(expr)} as TEXT)'
 
-
+    def __substr__(self, expr, pos, length=None):
+        if length is None:
+            return f'SUBSTR({self.escape(expr)},{self.escape(pos)} + 1)'
+        return f'SUBSTR({self.escape(expr)},{self.escape(pos)} + 1,{self.escape(length)})'
+    
+    def __regexMatch__(self, input, regex, options = None):
+        match_type = 'm' # support multiline
+        if options is not None and options.__contains__('i'): # ignore case
+            match_type += 'i'
+        if options is not None and options.__contains__('s'): # allows the dot character (i.e. .) to match all characters including newline characters
+            match_type += 'n'
+        return f'REGEXP_LIKE({self.escape(input)},{self.escape(regex)}, {self.escape(match_type)})'
 
 class SqliteFormatter(SqlFormatter):
     def __init__(self):
