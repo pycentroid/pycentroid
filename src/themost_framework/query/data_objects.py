@@ -1,6 +1,7 @@
 from typing import Callable
 from abc import abstractmethod
 from themost_framework.common import AnyObject
+import logging
 
 class DataColumn(AnyObject):
     def __init__(self, **kwargs):
@@ -12,6 +13,16 @@ class DataColumn(AnyObject):
         super().__init__(**kwargs)
 
 class DataAdapter:
+
+    __raw_connection__ = None
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception as error:
+            logging.warning('An error occurred while closing database connection.')
+            logging.warning(error)
+
 
     @abstractmethod
     def open(self):

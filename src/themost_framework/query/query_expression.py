@@ -1,5 +1,5 @@
 import inspect
-
+import typing
 from themost_framework.common import expect, NoneError
 from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
@@ -43,7 +43,17 @@ class QueryExpression:
     def from_collection(self, collection):
         return self.__set_collection__(collection)
 
+
     def select(self, *args):
+        """Defines a collection of attributes that are going to be collected
+
+        Args:
+            func (Callable): A lambda function which returns a list of attributes that are going to be used for selecting items
+            params (*, optional): The parameters of the given select callable. Defaults to None.
+
+        Returns:
+            self: Returns the current query expression for further processing
+        """
         self.__update__ = None
         self.__insert__ = None
         self.___delete___ = None
@@ -67,14 +77,23 @@ class QueryExpression:
                 raise 'Expected string, a dictionary object or an instance of QueryField class'
         return self
 
-    def where(self, *args):
+    def where(self, *args, **kwargs):
+        """Defines a where clause for filtering items
+
+        Args:
+            func (Callable): A lambda function which is going to be used for filtering objects
+            params (*, optional): The parameters of the given where callable. Defaults to None.
+
+        Returns:
+            self: Returns the current query expression for further processing
+        """
         if type(args[0]) is str:
             self.__where__ = None
             # todo: validate object name
             self.__left__ = QueryField(*args)
         if inspect.isfunction(args[0]):
             # parse callable as where statement
-            self.__where__ = ClosureParser().parse_filter(*args)
+            self.__where__ = ClosureParser().parse_filter(*args, kwargs)
         
         return self
     
@@ -511,7 +530,6 @@ class QueryExpression:
         return self.__append_order__(expr, 1)
 
     def order_by_descending(self, expr):
-        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or then_by() first.'))
         if inspect.isfunction(expr):
             arguments = ClosureParser().parse_select(expr)
             for arg in arguments:
@@ -520,6 +538,7 @@ class QueryExpression:
         return self.__append_order__(expr, -1)
     
     def then_by(self, expr):
+        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'))
         if inspect.isfunction(expr):
             arguments = ClosureParser().parse_select(expr)
             for arg in arguments:
@@ -528,7 +547,7 @@ class QueryExpression:
         return self.__append_order__(expr, 1)
 
     def then_by_descending(self, expr):
-        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or then_by() first.'))
+        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'))
         if inspect.isfunction(expr):
             arguments = ClosureParser().parse_select(expr)
             for arg in arguments:

@@ -249,7 +249,7 @@ class SqliteAdapter(DataAdapter):
             self.__raw_connection__.create_function('REGEXP_LIKE', 3, regexp_like)
     
     def close(self):
-        if (self.__raw_connection__):
+        if self.__raw_connection__ is not None:
             self.__raw_connection__.close()
             self.__raw_connection__ = None
     
@@ -271,8 +271,12 @@ class SqliteAdapter(DataAdapter):
             else:
                 TypeError('Expected string or an instance of query expression')
             # execute query
-            logging.debug('SQL >' + sql)
-            cur.execute(sql)
+            logging.debug('SQL:%s', sql)
+            try:
+                cur.execute(sql)
+            except Exception as error:
+                 logging.error('SQL:%s', sql)
+                 raise error
             # if query is SELECT or PRAGMA
             if re.search('^(SELECT|PRAGMA)', sql, re.DOTALL) is not None:
                 ## fetch records

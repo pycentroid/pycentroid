@@ -165,7 +165,7 @@ class ClosureParser:
                 else:
                     sequence[keyword.arg] = keyword_expr
             return sequence
-        if type(expr) is ast.List:
+        if type(expr) is ast.List or type(expr) is ast.Tuple:
             for elt in expr.elts:
                 attr = self.parse_common(elt)
                 if type(attr) is str:
@@ -185,7 +185,9 @@ class ClosureParser:
                 value = self.parse_common(dict_expr.values[i])
                 sequence.__setattr__(attr, value)
             return sequence
-        raise Exception('Unsupported sequence expression')
+        else:
+            # parse as sequence
+            raise Exception('Invalid sequence attribute. Expected a list or tuple')
 
     def parse_binary(self, expr: ast.BinOp):
         # find binary operator

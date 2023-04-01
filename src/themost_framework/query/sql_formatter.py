@@ -527,16 +527,14 @@ class SqlFormatter:
         return self.__dialect__.escape(where)
 
     def format(self, query: QueryExpression):
-        if query.__where__ is not None:
-            if query.__limit__ > 0:
-                return self.format_limit_select(query)
-            else:
-                return self.format_select(query)
-        elif query.__update__ is not None:
+        if query.__update__ is not None:
             return self.format_update(query)
         elif query.__insert__ is not None:
             return self.format_insert(query)
         elif query.___delete___ == True:
             return self.format_delete(query)
         else:
-            TypeError('Expected a valid query expression')
+            if query.__limit__ > 0:
+                return self.format_limit_select(query)
+            else:
+                return self.format_select(query)
