@@ -1,6 +1,7 @@
 from .query_expression import QueryExpression, QueryField
 from .query_field import get_first_key
-from ..common import expect
+from ..common import expect, object
+from ..common.events import SyncSeriesEventEmitter
 from .utils import SqlUtils
 from .object_name_validator import ObjectNameValidator
 import re
@@ -36,6 +37,7 @@ class SqlDialect:
     def __init__(self, options=SqlDialectOptions()):
         self.options = options
         self.types = dict()
+        self.resolving_collection = SyncSeriesEventEmitter()
 
     def format_type(self, name: str, type: str, nullable = True, size = None, scale = None, ordinal = None, primary = False):
         # get type definition
@@ -105,6 +107,19 @@ class SqlDialect:
         return SqlUtils.escape(value)
 
     def escape_name(self, value):
+        name = value if value.startswith('$') is False else value[1:]
+        if name.__contains__('.') == False:
+            # try to get in-process collection name, if any
+            event = object(collection=None)
+            # raise resolving collection event
+            self.resolving_collection.emit(event)
+            # if collection has been defined
+            if event.collection is not None:
+                # concatenate attribute name
+                name = event.collection + '.' + name
+        return ObjectNameValidator().escape(name, self.options.name_format)
+
+    def escape_collection(self, value):
         name = value if value.startswith('$') is False else value[1:]
         return ObjectNameValidator().escape(name, self.options.name_format)
 
@@ -300,10 +315,10 @@ class SqlFormatter:
                 sql += SqlDialect.Space
                 sql += SqlDialect.Join
                 sql += SqlDialect.Space
-                sql += self.__dialect__.escape_name(from_collection)
+                sql += self.__dialect__.escape_collection(from_collection)
                 if as_collection is not None:
                     sql += SqlDialect.Space
-                    sql += self.__dialect__.escape_name(as_collection)
+                    sql += self.__dialect__.escape_collection(as_collection)
                 sql += SqlDialect.Space
                 sql += 'ON'
                 sql += SqlDialect.Space
@@ -367,7 +382,6 @@ class SqlFormatter:
         collection = query.__collection__.collection
         # and collection alias
         collection_alias = query.__collection__.alias
-
         sql = SqlDialect.Select
         if query.__select__ is None:
             sql += ' * '  # wildcard select
@@ -378,21 +392,21 @@ class SqlFormatter:
                     fields.append(self.__dialect__.escape_name(key))
                 else:
                     fields.append(self.__dialect__.escape(query.__select__[key]) +
-                                  SqlDialect.Space +
-                                  SqlDialect.As +
-                                  SqlDialect.Space +
-                                  self.__dialect__.escape_name(key))
+                                SqlDialect.Space +
+                                SqlDialect.As +
+                                SqlDialect.Space +
+                                self.__dialect__.escape_name(key))
             sql += SqlDialect.Space
             sql += ','.join(fields)
             sql += SqlDialect.Space
         sql += SqlDialect.From
         sql += SqlDialect.Space
 
-        sql += self.__dialect__.escape_name(collection)
+        sql += self.__dialect__.escape_collection(collection)
         # append alias, if any
         if collection_alias is not None:
             sql += SqlDialect.Space
-            sql += self.__dialect__.escape_name(collection_alias)
+            sql += self.__dialect__.escape_collection(collection_alias)
         
         # append join statement
         join_sql = self.format_join(query)
@@ -413,8 +427,8 @@ class SqlFormatter:
         if query.__group_by__ is not None:
             sql += SqlDialect.Space
             sql += self.format_group_by(query)
-
         return sql
+        
 
     def format_limit_select(self, query: QueryExpression):
         sql = self.format_select(query);
@@ -433,7 +447,7 @@ class SqlFormatter:
         expect(query.__update__).to_be_truthy(Exception('Expected a valid update expression'))
         sql = SqlDialect.Update
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_name(query.__collection__.collection)
+        sql += self.__dialect__.escape_collection(query.__collection__.collection)
         expect(query.__where__).to_be_truthy(
             Exception('Where expression cannot be empty while formatting an update expression'))
         # format set
@@ -463,7 +477,7 @@ class SqlFormatter:
         expect(query.__insert__).to_be_truthy(Exception('Expected a valid update expression'))
         sql = SqlDialect.Insert
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_name(query.__collection__.collection)
+        sql += self.__dialect__.escape_collection(query.__collection__.collection)
 
         values = []
         keys = []
@@ -503,10 +517,10 @@ class SqlFormatter:
         sql += SqlDialect.Space
         sql += SqlDialect.From
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_name(collection)
+        sql += self.__dialect__.escape_collection(collection)
         if collection_alias is not None:
             sql += SqlDialect.Space
-            sql += self.__dialect__.escape_name(collection_alias)
+            sql += self.__dialect__.escape_collection(collection_alias)
         # append join statement
         join_sql = self.format_join(query)
         if len(join_sql) > 0:
@@ -527,14 +541,29 @@ class SqlFormatter:
         return self.__dialect__.escape(where)
 
     def format(self, query: QueryExpression):
-        if query.__update__ is not None:
-            return self.format_update(query)
-        elif query.__insert__ is not None:
-            return self.format_insert(query)
-        elif query.___delete___ == True:
-            return self.format_delete(query)
-        else:
-            if query.__limit__ > 0:
-                return self.format_limit_select(query)
+        collection = None
+        if query.__collection__ is not None:
+            # get collection name (or alias)
+            collection = query.__collection__.alias if query.__collection__.alias is not None else query.__collection__.collection
+        # subscriber for resolving collection
+        def resolving_collection(event):
+            if query.__lookup__ is not None and len(query.__lookup__) > 0:
+                event.collection = collection
+        # subscribe event
+        self.__dialect__.resolving_collection.subscribe(resolving_collection)
+        try:
+            if query.__update__ is not None:
+                return self.format_update(query)
+            elif query.__insert__ is not None:
+                return self.format_insert(query)
+            elif query.___delete___ == True:
+                return self.format_delete(query)
             else:
-                return self.format_select(query)
+                if query.__limit__ > 0:
+                    return self.format_limit_select(query)
+                else:
+                    return self.format_select(query)
+        finally:
+            # unsubsdcribe collection event
+            self.__dialect__.resolving_collection.unsubscribe(resolving_collection)
+

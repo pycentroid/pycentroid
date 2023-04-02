@@ -104,7 +104,7 @@ def test_order_by_descending(db):
         if index > 0:
             TestCase().assertLessEqual(item.price, items[index-1].price)
 
-def test_where_with_arguments(db):
+def test_where_with_args(db):
     query = QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category, x.price)
         ).where((

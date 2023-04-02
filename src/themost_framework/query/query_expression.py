@@ -44,7 +44,7 @@ class QueryExpression:
         return self.__set_collection__(collection)
 
 
-    def select(self, *args):
+    def select(self, *args, **kwargs):
         """Defines a collection of attributes that are going to be collected
 
         Args:
@@ -58,7 +58,7 @@ class QueryExpression:
         self.__insert__ = None
         self.___delete___ = None
         if inspect.isfunction(args[0]):
-            self.__select__ = ClosureParser().parse_select(*args)
+            self.__select__ = ClosureParser().parse_select(*args, kwargs)
             return self
         self.__select__ = {}
         for arg in args:
@@ -409,22 +409,31 @@ class QueryExpression:
         """Prepares a join expression with the given collection
 
         Args:
-            collection (str): The collection to join
+            collection (str | QueryEntity): The collection to join
             alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
 
         Returns:
-            QueryExpression
+            self
         """
-        self.__joining__ = {
-            '$lookup': {
-                'from': collection,
-                'direction': 'inner',
-                'as': alias
+        if isinstance(collection, QueryEntity):
+            self.__joining__ = {
+                '$lookup': {
+                    'from': collection.collection,
+                    'direction': 'inner',
+                    'as': collection.alias
+                }
             }
-        }
+        else:
+            self.__joining__ = {
+                '$lookup': {
+                    'from': collection,
+                    'direction': 'inner',
+                    'as': alias
+                }
+            }
         return self
     
-    def on(self, expr):
+    def on(self, *args, **kwargs):
         """Finalizes a join expression by appending a lookup expression
 
         Args:
@@ -435,10 +444,18 @@ class QueryExpression:
         """
         expect(self.__joining__).to_be_truthy(Exception('Joining expression is empty'))
         lookup = self.__joining__['$lookup']
+        if inspect.isfunction(args[0]):
+            expr = ClosureParser().parse_filter(*args, kwargs)
+        else:
+            query = args[0]
+            if isinstance(query, QueryExpression):
+                raise Exception('Expected an instance of query expression')
+            # get where statement
+            expr = query.__where__
         # add pipelien
         lookup.__setitem__('pipeline', {
             '$match': {
-                '$expr': expr.__where__
+                '$expr': expr
             }
         })
         # append join expression
@@ -555,10 +572,10 @@ class QueryExpression:
             return self
         return self.__append_order__(expr, -1)
 
-    def group_by(self, *args):
+    def group_by(self, *args, **kwargs):
         arguments = args
         if inspect.isfunction(args[0]):
-            arguments = ClosureParser().parse_select(*args)
+            arguments = ClosureParser().parse_select(*args, kwargs)
         self.__group_by__ = []
         for arg in arguments:
             if type(arg) is str:

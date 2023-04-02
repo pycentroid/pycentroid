@@ -109,8 +109,8 @@ class ClosureParser:
             # a simple member reference like x.category
             # expect object name to be the first argument of lamda function
             obj = expr.value
-            expect(obj.id).to_equal(self.args[0].arg, Exception('Invalid member expression. Expected an expression '
-                                                                'which uses a member of the first argument'))
+            if obj.id != self.args[0].arg:
+                attr = '$' + obj.id  + '.' + attr[1:]
             event = object(target = self, member = attr)
             if is_qualified_reference(attr):
                 self.resolving_join_member.emit(event)
