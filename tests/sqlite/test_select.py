@@ -26,10 +26,10 @@ def test_select_and_join(db):
 
 def test_select_with_nested_filter(db):
     items = db.execute(QueryExpression().select(
-        lambda x: (x.orderedItem,
-                x.customer.familyName,
-                x.customer.givenName,
-                x.customer.address.addressLocality)
+        lambda x,customer,address: (x.orderedItem,
+                customer.familyName,
+                customer.givenName,
+                address.addressLocality)
     ).from_collection(Orders).join(Customers).on(
         lambda x,customer: x.customer == customer.id
         ).join(PostalAddresses).on(

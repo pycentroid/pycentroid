@@ -1,6 +1,6 @@
 import inspect
 import typing
-from themost_framework.common import expect, NoneError
+from themost_framework.common import expect, object, NoneError, SyncSeriesEventEmitter
 from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
@@ -11,9 +11,12 @@ class Empty:
 
 
 class QueryExpression:
+
+    resolving_member = SyncSeriesEventEmitter()
+    resolving_join_member = SyncSeriesEventEmitter()
+    resolving_method = SyncSeriesEventEmitter()
     
     def __init__(self, collection=None):
-
         self.__where__ = None
         self.__prepared__ = None
         self.__order_by__ = None
@@ -26,12 +29,10 @@ class QueryExpression:
         self.__limit__ = 0
         self.__lookup__ = []
         self.__joining__ = None
-
         self.__left__: QueryField or None = None
         self.__last_logical = None
         if collection is not None:
             self.__set_collection__(collection)
-        return
 
     def __set_collection__(self, collection):
         if type(collection) is QueryEntity:
@@ -42,6 +43,26 @@ class QueryExpression:
 
     def from_collection(self, collection):
         return self.__set_collection__(collection)
+
+    def get_closure_parser(self) -> ClosureParser:
+        parser = ClosureParser()
+
+        def resolving_join_member(event):
+            new_event = object(target=self,member=event.member,fully_qualified_name=event.fully_qualified_name)
+            self.resolving_join_member.emit(new_event)
+        parser.resolving_join_member.subscribe(resolving_join_member)
+
+        def resolving_member(event):
+            new_event = object(target=self,member=event.member)
+            self.resolving_member.emit(new_event)
+        parser.resolving_member.subscribe(resolving_member)
+
+        def resolving_method(event):
+            new_event = object(target=self,method=event.method)
+            self.resolving_method.emit(new_event)
+        parser.resolving_method.subscribe(resolving_method)
+
+        return parser
 
 
     def select(self, *args, **kwargs):
@@ -58,7 +79,7 @@ class QueryExpression:
         self.__insert__ = None
         self.___delete___ = None
         if inspect.isfunction(args[0]):
-            self.__select__ = ClosureParser().parse_select(*args, kwargs)
+            self.__select__ = self.get_closure_parser().parse_select(*args, kwargs)
             return self
         self.__select__ = {}
         for arg in args:
@@ -93,7 +114,7 @@ class QueryExpression:
             self.__left__ = QueryField(*args)
         elif inspect.isfunction(args[0]):
             # parse callable as where statement
-            self.__where__ = ClosureParser().parse_filter(*args, kwargs)
+            self.__where__ = self.get_closure_parser().parse_filter(*args, kwargs)
         
         return self
     
@@ -445,7 +466,7 @@ class QueryExpression:
         expect(self.__joining__).to_be_truthy(Exception('Joining expression is empty'))
         lookup = self.__joining__['$lookup']
         if inspect.isfunction(args[0]):
-            expr = ClosureParser().parse_filter(*args, kwargs)
+            expr = self.get_closure_parser().parse_filter(*args, kwargs)
         else:
             query = args[0]
             expect(query).to_be_instance_of(QueryExpression, Exception('Expected an instance of query expression'))
@@ -539,7 +560,7 @@ class QueryExpression:
     
     def order_by(self, expr):
         if inspect.isfunction(expr):
-            arguments = ClosureParser().parse_select(expr)
+            arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, 1)
             return self
@@ -547,7 +568,7 @@ class QueryExpression:
 
     def order_by_descending(self, expr):
         if inspect.isfunction(expr):
-            arguments = ClosureParser().parse_select(expr)
+            arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
@@ -556,7 +577,7 @@ class QueryExpression:
     def then_by(self, expr):
         expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'))
         if inspect.isfunction(expr):
-            arguments = ClosureParser().parse_select(expr)
+            arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
@@ -565,7 +586,7 @@ class QueryExpression:
     def then_by_descending(self, expr):
         expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'))
         if inspect.isfunction(expr):
-            arguments = ClosureParser().parse_select(expr)
+            arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
@@ -574,7 +595,7 @@ class QueryExpression:
     def group_by(self, *args, **kwargs):
         arguments = args
         if inspect.isfunction(args[0]):
-            arguments = ClosureParser().parse_select(*args, kwargs)
+            arguments = self.get_closure_parser().parse_select(*args, kwargs)
         self.__group_by__ = []
         for arg in arguments:
             if type(arg) is str:

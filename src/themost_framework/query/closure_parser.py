@@ -111,8 +111,9 @@ class ClosureParser:
             obj = expr.value
             if obj.id != self.args[0].arg:
                 attr = '$' + obj.id  + '.' + attr[1:]
-            event = object(target = self, member = attr)
+            event = object(target=self, member=attr)
             if is_qualified_reference(attr):
+                event.fully_qualified_member = attr
                 self.resolving_join_member.emit(event)
             else:
                 self.resolving_member.emit(event)
@@ -123,13 +124,14 @@ class ClosureParser:
             # a nested member like x.address.streetAddress
             obj = expr.value
             while type(obj) is ast.Attribute:
-                if type(obj.value) is ast.Name:
+                if type(obj.value) is ast.Name or type(obj.value) is ast.Attribute:
                     attr = '$' + obj.attr + '.' + attr[1:]
                 # get next value
                 obj = obj.value
             # emit event
             event = object(target = self, member = attr)
             if is_qualified_reference(attr):
+                event.fully_qualified_member = attr
                 self.resolving_join_member.emit(event)
             else:
                 self.resolving_member.emit(event)
