@@ -97,9 +97,9 @@ class SqlDialect:
                         return func(params)
             elif value[key] == 1:
                 # return object name
-                return self.escape_name(key)
+                return self.escape_name(self.__format_name__(key))
         if type(value) is str and value.startswith('$'):
-            return self.escape_name(value)
+            return self.escape_name(self.__format_name__(value))
         return SqlUtils.escape(value)
 
     # noinspection PyMethodMayBeStatic
@@ -107,6 +107,10 @@ class SqlDialect:
         return SqlUtils.escape(value)
 
     def escape_name(self, value):
+        name = value if value.startswith('$') is False else value[1:]
+        return ObjectNameValidator().escape(name, self.options.name_format)
+
+    def __format_name__(self, value):
         name = value if value.startswith('$') is False else value[1:]
         if name.__contains__('.') == False:
             # try to get in-process collection name, if any
@@ -117,11 +121,7 @@ class SqlDialect:
             if event.collection is not None:
                 # concatenate attribute name
                 name = event.collection + '.' + name
-        return ObjectNameValidator().escape(name, self.options.name_format)
-
-    def escape_collection(self, value):
-        name = value if value.startswith('$') is False else value[1:]
-        return ObjectNameValidator().escape(name, self.options.name_format)
+        return name
 
     # noinspection PyMethodOverriding
     def __eq__(self, left, right):
@@ -311,14 +311,15 @@ class SqlFormatter:
                 pipeline = lookup.get('pipeline')
                 from_collection = lookup.get('from')
                 as_collection = lookup.get('as')
-                sql = lookup['direction'].upper()  # LEFT INNER or RIGHT
+                sql += '' if len(sql) == 0 else SqlDialect.Space
+                sql += lookup['direction'].upper()  # LEFT INNER or RIGHT
                 sql += SqlDialect.Space
                 sql += SqlDialect.Join
                 sql += SqlDialect.Space
-                sql += self.__dialect__.escape_collection(from_collection)
+                sql += self.__dialect__.escape_name(from_collection)
                 if as_collection is not None:
                     sql += SqlDialect.Space
-                    sql += self.__dialect__.escape_collection(as_collection)
+                    sql += self.__dialect__.escape_name(as_collection)
                 sql += SqlDialect.Space
                 sql += 'ON'
                 sql += SqlDialect.Space
@@ -389,7 +390,7 @@ class SqlFormatter:
             fields = []
             for key in query.__select__:
                 if query.__select__[key] == 1:
-                    fields.append(self.__dialect__.escape_name(key))
+                    fields.append(self.__dialect__.escape_name(self.__dialect__.__format_name__(key)))
                 else:
                     fields.append(self.__dialect__.escape(query.__select__[key]) +
                                 SqlDialect.Space +
@@ -402,11 +403,11 @@ class SqlFormatter:
         sql += SqlDialect.From
         sql += SqlDialect.Space
 
-        sql += self.__dialect__.escape_collection(collection)
+        sql += self.__dialect__.escape_name(collection)
         # append alias, if any
         if collection_alias is not None:
             sql += SqlDialect.Space
-            sql += self.__dialect__.escape_collection(collection_alias)
+            sql += self.__dialect__.escape_name(collection_alias)
         
         # append join statement
         join_sql = self.format_join(query)
@@ -447,7 +448,7 @@ class SqlFormatter:
         expect(query.__update__).to_be_truthy(Exception('Expected a valid update expression'))
         sql = SqlDialect.Update
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_collection(query.__collection__.collection)
+        sql += self.__dialect__.escape_name(query.__collection__.collection)
         expect(query.__where__).to_be_truthy(
             Exception('Where expression cannot be empty while formatting an update expression'))
         # format set
@@ -477,7 +478,7 @@ class SqlFormatter:
         expect(query.__insert__).to_be_truthy(Exception('Expected a valid update expression'))
         sql = SqlDialect.Insert
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_collection(query.__collection__.collection)
+        sql += self.__dialect__.escape_name(query.__collection__.collection)
 
         values = []
         keys = []
@@ -517,10 +518,10 @@ class SqlFormatter:
         sql += SqlDialect.Space
         sql += SqlDialect.From
         sql += SqlDialect.Space
-        sql += self.__dialect__.escape_collection(collection)
+        sql += self.__dialect__.escape_name(collection)
         if collection_alias is not None:
             sql += SqlDialect.Space
-            sql += self.__dialect__.escape_collection(collection_alias)
+            sql += self.__dialect__.escape_name(collection_alias)
         # append join statement
         join_sql = self.format_join(query)
         if len(join_sql) > 0:

@@ -31,8 +31,22 @@ class Expected:
             return
         raise error
     
+    def to_be_instance_of(self, class_or_tuple, error: Exception):
+        if isinstance(self.__value__, class_or_tuple) == False:
+            raise error
+    
     def to_equal(self, value, error: Exception):
-        if self.__value__ is value:
+        if self.__value__ == value:
+            return
+        raise error
+    
+    def to_be_greater_than(self, value, error: Exception):
+        if self.__value__ > value:
+            return
+        raise error
+    
+    def to_be_greater_or_equal(self, value, error: Exception):
+        if self.__value__ >= value:
             return
         raise error
 

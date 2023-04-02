@@ -91,7 +91,7 @@ class QueryExpression:
             self.__where__ = None
             # todo: validate object name
             self.__left__ = QueryField(*args)
-        if inspect.isfunction(args[0]):
+        elif inspect.isfunction(args[0]):
             # parse callable as where statement
             self.__where__ = ClosureParser().parse_filter(*args, kwargs)
         
@@ -448,8 +448,7 @@ class QueryExpression:
             expr = ClosureParser().parse_filter(*args, kwargs)
         else:
             query = args[0]
-            if isinstance(query, QueryExpression):
-                raise Exception('Expected an instance of query expression')
+            expect(query).to_be_instance_of(QueryExpression, Exception('Expected an instance of query expression'))
             # get where statement
             expr = query.__where__
         # add pipelien

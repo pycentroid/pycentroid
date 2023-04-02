@@ -81,7 +81,7 @@ def test_complex_logical(db):
         TestCase().assertLessEqual(item.price, 800)
 
 def test_order_by(db):
-    query = QueryExpression(Products).select(lambda x: (x.id, x.name, x.category, x.price ), None).where(
+    query = QueryExpression(Products).select(lambda x: (x.id, x.name, x.category, x.price )).where(
         lambda x: x.category == 'Laptops'
         ).order_by(
             lambda x: (x.price,)
