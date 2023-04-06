@@ -25,9 +25,9 @@ class TokenOperator(Enum):
     And='$and'
     Or='$or'
 
-    @classmethod
+    @staticmethod
     def is_logical_operator(op):
-        return re.search(r'^(\$and|\$or|\$not|\$nor)$', op)
+        return re.search(r'^(\$and|\$or|\$not|\$nor)$', op.value)
 
 class TokenType(Enum):
     Literal='Literal'
@@ -228,22 +228,22 @@ class OpenDataParser():
     
     def get_operator(self, token):
         if token.type==TokenType.Identifier:
-            if token.identifier=='and': return Token.Operator.And
-            if token.identifier=='or': return Token.Operator.Or
-            if token.identifier=='eq': return Token.Operator.Eq
-            if token.identifier=='ne': return Token.Operator.Ne
-            if token.identifier=='lt': return Token.Operator.Lt
-            if token.identifier=='le': return Token.Operator.Le
-            if token.identifier=='gt': return Token.Operator.Gt
-            if token.identifier=='ge': return Token.Operator.Ge
-            if token.identifier=='in': return Token.Operator.In
-            if token.identifier=='nin': return Token.Operator.NotIn
-            if token.identifier=='add': return Token.Operator.Add
-            if token.identifier=='sub': return Token.Operator.Sub
-            if token.identifier=='mul': return Token.Operator.Mul
-            if token.identifier=='div': return Token.Operator.Div
-            if token.identifier=='mod': return Token.Operator.Mod
-            if token.identifier=='not': return Token.Operator.Not
+            if token.identifier=='and': return TokenOperator.And
+            if token.identifier=='or': return TokenOperator.Or
+            if token.identifier=='eq': return TokenOperator.Eq
+            if token.identifier=='ne': return TokenOperator.Ne
+            if token.identifier=='lt': return TokenOperator.Lt
+            if token.identifier=='le': return TokenOperator.Le
+            if token.identifier=='gt': return TokenOperator.Gt
+            if token.identifier=='ge': return TokenOperator.Ge
+            if token.identifier=='in': return TokenOperator.In
+            if token.identifier=='nin': return TokenOperator.NotIn
+            if token.identifier=='add': return TokenOperator.Add
+            if token.identifier=='sub': return TokenOperator.Sub
+            if token.identifier=='mul': return TokenOperator.Mul
+            if token.identifier=='div': return TokenOperator.Div
+            if token.identifier=='mod': return TokenOperator.Mod
+            if token.identifier=='not': return TokenOperator.Not
         return None;
 
     def parse(self, string):
@@ -295,7 +295,7 @@ class OpenDataParser():
             if right is None:
                 raise Exception('Expected right operand')
             result = dict()
-            result[op] = [
+            result[op.value] = [
                 left,
                 right
             ]
@@ -305,14 +305,14 @@ class OpenDataParser():
             right = self.parse_common_item()
             # create expression
             expr = dict()
-            expr[op] = [
+            expr[op.value] = [
                 left,
                 right
             ]
             # self an exception where the current token is a logican operator
             if self.at_end()==False and TokenOperator.is_logical_operator(self.get_operator(self.current_token)):
                 # get operator
-                op2 = self.getOperator(self.current_token)
+                op2 = self.get_operator(self.current_token)
                 self.move_next()
                 # read right operand
                 right = self.parse_common()
@@ -320,7 +320,7 @@ class OpenDataParser():
                     raise Exception('Expected right operand')
                 # and create a complex logical expression
                 result = dict()
-                result[op2] = [
+                result[op2.value] = [
                     expr,
                     right
                 ]
@@ -490,7 +490,7 @@ class OpenDataParser():
         self.offset = 0
         results = []
         # if expression has only one token
-        if self.tokens.length == 1:
+        if len(self.tokens) == 1:
             # and token is an identifier
             if self.current_token.type == TokenType.Identifier:
                 # append resul
@@ -502,13 +502,13 @@ class OpenDataParser():
                 return results
             else:
                 raise Exception('Invalid expand token. Expected identifier')
-        while self.at_end() == false:
+        while self.at_end() == False:
             offset = self.offset
             result = self.parse_expand_item()
             # set source
             result['source'] = self.get_source(offset, self.offset)
             results.append(result)
-            if self.at_end() == false and self.current_token.syntax == SyntaxToken.Comma().syntax:
+            if self.at_end() == False and self.current_token.syntax == SyntaxToken.Comma().syntax:
                 self.move_next()
         return results
 
@@ -522,7 +522,7 @@ class OpenDataParser():
             # move until parenClose e.g. ...$select=id,familyName,giveName)
             # or semicolon ...$select=id,familyName,giveName;
             offset = self.offset
-            read = true
+            read = True
             parenClose = 0
             while read == True:
                 if self.current_token.isParenOpen():
@@ -616,10 +616,11 @@ class OpenDataParser():
         source = self.source
         offset = self.offset
         for c in source[current:]:
+            c = source[current]
             current+=1
             if OpenDataParser.is_identifier_char(c)==False:
-                break;
-        name = source[offset: current-offset].strip()
+                break
+        name = source[offset: current].strip()
         last_offset = offset
         offset = current
         token = None
@@ -717,13 +718,13 @@ class OpenDataParser():
         offset = self.offset
         sb = '';
         for chr in source[self.current:]:
-            c = self.source.charAt(current)
+            c = self.source[current]
             if c == '\'':
-                if (current < source.length - 1) and (source.charAt(current + 1) == '\''):
+                if current < len(source) - 1 and source[current + 1] == '\'':
                     current += 1;
                     sb += '\'';
                 else:
-                    had_end = true;
+                    had_end = True;
                     break;
             else:
                 sb += c;
@@ -739,27 +740,28 @@ class OpenDataParser():
         _offset = self.offset
         floating = False
         c = None
-        while _current < len(source):
-            _current += 1
+        while _current < len(_source):
             c = _source[_current]
             if c == '.':
                 if floating:
                     break
-                floating = true
-            elif OpenDataParser.isDigit(c) == False:
+                floating = True
+            elif OpenDataParser.is_digit(c) == False:
                 break
+            _current += 1
+
         have_exponent = False
-        if _current < _source.length:
+        if _current < len(_source):
             c = _source[_current]
             if c == 'E' or c == 'e':
                 _current += 1
                 if _source[_current] == '-':
                     _current += 1
-                exponent_end = None if _current == _source.length else self.skip_digits(_current)
+                exponent_end = None if _current == len(_source) else self.skip_digits(_current)
                 if exponent_end is None:
                     raise Exception(f'Expected digits after exponent at %s.', _offset)
                 _current = exponent_end
-                have_exponent = true
+                have_exponent = True
 
                 if _current < len(_source):
                     c = _source[_current]
@@ -768,7 +770,7 @@ class OpenDataParser():
                     elif c == 'l' or c == 'L':
                         raise Exception(f'Unexpected exponent for long literal at {_offset}.')
 
-        text = _source[_offset, _current - _offset]
+        text = _source[_offset: _current]
         value = None
         type = None
         if _current < len(_source):
@@ -834,27 +836,27 @@ class OpenDataParser():
     
     @staticmethod
     def is_char(c):
-        return re.search(r'[A-Za-z]', c)
+        return re.search(r'[A-Za-z]', c) is not None
 
     @staticmethod
     def is_digit(c):
-        return re.search(r'[0-9]', c)
+        return re.search(r'[0-9]', c) is not None
 
     @staticmethod
     def is_identifier_start(c):
-        return re.search(r'[A-Za-z0-9_\$]', c)
+        return re.search(r'[A-Za-z0-9_\$]', c) is not None
 
     @staticmethod
     def is_whitespace(c):
-        return re.search(r'\s', c)
+        return re.search(r'\s', c) is not None
 
     @staticmethod
     def is_identifier_char(c):
-        return re.search(r'[A-Za-z_\$]', c)
+        return re.search(r'[A-Za-z_\$]', c) is not None
     
     @staticmethod
     def is_syntax(c):
-        return re.search(r'[)(\/,\-=;:]', c[0])
+        return re.search(r'[)(\/,\-=;:]', c[0]) is not None
 
     def next(self):
         _current = self.current
