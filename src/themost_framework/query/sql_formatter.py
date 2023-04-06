@@ -108,6 +108,13 @@ class SqlDialect:
 
     def escape_name(self, value):
         name = value if value.startswith('$') is False else value[1:]
+        # validate if expression is a nested member expression which is not supported sql formatter
+        # e.g. $customer.address.addressLocality and should be resolved by using SQL JOIN expressions
+        member = name.split('.')
+        # if expression has more than 2 members
+        if len(member) > 2:
+            # get only the two last of them e.g. $customer.address.addressLocality -> address.addressLocality
+            name = '.'.join(member[2:])
         return ObjectNameValidator().escape(name, self.options.name_format)
 
     def __format_name__(self, value):

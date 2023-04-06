@@ -542,12 +542,12 @@ class QueryExpression:
         elif type(expr) is dict:
             for key in expr:
                 value = expr[key]
-                if type(value) is int and expr[key] is 1:
+                if type(value) is int and expr[key] == 1:
                     self.__order_by__.append({
                         '$expr': format_field_reference(key),
                         'direction': direction
                     })
-                elif type(value) is int and expr[key] is 0:
+                elif type(value) is int and expr[key] == 0:
                     break;
                 else:
                     self.__order_by__.append({

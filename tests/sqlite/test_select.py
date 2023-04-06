@@ -25,17 +25,17 @@ def test_select_and_join(db):
     TestCase().assertGreater(len(items), 0)
 
 def test_select_with_nested_filter(db):
-    items = db.execute(QueryExpression().select(
-        lambda x,customer,address: (x.orderedItem,
-                customer.familyName,
-                customer.givenName,
-                address.addressLocality)
-    ).from_collection(Orders).join(Customers).on(
+    query = QueryExpression().select(
+        lambda x: (x.orderedItem,
+                x.customer.familyName,
+                x.customer.givenName,
+                x.customer.address.addressLocality)
+    ).from_collection(Orders).join(Customers, 'customer').on(
         lambda x,customer: x.customer == customer.id
-        ).join(PostalAddresses).on(
+        ).join(PostalAddresses, 'address').on(
         lambda x,address: x.customer.address == address.id
         ).where(
             lambda x: x.orderStatus == 1
         )
-        )
+    items = db.execute(query)
     TestCase().assertGreater(len(items), 0)
