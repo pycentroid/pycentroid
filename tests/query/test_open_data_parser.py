@@ -29,7 +29,16 @@ def test_parse_logical_and():
 def test_parse_logical_or():
     expr = OpenDataParser().parse('actionStatus/alternateName eq \'ActiveActionStatus\' or actionStatus/alternateName eq \'CompletedActionStatus\'')
     TestCase().assertEqual(expr, {
-        '$and': [
+        '$or': [
+            { '$eq': [ '$actionStatus.alternateName',  'ActiveActionStatus' ] },
+            { '$eq': [ '$actionStatus.alternateName',  'CompletedActionStatus' ] },
+        ]
+    })
+
+def test_parse_logical_or_with_paren():
+    expr = OpenDataParser().parse('(actionStatus/alternateName eq \'ActiveActionStatus\') or (actionStatus/alternateName eq \'CompletedActionStatus\')')
+    TestCase().assertEqual(expr, {
+        '$or': [
             { '$eq': [ '$actionStatus.alternateName',  'ActiveActionStatus' ] },
             { '$eq': [ '$actionStatus.alternateName',  'CompletedActionStatus' ] },
         ]

@@ -3,7 +3,7 @@ from enum import Enum
 from datetime import datetime, date
 from themost_framework.common.datetime import isdatetime, getdatetime
 from themost_framework.common.objects import object
-from .query_field import format_field_reference
+from .query_field import format_any_field_reference
 
 
 class TokenOperator(Enum):
@@ -27,6 +27,8 @@ class TokenOperator(Enum):
 
     @staticmethod
     def is_logical_operator(op):
+        if op is None:
+            return False
         return re.search(r'^(\$and|\$or|\$not|\$nor)$', op.value)
 
 class TokenType(Enum):
@@ -210,9 +212,6 @@ class OpenDataParser():
     offset = 0
     source = None
     tokens = []
-    current_token = None
-    next_token = None
-    previous_token = None
     
     @property
     def current_token(self):
@@ -220,11 +219,11 @@ class OpenDataParser():
     
     @property
     def next_token(self):
-        self.tokens[self.offset + 1] if self.offset < len(self.tokens) - 1 else None
+        return self.tokens[self.offset + 1] if self.offset < len(self.tokens) - 1 else None
 
     @property
     def previous_token(self):
-        self.tokens[self.offset - 1] if self.offset > 0 and len(self.tokens) > 0 else None
+        return self.tokens[self.offset - 1] if self.offset > 0 and len(self.tokens) > 0 else None
     
     def get_operator(self, token):
         if token.type==TokenType.Identifier:
@@ -288,7 +287,7 @@ class OpenDataParser():
             return left
         op = self.get_operator(self.current_token)
         if op is None:
-            raise Exception('Expected operator')
+            raise Exception(f'Expected operator at {self.current}.')
         self.move_next()
         if self.at_end() == False and TokenOperator.is_logical_operator(op):
             right = self.parse_common()
@@ -310,7 +309,8 @@ class OpenDataParser():
                 right
             ]
             # self an exception where the current token is a logican operator
-            if self.at_end()==False and TokenOperator.is_logical_operator(self.get_operator(self.current_token)):
+            op = self.get_operator(self.current_token)
+            if self.at_end()==False and TokenOperator.is_logical_operator(op):
                 # get operator
                 op2 = self.get_operator(self.current_token)
                 self.move_next()
@@ -361,7 +361,7 @@ class OpenDataParser():
         if self.current_token.type!=TokenType.Identifier:
             raise Exception('Expected identifier')
         identifier = self.current_token.identifier
-        while self.next_token and self.next_token.syntax==SyntaxToken.Slash().syntax:
+        while self.next_token is not None and self.next_token.syntax==SyntaxToken.Slash().syntax:
             self.move_next()
             if self.next_token.type!=TokenType.Identifier:
                 raise Exception('Expected identifier')
@@ -373,11 +373,11 @@ class OpenDataParser():
         return self.resolve_member(identifier)
 
     def resolve_member(self, member):
-        return format_field_reference(re.sub('\/','.', member))
+        return format_any_field_reference(re.sub('\/','.', member))
     
     def resolve_method(self, method, args):
         method = dict()
-        method[format_field_reference(method)] = args
+        method[format_any_field_reference(method)] = args
         return method
 
     def parse_method_call(self):
@@ -608,7 +608,7 @@ class OpenDataParser():
             token=SyntaxToken.Colon()
         if token is None:
             raise Exception('Unknown syntax token.')
-        self.current += 1
+        self.offset = self.current + 1;
         return token
 
     def parse_identifier(self, minus=False):
@@ -617,9 +617,9 @@ class OpenDataParser():
         offset = self.offset
         for c in source[current:]:
             c = source[current]
-            current+=1
             if OpenDataParser.is_identifier_char(c)==False:
                 break
+            current+=1
         name = source[offset: current].strip()
         last_offset = offset
         offset = current
@@ -717,17 +717,18 @@ class OpenDataParser():
         source = self.source
         offset = self.offset
         sb = '';
-        for chr in source[self.current:]:
-            c = self.source[current]
+        while current < len(source):
+            current += 1
+            c = source[current]
             if c == '\'':
                 if current < len(source) - 1 and source[current + 1] == '\'':
-                    current += 1;
-                    sb += '\'';
+                    current += 1
+                    sb += '\''
                 else:
                     had_end = True;
-                    break;
+                    break
             else:
-                sb += c;
+                sb += c
         if had_end == False:
             raise Exception(f'Unterminated string starting at {offset}');
         self.current = current;
@@ -741,6 +742,7 @@ class OpenDataParser():
         floating = False
         c = None
         while _current < len(_source):
+            _current += 1
             c = _source[_current]
             if c == '.':
                 if floating:
@@ -748,7 +750,6 @@ class OpenDataParser():
                 floating = True
             elif OpenDataParser.is_digit(c) == False:
                 break
-            _current += 1
 
         have_exponent = False
         if _current < len(_source):
@@ -876,7 +877,7 @@ class OpenDataParser():
         if c == '\'':
             return self.parse_string()
         if OpenDataParser.is_syntax(c):
-            return self.parseSyntax()
+            return self.parse_syntax()
         if OpenDataParser.is_digit(c):
                 return self.parse_numeric()
         elif OpenDataParser.is_identifier_start(c):
