@@ -251,7 +251,7 @@ class SqlDialect:
     def __second__(self, expr):
         return f'SECOND({self.escape(expr)})'
 
-    def __add__(self, **args):
+    def __add__(self, *args):
         exprs = []
         for arg in args:
             exprs.append(self.escape(arg))
@@ -260,7 +260,7 @@ class SqlDialect:
         result += ')'
         return result
 
-    def __subtract__(self, **args):
+    def __subtract__(self, *args):
         exprs = []
         for arg in args:
             exprs.append(self.escape(arg))
@@ -268,6 +268,12 @@ class SqlDialect:
         result += '-'.join(exprs)
         result += ')'
         return result
+    
+    def __sub__(self, *args):
+        return self.__subtract__(*args)
+
+    def __mul__(self, *args):
+        return self.__multiply__(*args)
 
     def __multiply__(self, *args):
         exprs = []
@@ -275,7 +281,7 @@ class SqlDialect:
             exprs.append(self.escape(arg))
         result = '('
         result += '*'.join(exprs)
-        result = ')'
+        result += ')'
         return result
 
     def __divide__(self, *args):
@@ -286,8 +292,11 @@ class SqlDialect:
         result += '/'.join(exprs)
         result += ')'
         return result
+    
+    def __div__(self, *args):
+        return self.__divide__(*args)
 
-    def __modulo__(self, *args):
+    def __modulo__(self, **args):
         exprs = []
         for arg in args:
             exprs.append(self.escape(arg))

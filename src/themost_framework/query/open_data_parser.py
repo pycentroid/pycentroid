@@ -3,7 +3,7 @@ from enum import Enum
 from datetime import datetime, date
 from themost_framework.common.datetime import isdatetime, getdatetime
 from themost_framework.common.objects import object
-from .query_field import format_any_field_reference
+from .query_field import format_any_field_reference, get_first_key
 
 class TokenOperator(Enum):
 
@@ -29,6 +29,21 @@ class TokenOperator(Enum):
         if op is None:
             return False
         return re.search(r'^(\$and|\$or|\$not|\$nor)$', op.value)
+    
+    @staticmethod
+    def is_arithmetic_operator(op):
+        if op is None:
+            return False
+        pattern = r'^(\$add|\$mul|\$div|\$sub)$';
+        if type(op) is str:
+            return re.search(pattern, op)    
+        return re.search(pattern, op.value)
+    
+    @staticmethod
+    def is_comparison_operator(op):
+        if op is None:
+            return False
+        return re.search(r'^(\$lt|\$lte|\$gt|\$gte|\$eq|\$ne)$', op.value)
 
 class TokenType(Enum):
     Literal='Literal'
@@ -232,9 +247,10 @@ class OpenDataParser():
         [ 'trim', '$trim' ],
         [ 'length', '$size' ],
         [ 'add', '$add' ],
-        [ 'subtract', '$subtract' ],
+        [ 'sub', '$subtract' ],
         [ 'multiply', '$multiply' ],
-        [ 'divide', '$divide' ],
+        [ 'mul', '$multiply' ],
+        [ 'div', '$divide' ],
         [ 'concat', '$concat' ],
         [ 'substring', '$substr' ],
         [ 'startswith', '$regexMatch' ],
@@ -354,8 +370,29 @@ class OpenDataParser():
                     right
                 ]
                 return result
+            # if current operator is a comparison operator like $eq, $gt etc
+            if self.at_end()==False and TokenOperator.is_comparison_operator(op):
+                # check if expr is an arithmetic function e.g. Price mul 2.0
+                prev_operator = get_first_key(expr)
+                if TokenOperator.is_arithmetic_operator(prev_operator):
+                    left = dict(expr)
+                    self.move_next()
+                    right = self.parse_common()
+                    if right is None:
+                        raise Exception('Expected right operand')
+                    result = dict([
+                        [
+                            op.value,
+                            [
+                                left,
+                                right
+                            ]
+                        ]
+                    ])
+                    return result
             else:
                 return expr
+
 
     def parse_common_item(self):
         if len(self.tokens) == 0:
@@ -380,7 +417,7 @@ class OpenDataParser():
             if self.current_token.syntax==SyntaxToken.ParenOpen().syntax:
                 self.move_next()
                 result = self.parse_common()
-                self.expect_any()
+                self.expect(SyntaxToken.ParenClose())
                 return result
             
 
@@ -804,7 +841,6 @@ class OpenDataParser():
         floating = False
         c = None
         while _current < len(_source):
-            _current += 1
             c = _source[_current]
             if c == '.':
                 if floating:
@@ -812,6 +848,7 @@ class OpenDataParser():
                 floating = True
             elif OpenDataParser.is_digit(c) == False:
                 break
+            _current += 1
 
         have_exponent = False
         if _current < len(_source):
