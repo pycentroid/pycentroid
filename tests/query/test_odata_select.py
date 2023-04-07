@@ -51,3 +51,24 @@ def test_parse_order_by():
         { '$expr': '$price', 'direction': 'asc' },
         { '$expr': '$name', 'direction': 'desc' }
     ])
+
+def test_parse_select_concat():
+    expr = OpenDataParser().parse_select_sequence('concat(concat(person/givenName,\' \'),person/familyName) as name')
+    TestCase().assertEqual(expr, 
+        [
+            {
+                'name': {
+                    '$concat': [
+                        {
+                            '$concat': [
+                                '$person.givenName',
+                                ' '
+                            ]
+                        },
+                        '$person.familyName'
+                    ]
+                }
+            }
+            
+        ]
+    )

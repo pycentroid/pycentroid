@@ -3,6 +3,7 @@ from enum import Enum
 from datetime import datetime, date
 from themost_framework.common.datetime import isdatetime, getdatetime
 from themost_framework.common.objects import object
+from themost_framework.common.events import SyncSeriesEventEmitter
 from .query_field import format_any_field_reference, get_first_key
 
 class TokenOperator(Enum):
@@ -34,7 +35,7 @@ class TokenOperator(Enum):
     def is_arithmetic_operator(op):
         if op is None:
             return False
-        pattern = r'^(\$add|\$mul|\$div|\$sub)$';
+        pattern = r'^(\$add|\$mul|\$div|\$sub|\$mod)$';
         if type(op) is str:
             return re.search(pattern, op)    
         return re.search(pattern, op.value)
@@ -226,6 +227,8 @@ class OpenDataParser():
     offset = 0
     source = None
     tokens = []
+    resolving_member = SyncSeriesEventEmitter()
+    resolving_method = SyncSeriesEventEmitter()
 
     __method__ = dict([
         [ 'count', '$count' ],
@@ -257,6 +260,24 @@ class OpenDataParser():
         [ 'endswith', '$regexMatch' ],
         [ 'contains', '$regexMatch' ]
     ])
+
+    def __init__(self):
+
+        def resolve_method_regex_match(event):
+            if event.method == '$regexMatch':
+                input = event.args[0]
+                regex = event.args[1]
+                if event.original_method is not None and event.original_method=='startswith':
+                    regex = '^' + regex
+                elif event.original_method is not None and event.original_method=='endswith':
+                    regex = regex + '$'
+                event.expr = {
+                    '$regexMatch': {
+                        'input': input,
+                        'regex': regex
+                    }
+                }
+        self.resolving_method.subscribe(resolve_method_regex_match)
     
     @property
     def current_token(self):
@@ -434,24 +455,15 @@ class OpenDataParser():
             self.move_next()
             identifier += '/'
             identifier += self.current_token.identifier
+        original_member = identifier
         if re.search(r'^\$it\/', identifier):
             identifier = re.sub(r'^\$it\/', '', identifier)
-        return self.resolve_member(identifier)
-
-    def resolve_member(self, member):
-        return format_any_field_reference(re.sub('\/','.', member))
+        # resolve member
+        member=format_any_field_reference(re.sub('\/','.', identifier))
+        event = object(member=member,original_member=original_member)
+        self.resolving_member.emit(event)
+        return event.member
     
-    def resolve_method(self, method, args):
-        name = method
-        if method in self.__method__:
-            name = self.__method__.get(method)
-        return dict([
-            [
-                format_any_field_reference(name),
-                args
-            ]
-        ])
-
     def parse_method_call(self):
         if len(self.tokens) == 0:
             return None
@@ -470,8 +482,23 @@ class OpenDataParser():
                 'default': switch_case.default
             }
         args = self.parse_method_call_args([])
-        return self.resolve_method(method,args)
-        
+
+        name = method
+        if method in self.__method__:
+            name = self.__method__.get(method)
+        # emit resolving event
+        event = object(method=format_any_field_reference(name),original_method=method,args=args,expr=None)
+        self.resolving_method.emit(event)
+        if event.expr is None:
+            return dict([
+                [
+                    event.method,
+                    event.args
+                ]
+            ])
+        else:
+            return dict(event.expr)
+
 
     def parse_switch_method_branches(self, branches, default_value):
         current_token = self.current_token

@@ -120,3 +120,51 @@ def test_parse_arithmetic_div():
     sql = SqlFormatter().format_where(query.__where__)
     TestCase().assertEqual(sql, '((Rating/2)=2)')
 
+def test_parse_arithmetic_mod():
+    expr = OpenDataParser().parse('Rating mod 5 eq 0')
+    TestCase().assertEqual(expr, {
+        '$eq': [
+            {
+                '$mod': [
+                    '$Rating',
+                    5
+                ]
+            },
+            0
+        ]
+    })
+    query = QueryExpression()
+    query.__where__ = expr
+    sql = SqlFormatter().format_where(query.__where__)
+    TestCase().assertEqual(sql, '((Rating%5)=0)')
+
+def test_parse_substring():
+    expr = OpenDataParser().parse('substring(CompanyName,1) eq \'lfreds Futterkiste\'')
+    TestCase().assertEqual(expr, {
+        '$eq': [
+            {
+                '$substr': [
+                    '$CompanyName',
+                    1
+                ]
+            },
+            'lfreds Futterkiste'
+        ]
+    })
+
+def test_parse_startswith():
+    expr = OpenDataParser().parse('startswith(CompanyName,\'Alfr\') eq true')
+    TestCase().assertEqual(expr, {
+        '$eq': [
+            {
+                '$regexMatch': {
+                    'input': '$CompanyName',
+                    'regex': '^Alfr'
+                }
+            },
+            True
+        ]
+    })
+
+
+

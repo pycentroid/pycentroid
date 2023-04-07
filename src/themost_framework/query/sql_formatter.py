@@ -296,14 +296,17 @@ class SqlDialect:
     def __div__(self, *args):
         return self.__divide__(*args)
 
-    def __modulo__(self, **args):
+    def __modulo__(self, *args):
         exprs = []
         for arg in args:
             exprs.append(self.escape(arg))
         result = '('
-        result += '%%'.join(exprs)
+        result += '%'.join(exprs)
         result += ')'
         return result
+    
+    def __mod__(self, *args):
+        return self.__modulo__(*args)
 
     def __cond__(self, *args):
         return f'(CASE {self.escape(args[0])} WHEN 1 THEN {self.escape(args[1])} ELSE {self.escape(args[2])} END)'
@@ -367,7 +370,7 @@ class SqlFormatter:
                 sql += ','
             sql += self.__dialect__.escape(item.get('$expr'))
             sql += SqlDialect.Space
-            if direction is -1:
+            if direction == -1:
                 sql += 'DESC'
             else:
                 sql += 'ASC'
@@ -378,7 +381,7 @@ class SqlFormatter:
         sql = ''
         if query.__group_by__ is None:
             return sql
-        if len(query.__group_by__) is 0:
+        if len(query.__group_by__) == 0:
             return sql
         sql += SqlDialect.GroupBy
         sql += SqlDialect.Space
