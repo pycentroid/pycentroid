@@ -5,7 +5,6 @@ from themost_framework.common.datetime import isdatetime, getdatetime
 from themost_framework.common.objects import object
 from .query_field import format_any_field_reference
 
-
 class TokenOperator(Enum):
 
     Not='$not'
@@ -212,6 +211,36 @@ class OpenDataParser():
     offset = 0
     source = None
     tokens = []
+
+    __method__ = dict([
+        [ 'count', '$count' ],
+        [ 'min', '$min' ],
+        [ 'max', '$max' ],
+        [ 'avg', '$avg' ],
+        [ 'sum', '$sum' ],
+        [ 'year', '$year' ],
+        [ 'month', '$month' ],
+        [ 'day', '$dayOfMonth' ],
+        [ 'hour', '$hour' ],
+        [ 'minute', '$minute' ],
+        [ 'second', '$second' ],
+        [ 'indexof', '$indexOfBytes' ],
+        [ 'round', '$round' ],
+        [ 'floor', '$floor' ],
+        [ 'ceiling', '$ceil' ],
+        [ 'tolower', '$toLower' ],
+        [ 'trim', '$trim' ],
+        [ 'length', '$size' ],
+        [ 'add', '$add' ],
+        [ 'subtract', '$subtract' ],
+        [ 'multiply', '$multiply' ],
+        [ 'divide', '$divide' ],
+        [ 'concat', '$concat' ],
+        [ 'substring', '$substr' ],
+        [ 'startswith', '$regexMatch' ],
+        [ 'endswith', '$regexMatch' ],
+        [ 'contains', '$regexMatch' ]
+    ])
     
     @property
     def current_token(self):
@@ -226,7 +255,7 @@ class OpenDataParser():
         return self.tokens[self.offset - 1] if self.offset > 0 and len(self.tokens) > 0 else None
     
     def get_operator(self, token):
-        if token.type==TokenType.Identifier:
+        if token is not None and token.type==TokenType.Identifier:
             if token.identifier=='and': return TokenOperator.And
             if token.identifier=='or': return TokenOperator.Or
             if token.identifier=='eq': return TokenOperator.Eq
@@ -332,7 +361,7 @@ class OpenDataParser():
         if len(self.tokens) == 0:
             return None
         if self.current_token.type==TokenType.Identifier:
-            if self.next_token and self.next_token.syntax == SyntaxToken.ParenClose().syntax and\
+            if self.next_token and self.next_token.syntax == SyntaxToken.ParenOpen().syntax and\
                 self.get_operator(self.current_token) is None:
                 return self.parse_method_call()
             elif self.get_operator(self.current_token)==TokenOperator.Not:
@@ -376,9 +405,15 @@ class OpenDataParser():
         return format_any_field_reference(re.sub('\/','.', member))
     
     def resolve_method(self, method, args):
-        method = dict()
-        method[format_any_field_reference(method)] = args
-        return method
+        name = method
+        if method in self.__method__:
+            name = self.__method__.get(method)
+        return dict([
+            [
+                format_any_field_reference(name),
+                args
+            ]
+        ])
 
     def parse_method_call(self):
         if len(self.tokens) == 0:
@@ -432,9 +467,7 @@ class OpenDataParser():
         return self.parse_switch_method_branches(branches, default_value)
         
 
-        
-
-    def parse_method_call_args(method_args, self):
+    def parse_method_call_args(self, method_args):
         self.expect_any()
         if self.current_token.syntax == SyntaxToken.Comma().syntax:
             self.move_next()
@@ -447,9 +480,10 @@ class OpenDataParser():
             method_args.append(arg)
             self.parse_method_call_args(method_args)
         return method_args
+        
 
     def parse_select_sequence(self, source):
-        self.source = sourc;
+        self.source = source
         self.tokens = self.to_list()
         self.offset = 0
         results = []
@@ -457,7 +491,7 @@ class OpenDataParser():
             offset = self.offset
             result = self.parse_common_item()
             if self.current_token and self.current_token.type == TokenType.Identifier\
-                and self.currentToken.identifier.lower() == 'as':
+                and self.current_token.identifier.lower() == 'as':
                 # get next token
                 self.move_next()
                 # get alias
@@ -472,7 +506,7 @@ class OpenDataParser():
                 result = dict([
                     [ result, 1 ]
                 ])
-            results.push(result)
+            results.append(result)
             if self.at_end() == False and self.current_token.syntax == SyntaxToken.Comma().syntax:
                 self.move_next();
         return results
@@ -481,7 +515,35 @@ class OpenDataParser():
         return self.parse_select_sequence(string)
 
     def parse_order_by_sequence(self, string):
-        return self.parse_select_sequence(string)
+        self.source = string;
+        self.tokens = self.to_list()
+        self.offset = self.current = 0
+        tokens = self.tokens
+        results = []
+        if len(tokens)==0:
+            return results
+        while self.at_end() == False:
+            offset = self.offset
+            expr = self.parse_common_item()
+            direction = 'asc'
+            if self.current_token is not None and self.current_token.type == TokenType.Identifier and\
+                (self.current_token.identifier.lower() == 'asc' or self.current_token.identifier.lower() == 'desc'):
+                    direction = self.current_token.identifier.lower()
+                    result = {
+                        '$expr': expr,
+                        'direction': direction
+                    }
+                    # go to next token
+                    self.move_next()
+            else:
+                result = {
+                        '$expr': expr,
+                        'direction': direction
+                    }
+            results.append(result)
+            if self.at_end() == False and self.current_token.syntax == SyntaxToken.Comma().syntax:
+                self.move_next()
+        return results
 
     def parse_expand_sequence(self, string):
         self.source = string
@@ -776,19 +838,19 @@ class OpenDataParser():
         type = None
         if _current < len(_source):
             c = _source[_current]
-            if c == 'F' or 'f':
+            if c == 'F' or c == 'f':
                 value = float(text)
                 type = LiteralType.Single
                 _current += 1
-            elif c == 'D' or 'd':
+            elif c == 'D' or c == 'd':
                 value = float(text)
                 type = LiteralType.Double
                 _current += 1
-            elif c == 'M' or 'm':
+            elif c == 'M' or c == 'm':
                 value = float(text)
                 type = LiteralType.Decimal
                 _current += 1
-            elif c == 'L' or 'l':
+            elif c == 'L' or c == 'l':
                 value = int(text)
                 type = LiteralType.Long
                 _current += 1
