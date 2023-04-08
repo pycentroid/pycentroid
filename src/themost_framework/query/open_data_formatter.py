@@ -1,4 +1,6 @@
+import re
 from .sql_formatter import SqlFormatter, SqlDialect
+from .query_field import get_first_key
 
 class NotSupportedException(Exception):
     def __init__(self, message='This operation is not supported by OData protocol'):
@@ -9,6 +11,10 @@ class NotSupportedException(Exception):
 class OpenDataDialect(SqlDialect):
     def __init(self):
         super().__init__(self)
+
+    def __format_name__(self, value):
+        name = re.sub('.', '/', value[1:])
+        return name if name.startswith('$') is False else name[1:]
 
     def __eq__(self, left, right):
         final_right = self.escape(right)
@@ -191,6 +197,18 @@ class OpenDataDialect(SqlDialect):
         s += ')'
         return s
 
+    def __now__(self):
+        return 'now()'
+
+    def __me__(self):
+        return 'me()'
+
+    def __whoami__(self):
+        return 'whoami()'
+
+    def __now__(self):
+        return 'now()'
+
 class OpenDataFormatter(SqlFormatter):
     def __init(self):
         super().__init__(self)
@@ -204,6 +222,127 @@ class OpenDataFormatter(SqlFormatter):
     
     def format_insert(self, query):
         raise NotSupportedException()
+
+    def format_group_by(self, query):
+        if query.__group_by__ is None:
+            return None
+        if len(query.__group_by__) == 0:
+            return None
+        return ','.join(map(lambda x:self.escape(x), query.__group_by__))
+
+    def format_where(self, where):
+        if where is None:
+            return None
+        return self.escape(where)
     
+    def format_limit_select(self, query):
+        result = self.format_select(query)
+        if query.__limit__ > 0:
+            result.update([
+                '$count',
+                'true'
+            ])
+            result.update([
+                '$top',
+                query.__limit__ 
+            ])
+        if query.__skip__ > 0:
+            result.update([
+                '$skip',
+                query.__skip__ 
+            ])
+        return result
+    
+    def format_order(self, query):
+        if query.__order_by__ is None:
+            return None
+        if len(query.__order_by__) == 0:
+            return None
+        return ','.join(map(lambda x:self.escape(x.get('$expr')) + ' ' + x.get('direction') , query.__order_by__))
+
+    def format_select(self, query):
+        result = {};
+        if query.__select__ is not None and len(query.__select__) > 0:
+            fields = []
+            for key in query.__select__:
+                if query.__select__[key] == 1:
+                    fields.append(self.__dialect__.escape_name(self.__dialect__.__format_name__(key)))
+                else:
+                    fields.append(self.__dialect__.escape(query.__select__[key]) +
+                                ' as ' +
+                                self.__dialect__.escape_name(key))
+            result.update([
+                [
+                    '$select',
+                    ','.join(fields)
+                    ]
+            ])
+        # format filter
+        filter = self.format_where(query.__where__)
+        if filter is not None:
+            result.update([
+                [
+                    '$filter',
+                    filter
+                    ]
+            ])
+        # format group by
+        group_by = self.format_group_by(query)
+        if group_by is not None:
+            result.update([
+                [
+                    '$groupby',
+                    group_by
+                ]
+            ])
+        # format order by
+        order_by = self.format_order(query)
+        if order_by is not None:
+            result.update([
+                [
+                    '$orderby',
+                    order_by
+                ]
+            ])
+        
+        expand = self.format_expand(query)
+        if expand is not None:
+            result.update([
+                [
+                    '$expand',
+                    expand
+                ]
+            ])
+        
+        return result;
+
+    def format_expand(self, query):
+        """Formats the expand segment of the given query
+
+        Args:
+            query (QueryExpression): An instance of query expression
+
+        Returns:
+            (string | None): Returns a string which represents an OData system query option
+        """
+        if len(query.__expand__) == 0:
+            return None
+        results = []
+        for expand in query.__expand__:
+            # get expand params
+            params = self.format_select(expand)
+            expr = get_first_key(expand.__collection__)
+            if len(params.keys()) > 0:
+                expr += '('
+                expr += ';'.join(map(lambda key: key+'='+params[key], list(params.keys())))
+                expr += ')'
+            results.append(expr)
+        return ','.join(results)
+
+
+        
+        
+
+
 
 
