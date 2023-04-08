@@ -5,11 +5,6 @@ from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
 
-
-class Empty:
-    pass
-
-
 class QueryExpression:
 
     resolving_member = SyncSeriesEventEmitter()
@@ -31,6 +26,7 @@ class QueryExpression:
         self.__joining__ = None
         self.__left__: QueryField or None = None
         self.__last_logical = None
+        
         if collection is not None:
             self.__set_collection__(collection)
 

@@ -9,11 +9,11 @@ class NotSupportedException(Exception):
 
 
 class OpenDataDialect(SqlDialect):
-    def __init(self):
-        super().__init__(self)
+    def __init__(self):
+        super().__init__()
 
     def __format_name__(self, value):
-        name = re.sub('.', '/', value[1:])
+        name = re.sub(r'\.', '/', value[1:])
         return name if name.startswith('$') is False else name[1:]
 
     def __eq__(self, left, right):
@@ -210,8 +210,8 @@ class OpenDataDialect(SqlDialect):
         return 'now()'
 
 class OpenDataFormatter(SqlFormatter):
-    def __init(self):
-        super().__init__(self)
+    def __init__(self):
+        super().__init__()
         self.__dialect__ = OpenDataDialect()
     
     def format_delete(self, query):
@@ -228,12 +228,12 @@ class OpenDataFormatter(SqlFormatter):
             return None
         if len(query.__group_by__) == 0:
             return None
-        return ','.join(map(lambda x:self.escape(x), query.__group_by__))
+        return ','.join(map(lambda x:self.__dialect__.escape(x), query.__group_by__))
 
     def format_where(self, where):
         if where is None:
             return None
-        return self.escape(where)
+        return self.__dialect__.escape(where)
     
     def format_limit_select(self, query):
         result = self.format_select(query)
@@ -258,7 +258,7 @@ class OpenDataFormatter(SqlFormatter):
             return None
         if len(query.__order_by__) == 0:
             return None
-        return ','.join(map(lambda x:self.escape(x.get('$expr')) + ' ' + x.get('direction') , query.__order_by__))
+        return ','.join(map(lambda x:self.__dialect__.escape(x.get('$expr')) + ' ' + x.get('direction') , query.__order_by__))
 
     def format_select(self, query):
         result = {};
@@ -331,11 +331,23 @@ class OpenDataFormatter(SqlFormatter):
         for expand in query.__expand__:
             # get expand params
             params = self.format_select(expand)
-            expr = get_first_key(expand.__collection__)
-            if len(params.keys()) > 0:
+            collection = get_first_key(expand.__collection__).split('.')
+            expr = ''
+            for index,item in enumerate(collection):
+                if index > 0:
+                    expr += '('
+                    expr += '$expand'
+                    expr += '='
+                    expr += item
+                else:
+                    expr = item
+            param_keys = list(params.keys())
+            if len(param_keys) > 0:
                 expr += '('
-                expr += ';'.join(map(lambda key: key+'='+params[key], list(params.keys())))
+                expr += ';'.join(map(lambda key: key+'='+params[key], param_keys))
                 expr += ')'
+            if len(collection) > 1:
+                expr += ')'*(len(collection)-1)
             results.append(expr)
         return ','.join(results)
 

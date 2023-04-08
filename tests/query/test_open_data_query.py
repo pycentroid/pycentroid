@@ -11,17 +11,6 @@ def test_get_any_expression():
         'customer': 1
     })
 
-def test_get_any_nested_expression():
-    expr = any(lambda x: (x.customer.address,))
-    TestCase().assertIsNotNone(expr)
-    TestCase().assertEqual(expr.__collection__, {
-        'customer': 1
-    })
-    TestCase().assertGreater(len(expr.__expand__), 0)
-    TestCase().assertEqual(expr.__expand__[0].__collection__, {
-        'address': 1
-    })
-
 def test_expand_expr():
     Orders = QueryEntity('Orders')
     query = OpenDataQueryExpression(Orders).expand(lambda x: (x.customer.address,))
@@ -29,4 +18,32 @@ def test_expand_expr():
     expr = OpenDataFormatter().format_select(query)
     TestCase().assertEqual(expr, {
         '$expand': 'customer($expand=address)'
+    })
+
+def test_expand_multiple_expr():
+    Orders = QueryEntity('Orders')
+    query = OpenDataQueryExpression(Orders).expand(
+        lambda x: (x.customer.address,)
+        ).expand(
+        lambda x: (x.orderedItem,)
+        )
+    TestCase().assertIsNotNone(query)
+    expr = OpenDataFormatter().format_select(query)
+    TestCase().assertEqual(expr, {
+        '$expand': 'customer($expand=address),orderedItem'
+    })
+
+def test_expand_with_select():
+    Orders = QueryEntity('Orders')
+    query = OpenDataQueryExpression(Orders).expand(
+        any(
+            lambda x: (x.customer.address,)
+            ).select(
+                lambda y:(y.mobile,)
+                )
+        )
+    TestCase().assertIsNotNone(query)
+    expr = OpenDataFormatter().format_select(query)
+    TestCase().assertEqual(expr, {
+        '$expand': 'customer($expand=address($select=mobile))'
     })
