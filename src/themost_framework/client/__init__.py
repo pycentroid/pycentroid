@@ -1,1 +1,2 @@
-from .client import ClientContextOptions, ClientContext, ClientDataModel, ClientDataQueryable, ClientService
+from .client import *
+from .metadata import *

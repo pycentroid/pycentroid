@@ -47,7 +47,7 @@ class OpenDataDialect(SqlDialect):
     def __round__(self, expr, digits=0):
         return f'round({self.escape(expr)},{self.escape(digits)})'
     
-    def __and__(self, expr, digits=0):
+    def __and__(self, *args):
         exprs = []
         for arg in args:
             exprs.append(self.escape(arg))
@@ -170,13 +170,13 @@ class OpenDataDialect(SqlDialect):
         result += ')'
         return result
     
-    def __regexMatch__(self, expr, search):
-        if search.startswith('^'):
-            return f'startswith({self.escape(expr)},{self.escape(search[1:])})'
-        elif search.endswith('$'):
-            return f'endswith({self.escape(expr)},{self.escape(search[:-1])})'
+    def __regexMatch__(self, input, regex):
+        if regex.startswith('^'):
+            return f'startswith({self.escape(input)},{self.escape(regex[1:])})'
+        elif regex.endswith('$'):
+            return f'endswith({self.escape(input)},{self.escape(regex[:-1])})'
         else:
-            return f'contains({self.escape(expr)},{self.escape(search)})'
+            return f'contains({self.escape(input)},{self.escape(regex)})'
     
     def __cond__(self, *args):
         return f'case({self.escape(args[0])}:{self.escape(args[1])},true:{self.escape(args[2])})'
