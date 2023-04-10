@@ -1,5 +1,4 @@
-from typing import Callable
-from abc import abstractmethod
+
 
 class AnyObject:
     def __init__(self, **kwargs):
@@ -11,6 +10,7 @@ class AnyObject:
     
     def __str__(self):
         return self.__dict__.__str__()
+
 
 def object(**kwargs):
     return AnyObject(**kwargs)

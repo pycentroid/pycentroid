@@ -1,6 +1,6 @@
 import pytest
 
-from themost_framework.data.data_application import DataApplication
+from atmost.data.data_application import DataApplication
 
 __author__ = "Kyriakos Barbounakis"
 __copyright__ = "Kyriakos Barbounakis"

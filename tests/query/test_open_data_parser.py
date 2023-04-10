@@ -1,8 +1,8 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query.open_data_parser import OpenDataParser, SyntaxToken
-from themost_framework.query.query_expression import QueryExpression
-from themost_framework.query.sql_formatter import SqlFormatter
+from atmost.query.open_data_parser import OpenDataParser, SyntaxToken
+from atmost.query.query_expression import QueryExpression
+from atmost.query.sql_formatter import SqlFormatter
 
 def test_get_tokens():
     parser = OpenDataParser()

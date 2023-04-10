@@ -1,10 +1,10 @@
 from .dialect import SqliteDialect, SqliteFormatter
-from themost_framework.query import QueryExpression, DataAdapter, DataTable, DataView, DataTableIndex
+from atmost.query import QueryExpression, DataAdapter, DataTable, DataView, DataTableIndex
 import sqlite3
 import re
 import time
 from typing import Callable
-from themost_framework.common import expect, AnyObject
+from atmost.common import expect, AnyObject
 import logging
 
 class SqliteTableIndex(DataTableIndex):

@@ -1,7 +1,8 @@
 from typing import Callable
 from abc import abstractmethod
-from themost_framework.common import AnyObject
+from atmost.common import AnyObject
 import logging
+
 
 class DataColumn(AnyObject):
     def __init__(self, **kwargs):
@@ -11,6 +12,7 @@ class DataColumn(AnyObject):
         self.size = None
         self.scale = None
         super().__init__(**kwargs)
+
 
 class DataAdapter:
 
@@ -23,7 +25,6 @@ class DataAdapter:
             logging.warning('An error occurred while closing database connection.')
             logging.warning(error)
 
-
     @abstractmethod
     def open(self):
         pass
@@ -33,7 +34,7 @@ class DataAdapter:
         pass
 
     @abstractmethod
-    def execute(query, values = None):
+    def execute(self, query, values=None):
         pass
 
     @abstractmethod
@@ -52,9 +53,10 @@ class DataAdapter:
     def upgrade(self, table_upgrade):
         pass
 
+
 class DataTable:
 
-    def __init__(self,table: str, adapter: DataAdapter):
+    def __init__(self, table: str, adapter: DataAdapter):
         self.table = table
         self.__adapter__ = adapter
 
@@ -86,9 +88,10 @@ class DataTable:
     def indexes(self):
         pass
 
+
 class DataTableIndex:
 
-    def __init__(self,table: str, adapter: DataAdapter):
+    def __init__(self, table: str, adapter: DataAdapter):
         self.table = table
         self.__adapter__ = adapter
 
@@ -108,9 +111,10 @@ class DataTableIndex:
     def list(self):
         pass
 
+
 class DataView:
 
-    def __init__(self,view: str, adapter: DataAdapter):
+    def __init__(self, view: str, adapter: DataAdapter):
         self.view = view
         self.__adapter__ = adapter
 

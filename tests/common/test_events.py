@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.common import SyncSeriesEventEmitter, SyncSubscription
+from atmost.common import SyncSeriesEventEmitter, SyncSubscription
 
 def next_handler(event):
     event.total += 1

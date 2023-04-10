@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.common.datetime import isdatetime, getdatetime, getdate
+from atmost.common.datetime import isdatetime, getdatetime, getdate
 from datetime import datetime
 
 def test_isdatetime():

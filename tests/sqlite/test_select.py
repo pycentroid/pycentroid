@@ -1,7 +1,7 @@
 import pytest
-from themost_framework.sqlite import SqliteAdapter
-from themost_framework.common import object
-from themost_framework.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
+from atmost.sqlite import SqliteAdapter
+from atmost.common import object
+from atmost.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
 from unittest import TestCase
 import re
 

@@ -1,12 +1,12 @@
-from themost_framework.common.objects import object
-from themost_framework.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
-from themost_framework.common import expect, AnyObject
-import requests
-from requests.structures import CaseInsensitiveDict
-from urllib.parse import urljoin
-import json
 import re
 import xml.etree.ElementTree as ElementTree
+from urllib.parse import urljoin
+
+import requests
+from requests.structures import CaseInsensitiveDict
+
+from atmost.common import expect
+from atmost.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
 from .metadata import EdmSchema
 
 NSMAP = {
@@ -14,17 +14,19 @@ NSMAP = {
     'edm': 'http://docs.oasis-open.org/odata/ns/edm'
 }
 
-class ClientContextOptions():
-    remote=None
+
+class ClientContextOptions:
+    remote = None
+
     def __init__(self, remote):
         self.remote = remote
 
 
-class ClientDataService():
+class ClientDataService:
     def __init__(self, options):
         self.options = options
         self.headers = CaseInsensitiveDict()
-    
+
     def set(self, key: str, value):
         """Sets an HTTP header that is going to be included in remote requests
 
@@ -46,7 +48,7 @@ class ClientDataService():
             key (str): The name of the HTTP header
         """
         self.headers.pop(key)
-    
+
     def resolve(self, url: str) -> str:
         """Resolves an absolute url 
 
@@ -56,15 +58,16 @@ class ClientDataService():
         Returns:
             str: The absolute url which has been resolved
         """
-        expect(re.search(r'^((https?):\/\/)', url)).to_be_falsy(Exception('Expected relative url'))
+        expect(re.search(r'^((https?)://)', url)).to_be_falsy(Exception('Expected relative url'))
         return urljoin(self.options.remote, url)
-        
 
-class ClientDataModel():
+
+class ClientDataModel:
     service = None
+
     def __init__(self, name):
         self.name = name
-    
+
     def as_queryable(self):
         """Gets an instance of client queryable which is going to be used to get items
 
@@ -77,24 +80,24 @@ class ClientDataModel():
     def url(self):
         return urljoin(self.service.options.remote, self.name)
 
-    def execute(self, data:dict):
+    def execute(self, data: dict):
         # get url e.g. /Orders
         url = self.url
         # get headers
-        headers = self.model.service.headers.copy()
+        headers = self.service.headers.copy()
         # make request and send data
         response = requests.post(url, json=data, headers=headers)
         # get response
         return response.json()
-    
-    def save(self, data:dict):
+
+    def save(self, data: dict):
         return self.execute(data)
 
-    def remove(self, item:dict):
+    def remove(self, item: str):
         # get url e.g. /Orders/1234000
         url = urljoin(self.url, item)
         # get service headers
-        headers = self.model.service.headers.copy()
+        headers = self.service.headers.copy()
         # make request
         response = requests.delete(url, headers=headers)
         # get response, if any
@@ -102,8 +105,8 @@ class ClientDataModel():
 
 
 class ClientDataQueryable(OpenDataQueryExpression):
-
     model = None
+
     def __init__(self, model: ClientDataModel):
         super().__init__(QueryEntity(model.name))
         self.__model__ = model
@@ -134,7 +137,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
         # get query params
         params = self.params
         # add accept header
-        if not 'Accept' in headers:
+        if 'Accept' not in headers:
             headers.update([
                 [
                     'Accept',
@@ -142,7 +145,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
                 ]
             ])
         # make request
-        response = requests.get(url, params, headers = headers)
+        response = requests.get(url, params, headers=headers)
         result = response.json()
         if 'value' in result and type(result['value']) is list:
             return result['value']
@@ -168,14 +171,14 @@ class ClientDataQueryable(OpenDataQueryExpression):
                 '$count', 'false'
             ]
         ])
-        if not 'Accept' in headers:
+        if 'Accept' not in headers:
             headers.update([
                 [
                     'Accept',
                     'application/json'
                 ]
             ])
-        response = requests.get(url, params, headers = headers)
+        response = requests.get(url, params, headers=headers)
         result = response.json()
         key = 'value'
         if key in result and type(result[key]) is list:
@@ -186,13 +189,12 @@ class ClientDataQueryable(OpenDataQueryExpression):
         return result
 
 
-class ClientDataContext():
-
+class ClientDataContext:
     __metadata__ = None
 
     def __init__(self, options):
         self.service = ClientDataService(options)
-    
+
     def model(self, name):
         """Returns an instance of a client data model for further processing
 
@@ -205,7 +207,7 @@ class ClientDataContext():
         model = ClientDataModel(name)
         model.service = self.service
         return model
-    
+
     def get_metadata(self):
         if self.__metadata__ is not None:
             return self.__metadata__
@@ -220,5 +222,3 @@ class ClientDataContext():
         })
         self.__metadata__ = EdmSchema().__readxml__(element)
         return self.__metadata__
-
-

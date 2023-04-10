@@ -1,6 +1,6 @@
 import inspect
 import typing
-from themost_framework.common import expect, object, NoneError, SyncSeriesEventEmitter
+from atmost.common import expect, object, NoneError, SyncSeriesEventEmitter
 from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference

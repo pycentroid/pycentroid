@@ -2,7 +2,7 @@ import inspect
 import typing
 from .query_expression import QueryExpression
 from .query_field import get_first_key
-from themost_framework.common import expect
+from atmost.common import expect
 import logging
 from dill.source import getsource
 

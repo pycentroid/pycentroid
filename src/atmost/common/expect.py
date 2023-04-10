@@ -32,7 +32,7 @@ class Expected:
         raise error
     
     def to_be_instance_of(self, class_or_tuple, error: Exception):
-        if isinstance(self.__value__, class_or_tuple) == False:
+        if not isinstance(self.__value__, class_or_tuple):
             raise error
     
     def to_equal(self, value, error: Exception):

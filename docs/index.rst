@@ -1,8 +1,8 @@
 =================
-themost-framework
+atmost
 =================
 
-This is the documentation of **themost-framework**.
+This is the documentation of **atmost**.
 
 .. note::
 

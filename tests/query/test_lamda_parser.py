@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import ClosureParser, QueryExpression, QueryField, select
+from atmost.query import ClosureParser, QueryExpression, QueryField, select
 from dill.source import getsource
 import ast
 

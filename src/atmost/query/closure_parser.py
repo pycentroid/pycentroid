@@ -5,8 +5,10 @@ from .query_field import is_qualified_reference, format_any_field_reference
 from .method_parser import MethodParserDialect, InstanceMethodParserDialect
 
 
+# noinspection PyUnusedLocal
 def count(field):
     pass
+
 
 class ClosureParser:
     def __init__(self):
@@ -110,7 +112,7 @@ class ClosureParser:
             # expect object name to be the first argument of lamda function
             obj = expr.value
             if obj.id != self.args[0].arg:
-                attr = '$' + obj.id  + '.' + attr[1:]
+                attr = '$' + obj.id + '.' + attr[1:]
             event = object(target=self, member=attr)
             if is_qualified_reference(attr):
                 event.fully_qualified_member = attr
@@ -129,7 +131,7 @@ class ClosureParser:
                 # get next value
                 obj = obj.value
             # emit event
-            event = object(target = self, member = attr)
+            event = object(target=self, member=attr)
             if is_qualified_reference(attr):
                 event.fully_qualified_member = attr
                 self.resolving_join_member.emit(event)
@@ -213,7 +215,7 @@ class ClosureParser:
             method = format_any_field_reference(expr.func.id)
         for arg in expr.args:
             arguments.append(self.parse_common(arg))
-        event = object(target=self,method=method,instance_method=instance_method)
+        event = object(target=self, method=method, instance_method=instance_method)
         self.resolving_method.emit(event)
         if event.resolve is not None:
             return event.resolve(*arguments)
@@ -221,7 +223,7 @@ class ClosureParser:
             Exception(f'{event.method}[] method has not yet implemented.')
 
     def parse_subscript(self, expr: ast.Subscript):
-        expr1 = self.parse_common(expr.value) 
+        expr1 = self.parse_common(expr.value)
         # get start
         start = 0 if expr.slice.lower is None else expr.slice.lower.n
         result = {
@@ -240,7 +242,7 @@ class ClosureParser:
     def parse_if(self, expr: ast.IfExp):
         if_expr = self.parse_common(expr.test)
         then_expr = self.parse_common(expr.body)
-        else_expr =  self.parse_common(expr.orelse)
+        else_expr = self.parse_common(expr.orelse)
         return {
             '$cond': [
                 if_expr,

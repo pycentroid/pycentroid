@@ -1,7 +1,7 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
-from themost_framework.common import year, month
+from atmost.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
+from atmost.common import year, month
 from datetime import datetime
 
 class Product:

@@ -2,7 +2,7 @@ adapterTypes:
   -
     name: "SQLite Data Adapter"
     invariantName: "sqlite"
-    type: "themost_framework.sqlite#SqliteAdpate"
+    type: "atmost.sqlite#SqliteAdpate"
 adapters:
   -
     name: "test"

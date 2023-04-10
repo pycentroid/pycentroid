@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query.open_data_parser import OpenDataParser, SyntaxToken
+from atmost.query.open_data_parser import OpenDataParser, SyntaxToken
 
 def test_parse_select():
     parser = OpenDataParser()

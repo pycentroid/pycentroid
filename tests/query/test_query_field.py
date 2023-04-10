@@ -1,8 +1,8 @@
 import pytest
 from unittest import TestCase
 
-from themost_framework.query.query_field import QueryField
-from themost_framework.query.query_value import QueryValue
+from atmost.query.query_field import QueryField
+from atmost.query.query_value import QueryValue
 
 
 def test_create_field():

@@ -1,10 +1,11 @@
 import pytest
 import requests
 from unittest import TestCase
-from themost_framework.client import ClientDataContext, ClientContextOptions, EdmSchema
+from atmost.client import ClientDataContext, ClientContextOptions
 from urllib.parse import urljoin
 
-REMOTE_SERVER='http://localhost:3000/api/'
+REMOTE_SERVER = 'http://localhost:3000/api/'
+
 
 @pytest.fixture()
 def context() -> ClientDataContext:
@@ -23,9 +24,11 @@ def context() -> ClientDataContext:
     context.service.set('Authorization', 'Bearer ' + token.get('access_token'))
     return context
 
+
 def test_context():
     ctx = ClientDataContext(ClientContextOptions(REMOTE_SERVER))
     TestCase().assertIsNotNone(ctx)
+
 
 def test_get_items(context):
     items = context.model('Products').as_queryable().where(
@@ -33,9 +36,11 @@ def test_get_items(context):
     ).get_items()
     TestCase().assertIsNotNone(items)
 
+
 def test_get_metadata(context):
     schema = context.get_metadata()
     TestCase().assertIsNotNone(schema)
+
 
 def test_get_item(context):
     item = context.model('Products').as_queryable().where(

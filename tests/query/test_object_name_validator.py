@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query import ObjectNameValidator, InvalidObjectNameError
+from atmost.query import ObjectNameValidator, InvalidObjectNameError
 
 def test_object_name():
     

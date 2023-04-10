@@ -1,4 +1,4 @@
-from themost_framework.query import SqlDialect, SqlFormatter, SqlDialectOptions
+from atmost.query import SqlDialect, SqlFormatter, SqlDialectOptions
 import re
 
 SqlDialectTypes = [

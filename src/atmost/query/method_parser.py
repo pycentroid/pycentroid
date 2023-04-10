@@ -1,22 +1,23 @@
 import re
-from .resolvers import MemberResolver, MethodResolver
 from .query_field import trim_field_reference
 
-class MethodParserDialect():
+
+# noinspection PyMethodMayBeStatic
+class MethodParserDialect:
     def __init__(self, resolver):
         """Initializes a method parser dialect
 
         Args:
-            resolver (MethodResolver)
+            resolver
         """
         self.resolver = resolver
         
         def resolving_method(event):
-            if event.instance_method==True:
+            if event.instance_method:
                 return
             if event.method is not None:
                 method = trim_field_reference(event.method)
-                if hasattr(self, '__' + method + '__') == True:
+                if hasattr(self, '__' + method + '__'):
                     func = getattr(self, '__' + method + '__')
                     if func is not None:
                         event.resolve = func
@@ -87,32 +88,34 @@ class MethodParserDialect():
         return {
             '$minute': list(args)
         }
-        
-    
+
     def __second__(self, *args):
         return {
             '$second': list(args)
         }
 
-class InstanceMethodParser():
+
+class InstanceMethodParser:
     def __init__(self, resolver):
         self.resolver = resolver
 
+
+# noinspection PyMethodMayBeStatic
 class InstanceMethodParserDialect(InstanceMethodParser):
     def __init__(self, resolver):
         """Initializes an instant method parser dialect
 
         Args:
-            resolver (MethodResolver)
+            resolver
         """
         super().__init__(resolver)
+
         def resolving_method(event):
-            if event.instance_method==False:
+            if not event.instance_method:
                 return
             if event.method is not None:
                 method = trim_field_reference(event.method)
-                func = None
-                if hasattr(self, '__' + method + '__') == True:
+                if hasattr(self, '__' + method + '__'):
                     func = getattr(self, '__' + method + '__')
                     if func is not None:
                         event.resolve = func

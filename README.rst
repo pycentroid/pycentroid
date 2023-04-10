@@ -2,7 +2,7 @@
 *This project is under heavy development*
 
 =================
-themost_framework
+atmost
 =================
 
 @themost-framework for Python

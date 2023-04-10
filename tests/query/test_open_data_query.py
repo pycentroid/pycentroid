@@ -1,8 +1,8 @@
 import pytest
 from unittest import TestCase
-from themost_framework.query.query_entity import QueryEntity
-from themost_framework.query.open_data_query import any, OpenDataQueryExpression
-from themost_framework.query.open_data_formatter import OpenDataFormatter
+from atmost.query.query_entity import QueryEntity
+from atmost.query.open_data_query import any, OpenDataQueryExpression
+from atmost.query.open_data_formatter import OpenDataFormatter
 
 def test_get_any_expression():
     expr = any(lambda x: (x.customer,))

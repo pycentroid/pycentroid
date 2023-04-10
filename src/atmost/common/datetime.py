@@ -1,9 +1,11 @@
 from datetime import datetime, date, timedelta, timezone
 import re
 
+# noinspection PyPep8
 timestamp_pattern = r'^(\d{4})-([01]\d)-([0-3]\d)[\sT]([0-2]\d):([0-5]\d):([0-5]\d)(\.(?P<millisecond>\d+))?((?P<timezone>[+-][0-2]\d:[0-5]\d)|Z)$'
 
 date_only_pattern = r'^(\d{4})-([01]\d)-([0-3]\d)$'
+
 
 def isdatetime(value) -> bool:
     """Validates if the given value is datetime
@@ -20,14 +22,15 @@ def isdatetime(value) -> bool:
         return re.search(timestamp_pattern, value) is not None
     return False
 
-def getdatetime(value) -> datetime:
+
+def getdatetime(value):
     """Converts the given parameter to datetime
 
     Args:
         value (date | str): The value to convert from
 
     Returns:
-        date: Returns an instance of datetime or None
+        (datetime | None): Returns an instance of datetime or None
     """
     if isinstance(value, datetime):
         return value
@@ -44,12 +47,13 @@ def getdatetime(value) -> datetime:
                 args.append(0)
             # get timezone
             if match.group('timezone') is not None:
-                tz = match.group('timezone') 
-                args.append(timezone(timedelta(hours=int(tz[:3]),minutes=int(tz[4:]))))
+                tz = match.group('timezone')
+                args.append(timezone(timedelta(hours=int(tz[:3]), minutes=int(tz[4:]))))
             else:
                 args.append(timezone.utc)
             return datetime(*args)
     return None
+
 
 def isdate(value):
     """Validates if the given value is date
@@ -66,14 +70,15 @@ def isdate(value):
         return re.search(date_only_pattern, value) is not None
     return False
 
-def getdate(value) -> date:
+
+def getdate(value):
     """Converts the given parameter to date
 
     Args:
         value (date | str): The value to convert from
 
     Returns:
-        date: Returns an instance of date or None
+        (date | None): Returns an instance of date or None
     """
     if isinstance(value, date):
         return value
@@ -85,6 +90,7 @@ def getdate(value) -> date:
                 args.append(int(match.group(x + 1)))
             return date(*args)
     return None
+
 
 def year(value) -> int:
     """Returns an integer that represents the year of the specified value.
@@ -100,6 +106,7 @@ def year(value) -> int:
     d = getdatetime(value)
     return None if isinstance(d, datetime) else d.year
 
+
 def month(value):
     """Returns an integer that represents the month of the specified value.
 
@@ -113,6 +120,7 @@ def month(value):
         return getdate(value).month
     d = getdatetime(value)
     return None if isinstance(d, datetime) else d.month
+
 
 def day(value):
     """Returns an integer that represents the day of month of the specified value.
@@ -128,6 +136,7 @@ def day(value):
     d = getdatetime(value)
     return None if isinstance(d, datetime) else d.day
 
+
 def hour(value):
     """Returns an integer that represents the hour of the specified value.
 
@@ -139,6 +148,7 @@ def hour(value):
     """
     d = getdatetime(value)
     return None if isinstance(d, datetime) else d.hour
+
 
 def minute(value):
     """Returns an integer that represents the minute of the specified value.
@@ -152,6 +162,7 @@ def minute(value):
     d = getdatetime(value)
     return None if isinstance(d, datetime) else d.minute
 
+
 def second(value):
     """Returns an integer that represents the second of the specified value.
 
@@ -163,4 +174,3 @@ def second(value):
     """
     d = getdatetime(value)
     return None if isinstance(d, datetime) else d.second
-

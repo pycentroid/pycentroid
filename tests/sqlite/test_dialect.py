@@ -1,6 +1,6 @@
 import pytest
-from themost_framework.sqlite import SqliteDialect
-from themost_framework.common import AnyObject
+from atmost.sqlite import SqliteDialect
+from atmost.common import AnyObject
 from unittest import TestCase
 
 
