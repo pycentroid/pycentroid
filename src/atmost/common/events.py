@@ -26,7 +26,7 @@ class SyncSubscription:
         self.__handler__ = handler
 
     def unsubscribe(self):
-        self.__emitter__.unsubscribe(self.__handler__)
+        self.__emitter__.unsubscribe(self.__handler__.handler)
 
 
 class SyncSeriesEventEmitter:

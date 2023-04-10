@@ -3,6 +3,7 @@ from unittest import TestCase
 from atmost.common.datetime import isdatetime, getdatetime, getdate
 from datetime import datetime
 
+
 def test_isdatetime():
     TestCase().assertEqual(isdatetime(datetime.now()), True)
     TestCase().assertEqual(isdatetime('2022-10-20'), False)
@@ -11,6 +12,7 @@ def test_isdatetime():
     TestCase().assertEqual(isdatetime('2022-10-20T14:35:40.000+02:00'), True)
     TestCase().assertEqual(isdatetime('2022-10-20 14:35:40.000+02:00'), True)
     TestCase().assertEqual(isdatetime('2022-10-20 14:35:40+02:00'), True)
+
 
 def test_getdatetime():
     value = getdatetime('2011-11-04T00:05:23.125Z')
@@ -23,6 +25,7 @@ def test_getdatetime():
     TestCase().assertEqual(value.microsecond, 125)
     value = getdatetime('2011-11-04T00:05:23.000+02:00')
     TestCase().assertEqual(value.microsecond, 0)
+
 
 def test_getdate():
     value = getdate('2011-11-04')
