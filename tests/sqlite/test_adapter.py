@@ -3,12 +3,13 @@ from unittest import TestCase
 from atmost.common import object
 from atmost.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
 from atmost.sqlite import SqliteAdapter
+from os.path import abspath
 
 __author__ = "Kyriakos Barbounakis"
 __copyright__ = "Kyriakos Barbounakis"
 __license__ = "BSD-3-Clause"
 
-connection_options = object(database='tests/db/local.db')
+connection_options = object(database=abspath('tests/db/local.db'))
 
 
 def test_create_connection():
