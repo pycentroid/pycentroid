@@ -1,6 +1,4 @@
-import pytest
 from atmost.sqlite import SqliteDialect
-from atmost.common import AnyObject
 from unittest import TestCase
 
 
@@ -17,5 +15,3 @@ def test_format_type():
 
     type_str = dialect.format_type(name='price', type='Decimal', nullable=False, size=19, scale=4)
     TestCase().assertEqual(type_str, '"price" NUMERIC(19,4) NOT NULL')
-
-

@@ -1,9 +1,8 @@
-import pytest
-from atmost.sqlite import SqliteAdapter
+from unittest import TestCase
+
 from atmost.common import object
 from atmost.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
-from unittest import TestCase
-import re
+from atmost.sqlite import SqliteAdapter
 
 __author__ = "Kyriakos Barbounakis"
 __copyright__ = "Kyriakos Barbounakis"
@@ -19,19 +18,24 @@ def test_create_connection():
     db.close()
     TestCase().assertIsNone(db.__raw_connection__)
 
+
 def test_table_exists():
     db = SqliteAdapter(connection_options)
     exists = db.table('ThingBase').exists()
     TestCase().assertTrue(exists)
     db.close()
 
+
 def test_get_table_columns():
     db = SqliteAdapter(connection_options)
     columns = db.table('ThingBase').columns()
+    TestCase().assertIsNotNone(columns)
     db.close()
+
 
 def test_create_table():
     db = SqliteAdapter(connection_options)
+
     def execute():
         db.table('Table1').create([
             DataColumn(name='id', type='Counter'),
@@ -48,8 +52,10 @@ def test_create_table():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+
 def test_change_table():
     db = SqliteAdapter(connection_options)
+
     def execute():
         db.table('Table1').create([
             DataColumn(name='id', type='Counter'),
@@ -60,7 +66,7 @@ def test_change_table():
             DataColumn(name='name', type='Text', nullable=False, size=512)
         ])
         columns = db.table('Table1').columns()
-        column = next(filter(lambda x:x.name== 'name', columns),None)
+        column = next(filter(lambda x: x.name == 'name', columns), None)
         TestCase().assertIsNotNone(column)
         TestCase().assertEqual(column.size, 512)
         db.table('Table1').drop()
@@ -68,8 +74,10 @@ def test_change_table():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+
 def test_get_columns():
     db = SqliteAdapter(connection_options)
+
     def execute():
         db.table('Table1').create([
             DataColumn(name='id', type='Counter'),
@@ -82,8 +90,10 @@ def test_get_columns():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+
 def test_create_view():
     db = SqliteAdapter(connection_options)
+
     def execute():
         db.table('Table1').create([
             DataColumn(name='id', type='Counter'),
@@ -108,8 +118,10 @@ def test_create_view():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+
 def test_create_index():
     db = SqliteAdapter(connection_options)
+
     def execute():
         db.table('Table1').create([
             DataColumn(name='id', type='Counter'),
@@ -133,12 +145,14 @@ def test_create_index():
     TestUtils(db).execute_in_transaction(execute)
     db.close()
 
+
 def test_sqlite_regex():
     db = SqliteAdapter(connection_options)
     db.open()
+    # noinspection PyPep8Naming
     Products = QueryEntity('ProductData')
     items = db.execute(
-        QueryExpression(Products).where(lambda x: x.name.__contains__('Apple') == True)
+        QueryExpression(Products).where(lambda x: x.name.__contains__('Apple') is True)
     )
     TestCase().assertGreater(len(items), 0)
     for item in items:
