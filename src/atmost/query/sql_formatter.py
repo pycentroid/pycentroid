@@ -12,11 +12,12 @@ class SqlDialectOptions:
         self.name_format = name_format
         self.force_alias = force_alias
 
-LogicalOperators = [ '$and', '$or']
-ComparisonOperators = [ '$eq', '$ne', '$gt', '$gte', '$lt', '$lte' ]
+
+LogicalOperators = ['$and', '$or']
+ComparisonOperators = ['$eq', '$ne', '$gt', '$gte', '$lt', '$lte']
+
 
 class SqlDialect:
-
     Space = ' '
     From = 'FROM'
     Where = 'WHERE'
@@ -39,7 +40,7 @@ class SqlDialect:
         self.types = dict()
         self.resolving_collection = SyncSeriesEventEmitter()
 
-    def format_type(self, name: str, type: str, nullable = True, size = None, scale = None, ordinal = None, primary = False):
+    def format_type(self, name: str, type: str, nullable=True, size=None, scale=None, ordinal=None, primary=False):
         # get type definition
         expr = self.types[type]
         if expr is None:
@@ -52,8 +53,8 @@ class SqlDialect:
                 expr = re.sub(size_expr, f'({size})', expr)
             else:
                 expr = re.sub(size_expr, '', expr)
-                
-        # search for size ans scale expression => (?,?)
+
+        # search for size and scale expression => (?,?)
         size_scale_expr = '\\(\\?,(\s+)?\\?\\)'
         match = re.search(size_scale_expr, expr)
         if match is not None:
@@ -61,7 +62,7 @@ class SqlDialect:
                 expr = re.sub(size_scale_expr, f'({size},{scale})', expr)
             else:
                 expr = re.sub(size_scale_expr, '', expr)
-        result = self.escape_name(name);
+        result = self.escape_name(name)
         result += SqlDialect.Space
         result += expr
         result += SqlDialect.Space
@@ -74,7 +75,7 @@ class SqlDialect:
             return False
         op = get_first_key(expr)
         return op in LogicalOperators
-    
+
     def __is_comparison_expression__(expr):
         if expr is None:
             return False
@@ -119,7 +120,7 @@ class SqlDialect:
 
     def __format_name__(self, value):
         name = value if value.startswith('$') is False else value[1:]
-        if name.__contains__('.') == False:
+        if not name.__contains__('.'):
             # try to get in-process collection name, if any
             event = object(collection=None)
             # raise resolving collection event
@@ -185,16 +186,16 @@ class SqlDialect:
 
     def __count__(self, expr):
         return f'COUNT({self.escape(expr)})'
-    
+
     def __min__(self, expr):
         return f'MIN({self.escape(expr)})'
-    
+
     def __max__(self, expr):
         return f'MAX({self.escape(expr)})'
-    
+
     def __avg__(self, expr):
         return f'AVG({self.escape(expr)})'
-    
+
     def __sum__(self, expr):
         return f'SUM({self.escape(expr)})'
 
@@ -219,11 +220,12 @@ class SqlDialect:
             return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1)'
         return f'SUBSTRING({self.escape(expr)},{self.escape(pos)} + 1,{self.escape(length)})'
 
-    def __regexMatch__(self, input, regex, options = None):
-        match_type = 'm' # support multiline
-        if options is not None and options.__contains__('i'): # ignore case
+    def __regexMatch__(self, input, regex, options=None):
+        match_type = 'm'  # support multiline
+        if options is not None and options.__contains__('i'):  # ignore case
             match_type += 'i'
-        if options is not None and options.__contains__('s'): # allows the dot character (i.e. .) to match all characters including newline characters
+        if options is not None and options.__contains__(
+                's'):  # allows the dot character (i.e. .) to match all characters including newline characters
             match_type += 'n'
         return f'REGEXP_LIKE({self.escape(input)}, {self.escape(regex)}, {self.escape(match_type)})'
 
@@ -268,7 +270,7 @@ class SqlDialect:
         result += '-'.join(exprs)
         result += ')'
         return result
-    
+
     def __sub__(self, *args):
         return self.__subtract__(*args)
 
@@ -292,7 +294,7 @@ class SqlDialect:
         result += '/'.join(exprs)
         result += ')'
         return result
-    
+
     def __div__(self, *args):
         return self.__divide__(*args)
 
@@ -304,7 +306,7 @@ class SqlDialect:
         result += '%'.join(exprs)
         result += ')'
         return result
-    
+
     def __mod__(self, *args):
         return self.__modulo__(*args)
 
@@ -357,15 +359,15 @@ class SqlFormatter:
     def format_order(self, query: QueryExpression):
         sql = ''
         if query.__order_by__ is None:
-            return sql;
+            return sql
         if len(query.__order_by__) == 0:
             return sql
         sql += SqlDialect.OrderBy
         sql += SqlDialect.Space
-        index = 0;
+        index = 0
         for item in query.__order_by__:
             # get direction
-            direction = item.get('direction') # 1=ASC, -1=DESC
+            direction = item.get('direction')  # 1=ASC, -1=DESC
             if index > 0:
                 sql += ','
             sql += self.__dialect__.escape(item.get('$expr'))
@@ -376,7 +378,7 @@ class SqlFormatter:
                 sql += 'ASC'
             index += 1
         return sql
-    
+
     def format_group_by(self, query: QueryExpression):
         sql = ''
         if query.__group_by__ is None:
@@ -412,10 +414,10 @@ class SqlFormatter:
                     fields.append(self.__dialect__.escape_name(self.__dialect__.__format_name__(key)))
                 else:
                     fields.append(self.__dialect__.escape(query.__select__[key]) +
-                                SqlDialect.Space +
-                                SqlDialect.As +
-                                SqlDialect.Space +
-                                self.__dialect__.escape_name(key))
+                                  SqlDialect.Space +
+                                  SqlDialect.As +
+                                  SqlDialect.Space +
+                                  self.__dialect__.escape_name(key))
             sql += SqlDialect.Space
             sql += ','.join(fields)
             sql += SqlDialect.Space
@@ -427,7 +429,7 @@ class SqlFormatter:
         if collection_alias is not None:
             sql += SqlDialect.Space
             sql += self.__dialect__.escape_name(collection_alias)
-        
+
         # append join statement
         join_sql = self.format_join(query)
         if len(join_sql) > 0:
@@ -439,7 +441,7 @@ class SqlFormatter:
             sql += SqlDialect.Where
             sql += SqlDialect.Space
             sql += self.format_where(query.__where__)
-        
+
         if query.__order_by__ is not None:
             sql += SqlDialect.Space
             sql += self.format_order(query)
@@ -448,10 +450,9 @@ class SqlFormatter:
             sql += SqlDialect.Space
             sql += self.format_group_by(query)
         return sql
-        
 
     def format_limit_select(self, query: QueryExpression):
-        sql = self.format_select(query);
+        sql = self.format_select(query)
         if query.__limit__ > 0:
             sql += SqlDialect.Space
             sql += 'LIMIT'
@@ -549,13 +550,12 @@ class SqlFormatter:
         # validate where    
         expect(query.__where__).to_be_truthy(
             Exception('Where expression cannot be empty while formatting a delete expression'))
-         # format where
+        # format where
         sql += SqlDialect.Space
         sql += SqlDialect.Where
         sql += SqlDialect.Space
         sql += self.format_where(query.__where__)
         return sql
-
 
     def format_where(self, where):
         return self.__dialect__.escape(where)
@@ -565,18 +565,20 @@ class SqlFormatter:
         if query.__collection__ is not None:
             # get collection name (or alias)
             collection = query.__collection__.alias if query.__collection__.alias is not None else query.__collection__.collection
+
         # subscriber for resolving collection
         def resolving_collection(event):
             if query.__lookup__ is not None and len(query.__lookup__) > 0:
                 event.collection = collection
+
         # subscribe event
-        self.__dialect__.resolving_collection.subscribe(resolving_collection)
+        subscription = self.__dialect__.resolving_collection.subscribe(resolving_collection)
         try:
             if query.__update__ is not None:
                 return self.format_update(query)
             elif query.__insert__ is not None:
                 return self.format_insert(query)
-            elif query.___delete___ == True:
+            elif query.___delete___:
                 return self.format_delete(query)
             else:
                 if query.__limit__ > 0:
@@ -584,6 +586,5 @@ class SqlFormatter:
                 else:
                     return self.format_select(query)
         finally:
-            # unsubsdcribe collection event
-            self.__dialect__.resolving_collection.unsubscribe(resolving_collection)
-
+            # unsubscribe collection event
+            subscription.unsubscribe()

@@ -1,9 +1,8 @@
+# noinspection PyUnresolvedReferences
 import pytest
 from unittest import TestCase
-
 from atmost.query import QueryExpression, QueryField, select
-from dill.source import getsource
-import ast
+
 
 def test_create_expr():
     q = QueryExpression('Person')
@@ -20,11 +19,12 @@ def test_create_expr():
         'dateCreated': 1
     })
 
+
 def test_use_equal():
     q = QueryExpression('Person').select(
         'id', 'familyName', 'givenName'
-        ).where('familyName').equal('Rees')
-    
+    ).where('familyName').equal('Rees')
+
     TestCase().assertEqual(q.__where__, {
         '$eq': [
             '$familyName',
@@ -32,11 +32,12 @@ def test_use_equal():
         ]
     })
 
+
 def test_use_and():
     q = QueryExpression('Person').select(
         'id', 'familyName', 'givenName'
-        ).where('familyName').equal('Rees').and_also('givenName').equal('Alexis')
-    
+    ).where('familyName').equal('Rees').and_also('givenName').equal('Alexis')
+
     TestCase().assertEqual(q.__where__, {
         '$and': [
             {
@@ -54,11 +55,12 @@ def test_use_and():
         ]
     })
 
+
 def test_use_or():
     q = QueryExpression('Product').select(
         'name', 'releaseDate', 'price', 'category'
-        ).where('category').equal('Laptops').or_else('category').equal('Desktops')
-    
+    ).where('category').equal('Laptops').or_else('category').equal('Desktops')
+
     TestCase().assertEqual(q.__where__, {
         '$or': [
             {
@@ -76,29 +78,28 @@ def test_use_or():
         ]
     })
 
+
 def test_use_not_equal():
     q = QueryExpression('Product').select(
         'name', 'releaseDate', 'price', 'category'
-        ).where('category').not_equal('Laptops')
-    
+    ).where('category').not_equal('Laptops')
+
     TestCase().assertEqual(q.__where__, {
-                '$ne': [
-                    '$category',
-                    'Laptops'
-                ]
-            })
+        '$ne': [
+            '$category',
+            'Laptops'
+        ]
+    })
+
 
 def test_select_map():
     q = QueryExpression('Product').select(
-        lambda x: select(id = x.id, name = x.name, category = x.category, price = x.price)
-        ).where('category').not_equal('Laptops')
-    
-    TestCase().assertEqual(q.__select__, {
-                'id': 1,
-                'name': 1,
-                'category': 1,
-                'price':1
-            })
+        lambda x: select(id=x.id, name=x.name, category=x.category, price=x.price)
+    ).where('category').not_equal('Laptops')
 
-    
-    
+    TestCase().assertEqual(q.__select__, {
+        'id': 1,
+        'name': 1,
+        'category': 1,
+        'price': 1
+    })

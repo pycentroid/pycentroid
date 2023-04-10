@@ -62,7 +62,7 @@ class SyncSeriesEventEmitter:
         Args:
             handler (SyncEventHandler): An event handler to remove
         """
-        __handler__ = next(filter(lambda x: x.handler == handler, self.__handlers__))
+        __handler__ = next(filter(lambda x: x.handler == handler, self.__handlers__), None)
         if __handler__ is not None:
             self.__handlers__.remove(__handler__)
 
