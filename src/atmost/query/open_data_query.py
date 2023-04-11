@@ -1,16 +1,15 @@
 import inspect
-import typing
 from .query_expression import QueryExpression
-from .query_field import get_first_key
 from atmost.common import expect
 import logging
 from dill.source import getsource
+
 
 def any(expr: callable):
     expect(inspect.isfunction(expr)).to_be_truthy(TypeError('Expected callable.'))
     logging.debug(getsource(expr).strip())
     # parse expression
-    select = OpenDataQueryExpression().get_closure_parser().parse_select(expr);
+    select = OpenDataQueryExpression().get_closure_parser().parse_select(expr)
     # get first argument
     keys = list(select.keys())
     expect(len(keys)).to_equal(1, Exception('Expected a single field select expression.'))

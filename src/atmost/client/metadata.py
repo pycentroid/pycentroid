@@ -1,37 +1,38 @@
 import xml.etree.ElementTree as ElementTree
 from typing import List
 
-
 nsmap = {
     'edmx': 'http://docs.oasis-open.org/odata/ns/edmx',
     'edm': 'http://docs.oasis-open.org/odata/ns/edm'
 }
 
-def get_annotation_string(element: ElementTree, annotation: str) -> str:
+
+def get_annotation_string(element: ElementTree, annotation: str) -> str or None:
     child = element.find(f'edm:Annotation[@Term="{annotation}"]', nsmap)
     if child is not None:
         return child.get('String')
     return None
 
-def get_annotation_bool(element: ElementTree, annotation: str) -> bool:
+
+def get_annotation_bool(element: ElementTree, annotation: str) -> bool or None:
     child = element.find(f'edm:Annotation[@Term="{annotation}"]', nsmap)
     if child is not None:
         return bool(child.get('Bool')) or bool(child.get('Tag'))
     return None
 
-class EdmPropertyRef():
 
+class EdmPropertyRef:
     Name: str = None
 
     def __init__(self):
         pass
-    
+
     def __readxml__(self, element: ElementTree):
         self.Name = element.get('Name')
         return self
 
-class EdmKey():
 
+class EdmKey:
     PropertyRef: List[EdmPropertyRef] = []
 
     def __init__(self):
@@ -39,11 +40,11 @@ class EdmKey():
 
     def __readxml__(self, element: ElementTree):
         children = element.findall('edm:PropertyRef', nsmap)
-        self.PropertyRef = list(map(lambda x:EdmPropertyRef().__readxml__(x), children))
+        self.PropertyRef = list(map(lambda x: EdmPropertyRef().__readxml__(x), children))
         return self
 
-class EdmAnnotation():
 
+class EdmAnnotation:
     Term: str = None
     String: str = None
     Tag = None
@@ -58,8 +59,8 @@ class EdmAnnotation():
             self.Bool = bool(element.get('Bool'))
         return self
 
-class EdmProperty():
 
+class EdmProperty:
     Name: str = None
     Type: str = None
     Nullable: bool = True
@@ -84,8 +85,8 @@ class EdmProperty():
 
         return self
 
-class EdmNavigationProperty():
 
+class EdmNavigationProperty:
     Name: str = None
     Type: str = None
     Description: str = None
@@ -101,8 +102,8 @@ class EdmNavigationProperty():
         self.LongDescription = get_annotation_string(element, 'Org.OData.Core.V1.LongDescription')
         return self
 
-class EdmParameter():
 
+class EdmParameter:
     Name: str = None
     Type: str = None
     Nullable: bool = True
@@ -116,8 +117,8 @@ class EdmParameter():
         self.Nullable = bool(element.get('Nullable'))
         return self
 
-class EdmReturnType():
 
+class EdmReturnType:
     Type: str = None
     Nullable: bool = True
 
@@ -129,10 +130,10 @@ class EdmReturnType():
         self.Nullable = bool(element.get('Nullable'))
         return self
 
-class EdmProcedure():
 
+class EdmProcedure:
     Name: str = None
-    IsBound = True;
+    IsBound = True
     Parameter: List[EdmParameter] = []
     ReturnType: EdmReturnType = None
 
@@ -149,25 +150,26 @@ class EdmProcedure():
             self.ReturnType = EdmReturnType().__readxml__(return_type)
         return self
 
+
 class EdmFunction(EdmProcedure):
 
     def __init__(self):
         super().__init__()
-    
+
     def __readxml__(self, element: ElementTree):
         return super().__readxml__(element)
+
 
 class EdmAction(EdmProcedure):
 
     def __init__(self):
         super().__init__()
-    
+
     def __readxml__(self, element: ElementTree):
         return super().__readxml__(element)
 
 
-class EdmEntityType():
-
+class EdmEntityType:
     Name: str = None
     BaseType: str = None
     OpenType = True
@@ -175,11 +177,11 @@ class EdmEntityType():
     Property: List[EdmProperty] = []
     NavigationProperty: List[EdmNavigationProperty] = []
     ImplementsType: str = None
-    Annotations = [];
+    Annotations = []
 
     def __init__(self):
         pass
-    
+
     def __readxml__(self, element: ElementTree):
         self.Name = element.get('Name')
         self.OpenType = bool(element.get('OpenType')) if element.get('OpenType') is not None else False
@@ -188,7 +190,7 @@ class EdmEntityType():
             self.BaseType = element.get('BaseType')
         implements = element.find('edm:Annotation[@Term="DataModel.OData.Core.V1.Implements"]', nsmap)
         if implements is not None:
-            self.ImplementsType = implements.get('String');
+            self.ImplementsType = implements.get('String')
         # get primary key
         key = element.find('Key', nsmap)
         if key is not None:
@@ -204,8 +206,8 @@ class EdmEntityType():
         self.Annotations = list(map(lambda x: EdmAnnotation().__readxml__(x), elements))
         return self
 
-class EdmEntitySet():
 
+class EdmEntitySet:
     Name: str = None
     EntityType: str = None
     ResourcePath: str = None
@@ -219,21 +221,20 @@ class EdmEntitySet():
         self.ResourcePath = get_annotation_string(element, 'Org.OData.Core.V1.ResourcePath')
         return self
 
-class EdmEntityContainer():
 
+class EdmEntityContainer:
     EntitySet = []
 
     def __init__(self):
         pass
-    
-    def __readxml__(self, element: ElementTree):
 
+    def __readxml__(self, element: ElementTree):
         elements = element.findall('edm:EntitySet', nsmap)
         self.EntitySet = list(map(lambda x: EdmEntitySet().__readxml__(x), elements))
         return self
 
-class EdmSchema():
 
+class EdmSchema:
     Action = []
     Function = []
     EntityType = []
@@ -257,4 +258,3 @@ class EdmSchema():
         elements = element.findall('edm:Function', nsmap)
         self.Function = list(map(lambda x: EdmFunction().__readxml__(x), elements))
         return self
-        

@@ -30,19 +30,19 @@ def test_context():
     TestCase().assertIsNotNone(ctx)
 
 
-def test_get_items(context):
-    items = context.model('Products').as_queryable().where(
+async def test_get_items(context):
+    items = await context.model('Products').as_queryable().where(
         lambda x: x.category == 'Laptops'
     ).get_items()
     TestCase().assertIsNotNone(items)
 
 
-def test_get_metadata(context):
-    schema = context.get_metadata()
+async def test_get_metadata(context):
+    schema = await context.get_metadata()
     TestCase().assertIsNotNone(schema)
 
 
-def test_get_item(context):
+async def test_get_item(context):
     item = context.model('Products').as_queryable().where(
         lambda x: x.category == 'Laptops' and x.name.startswith('Apple')
     ).get_item()

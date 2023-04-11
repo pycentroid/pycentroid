@@ -2,7 +2,7 @@ import re
 import xml.etree.ElementTree as ElementTree
 from urllib.parse import urljoin
 
-import requests
+import requests_async as requests
 from requests.structures import CaseInsensitiveDict
 
 from atmost.common import expect
@@ -34,12 +34,9 @@ class ClientDataService:
             key (str): The name of the HTTP header
             value (*): The value of the HTTP header
         """
-        self.headers.update([
-            [
-                key,
-                value
-            ]
-        ])
+        self.headers.update({
+            key: value
+        })
 
     def pop(self, key):
         """Removes an HTTP header
@@ -80,26 +77,26 @@ class ClientDataModel:
     def url(self):
         return urljoin(self.service.options.remote, self.name)
 
-    def execute(self, data: dict):
+    async def execute(self, data: dict):
         # get url e.g. /Orders
         url = self.url
         # get headers
         headers = self.service.headers.copy()
         # make request and send data
-        response = requests.post(url, json=data, headers=headers)
+        response = await requests.post(url, json=data, headers=headers)
         # get response
         return response.json()
 
     def save(self, data: dict):
         return self.execute(data)
 
-    def remove(self, item: str):
+    async def remove(self, item: str):
         # get url e.g. /Orders/1234000
         url = urljoin(self.url, item)
         # get service headers
         headers = self.service.headers.copy()
         # make request
-        response = requests.delete(url, headers=headers)
+        response = await requests.delete(url, headers=headers)
         # get response, if any
         return response.json()
 
@@ -124,7 +121,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
         """
         return urljoin(self.__model__.service.options.remote, self.__model__.name)
 
-    def get_items(self):
+    async def get_items(self):
         """Returns a collection of items based on the given query
 
         Returns:
@@ -145,13 +142,13 @@ class ClientDataQueryable(OpenDataQueryExpression):
                 ]
             ])
         # make request
-        response = requests.get(url, params, headers=headers)
+        response = await requests.get(url, params, headers=headers)
         result = response.json()
         if 'value' in result and type(result['value']) is list:
             return result['value']
         return result
 
-    def get_item(self):
+    async def get_item(self):
         """Returns an item based on the given query
 
         Returns:
@@ -178,7 +175,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
                     'application/json'
                 ]
             ])
-        response = requests.get(url, params, headers=headers)
+        response = await requests.get(url, params, headers=headers)
         result = response.json()
         key = 'value'
         if key in result and type(result[key]) is list:
@@ -208,12 +205,12 @@ class ClientDataContext:
         model.service = self.service
         return model
 
-    def get_metadata(self):
+    async def get_metadata(self):
         if self.__metadata__ is not None:
             return self.__metadata__
         url = self.service.resolve('$metadata')
         headers = self.service.headers.copy()
-        response = requests.get(url, headers=headers)
+        response = await requests.get(url, headers=headers)
         text = response.text
         doc = ElementTree.fromstring(text)
         element = doc.find('edmx:DataServices/edm:Schema', {
