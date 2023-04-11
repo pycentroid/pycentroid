@@ -5,18 +5,18 @@ import pytest
 from atmost.common import object
 from atmost.query import QueryEntity, QueryExpression
 from atmost.sqlite import SqliteAdapter
+from os.path import abspath, join, dirname
 
 Products = QueryEntity('ProductData')
 People = QueryEntity('PersonData')
 Orders = QueryEntity('OrderData')
 PostalAddresses = QueryEntity('PostalAddressData', 'address')
 Customers = QueryEntity('PersonData', 'customer')
-db = None
 
 
 @pytest.fixture()
 def db() -> SqliteAdapter:
-    return SqliteAdapter(object(database='tests/db/local.db'))
+    return SqliteAdapter(object(database=abspath(join(dirname(__file__), '../db/local.db'))))
 
 
 def test_select_and_join(db):
