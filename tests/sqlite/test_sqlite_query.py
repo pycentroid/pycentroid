@@ -3,6 +3,7 @@ from atmost.sqlite import SqliteAdapter
 from atmost.common import object
 from atmost.query import QueryEntity, QueryExpression
 from unittest import TestCase
+from os.path import abspath, join, dirname
 
 Products = QueryEntity('ProductData')
 
@@ -11,7 +12,7 @@ db = None
 
 @pytest.fixture()
 def db() -> SqliteAdapter:
-    return SqliteAdapter(object(database='tests/db/local.db'))
+    return SqliteAdapter(object(database=abspath(join(dirname(__file__), '../db/local.db'))))
 
 
 # noinspection PyShadowingNames
