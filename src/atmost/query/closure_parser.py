@@ -204,7 +204,7 @@ class ClosureParser:
         expect(expr.id in self.params).to_be_truthy(Exception('The specified param cannot be found'))
         return self.params.get(expr.id)
 
-    def parse_method_call(self, expr: ast.Call):
+    def parse_method_call(self, expr: ast.Call or ast.Attribute):
         arguments = []
         instance_method = False
         if type(expr.func) is ast.Attribute:
@@ -225,6 +225,7 @@ class ClosureParser:
     def parse_subscript(self, expr: ast.Subscript):
         expr1 = self.parse_common(expr.value)
         # get start
+        # noinspection PyUnresolvedReferences
         start = 0 if expr.slice.lower is None else expr.slice.lower.n
         result = {
             '$substr': [
@@ -233,6 +234,7 @@ class ClosureParser:
             ]
         }
         # get length
+        # noinspection PyUnresolvedReferences
         length = 0 if expr.slice.upper is None else expr.slice.upper.n
         # and append param
         if length > 0:

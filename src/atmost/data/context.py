@@ -1,4 +1,4 @@
-from .data_application_base import DataApplicationBase
+from .base import DataApplicationBase
 
 
 class DataContext:
