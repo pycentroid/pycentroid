@@ -15,7 +15,7 @@ class OpenDataDialect(SqlDialect):
         super().__init__()
 
     def __format_name__(self, value):
-        name = re.sub(r'\.', '/', value[1:])
+        name = re.sub(r'\.', '/', value)
         return name if name.startswith('$') is False else name[1:]
 
     def __eq__(self, left, right):

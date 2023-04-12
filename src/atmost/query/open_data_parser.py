@@ -511,12 +511,9 @@ class OpenDataParser:
         event = object(method=format_any_field_reference(name), original_method=method, args=args, expr=None)
         self.resolving_method.emit(event)
         if event.expr is None:
-            return dict([
-                [
-                    event.method,
-                    event.args
-                ]
-            ])
+            return dict({
+                event.method: event.args
+            })
         else:
             return dict(event.expr)
 
@@ -578,16 +575,16 @@ class OpenDataParser:
                 self.move_next()
                 # get alias
                 if self.current_token is not None and self.current_token.type == TokenType.Identifier:
-                    result = dict([
-                        [self.current_token.identifier, result]
-                    ])
+                    result = {
+                        self.current_token.identifier: result
+                    }
                     self.move_next()
                 else:
                     raise Exception(f'Expected alias at offset {self.offset}')
             else:
-                result = dict([
-                    [result, 1]
-                ])
+                result = dict({
+                    result: 1
+                })
             results.append(result)
             if not self.at_end() and self.current_token.syntax == SyntaxToken.Comma().syntax:
                 self.move_next()
