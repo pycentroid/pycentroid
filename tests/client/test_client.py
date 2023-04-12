@@ -43,7 +43,7 @@ async def test_get_metadata(context):
 
 
 async def test_get_item(context):
-    item = context.model('Products').as_queryable().where(
+    item = await context.model('Products').as_queryable().where(
         lambda x: x.category == 'Laptops' and x.name.startswith('Apple')
     ).get_item()
     TestCase().assertIsNotNone(item)
