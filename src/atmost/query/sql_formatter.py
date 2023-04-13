@@ -326,12 +326,12 @@ class SqlFormatter:
             alias = query.__collection__.alias
             joins = getattr(query, '__lookup__')
             for join in joins:
-                lookup = join.get('$lookup')
-                local_field = lookup.get('localField')
-                foreign_field = lookup.get('foreignField')
-                pipeline = lookup.get('pipeline')
-                from_collection = lookup.get('from')
-                as_collection = lookup.get('as')
+                lookup = join.getstrategy('$lookup')
+                local_field = lookup.getstrategy('localField')
+                foreign_field = lookup.getstrategy('foreignField')
+                pipeline = lookup.getstrategy('pipeline')
+                from_collection = lookup.getstrategy('from')
+                as_collection = lookup.getstrategy('as')
                 sql += '' if len(sql) == 0 else SqlDialect.Space
                 sql += lookup['direction'].upper()  # LEFT INNER or RIGHT
                 sql += SqlDialect.Space
@@ -349,9 +349,9 @@ class SqlFormatter:
                     sql += '='
                     sql += self.__dialect__.escape_name((as_collection or from_collection) + '.' + foreign_field)
                 elif pipeline is not None:
-                    match = pipeline.get('$match')
+                    match = pipeline.getstrategy('$match')
                     expect(match).to_be_truthy(TypeError('Pipeline match expression cannot be empty'))
-                    expr = match.get('$expr')
+                    expr = match.getstrategy('$expr')
                     expect(expr).to_be_truthy(TypeError('Expected a valid match express'))
                     sql += self.format_where(expr)
         return sql
@@ -367,10 +367,10 @@ class SqlFormatter:
         index = 0
         for item in query.__order_by__:
             # get direction
-            direction = item.get('direction')  # 1=ASC, -1=DESC
+            direction = item.getstrategy('direction')  # 1=ASC, -1=DESC
             if index > 0:
                 sql += ','
-            sql += self.__dialect__.escape(item.get('$expr'))
+            sql += self.__dialect__.escape(item.getstrategy('$expr'))
             sql += SqlDialect.Space
             if direction == -1:
                 sql += 'DESC'
@@ -394,7 +394,7 @@ class SqlFormatter:
             if type(item) is str:
                 sql += self.__dialect__.escape(item)
             else:
-                sql += self.__dialect__.escape(item.get('$expr'))
+                sql += self.__dialect__.escape(item.getstrategy('$expr'))
             index += 1
         return sql
 

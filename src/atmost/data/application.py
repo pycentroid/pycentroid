@@ -1,10 +1,10 @@
 from .context import DataContext
-from .base import DataApplicationBase
+from atmost.common import ApplicationBase
 from .configuration import DataConfiguration
 from os import getcwd
 
 
-class DataApplication(DataApplicationBase):
+class DataApplication(ApplicationBase):
     def __init__(self, **kwargs):
         super().__init__()
         # get current directory
@@ -12,12 +12,12 @@ class DataApplication(DataApplicationBase):
         self.cwd = cwd
         # initialize data configuration
         configuration = DataConfiguration(self)
-        self.use(DataConfiguration, configuration)
+        self.services.use(DataConfiguration, configuration)
 
     def create_context(self):
         return DataContext(self)
 
     @property
     def configuration(self) -> DataConfiguration:
-        return self.get(DataConfiguration)
+        return self.services.get(DataConfiguration)
 

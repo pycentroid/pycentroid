@@ -1,5 +1,12 @@
 import inspect
+import pydash
+import re
+from os import getcwd
 from .expect import expect
+
+
+def replace_slash_with_dot(path: str) -> str:
+    return re.sub(r'/', '.', path)
 
 
 class ExpectedStrategyTypeError(Exception):
@@ -24,15 +31,17 @@ class ConfigurationStrategy:
 
 class ConfigurationBase:
     __strategy__ = {}
+    __source__ = {}
+    cwd = None
 
-    def __init__(self):
-        pass
+    def __init__(self, cwd=None):
+        self.cwd = cwd or getcwd()
 
-    def get(self, strategy):
+    def getstrategy(self, strategy):
         expect(inspect.isclass(strategy)).to_be_truthy(ExpectedStrategyTypeError())
         return self.__strategy__.get(type(strategy))
 
-    def use(self, strategy, useclass=None):
+    def usestrategy(self, strategy, useclass=None):
         expect(inspect.isclass(useclass)).to_be_truthy(ExpectedStrategyTypeError())
         if useclass is None:
             self.__strategy__.update({
@@ -50,5 +59,16 @@ class ConfigurationBase:
         else:
             raise ExpectedConfigurationStrategyError()
 
-    def has(self, strategy):
+    def hasstrategy(self, strategy):
         return type(strategy) in self.__strategy__
+
+    def get(self, path: str):
+        return pydash.get(self.__source__, replace_slash_with_dot(path))
+
+    def has(self, path: str):
+        return pydash.has(self.__source__, replace_slash_with_dot(path))
+
+    def set(self, path: str, value):
+        return pydash.update(self.__source__, replace_slash_with_dot(path), value)
+
+

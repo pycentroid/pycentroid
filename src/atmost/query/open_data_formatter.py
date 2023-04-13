@@ -257,7 +257,7 @@ class OpenDataFormatter(SqlFormatter):
         if len(query.__order_by__) == 0:
             return None
         return ','.join(
-            map(lambda x: self.__dialect__.escape(x.get('$expr')) + ' ' + x.get('direction'), query.__order_by__))
+            map(lambda x: self.__dialect__.escape(x.getstrategy('$expr')) + ' ' + x.getstrategy('direction'), query.__order_by__))
 
     def format_select(self, query):
         result = {}
