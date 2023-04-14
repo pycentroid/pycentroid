@@ -9,8 +9,9 @@ class DataApplication(ApplicationBase):
         super().__init__()
         # get current directory
         cwd = kwargs.get('cwd') or getcwd()
+        # set current directory
         self.cwd = cwd
-        # initialize data configuration
+        # init data configuration
         self.services.use(DataConfiguration, DataConfiguration(self))
 
     def create_context(self):
