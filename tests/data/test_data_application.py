@@ -28,6 +28,8 @@ def test_get_configuration():
     app = DataApplication(cwd=APP_PATH)
     TestCase().assertIsNotNone(app.configuration)
     TestCase().assertEqual(type(app.configuration), DataConfiguration)
+    section = app.configuration.get('settings/mail')
+    TestCase().assertIsNotNone(section)
 
 
 def test_get_service():

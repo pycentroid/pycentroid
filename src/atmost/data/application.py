@@ -11,8 +11,7 @@ class DataApplication(ApplicationBase):
         cwd = kwargs.get('cwd') or getcwd()
         self.cwd = cwd
         # initialize data configuration
-        configuration = DataConfiguration(self)
-        self.services.use(DataConfiguration, configuration)
+        self.services.use(DataConfiguration, DataConfiguration(self))
 
     def create_context(self):
         return DataContext(self)

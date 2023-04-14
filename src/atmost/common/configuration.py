@@ -1,8 +1,14 @@
 import inspect
 import pydash
 import re
+import yaml
 from os import getcwd
 from .expect import expect
+from typing import TypeVar
+from os.path import abspath, join, isfile
+from os import environ as env
+
+T = TypeVar('T')
 
 
 def replace_slash_with_dot(path: str) -> str:
@@ -35,11 +41,26 @@ class ConfigurationBase:
     cwd = None
 
     def __init__(self, cwd=None):
-        self.cwd = cwd or getcwd()
+        self.cwd = cwd or join(self.cwd, 'config')
+        # load configuration from file
+        path = join(self.cwd, f'app.{self.__env__}.yml')
+        if isfile(path):
+            with open(path, 'r') as file:
+                self.__source__ = yaml.load(file, yaml.FullLoader)
+        else:
+            path = join(self.cwd, f'app.yml')
+            if isfile(path):
+                with open(path, 'r') as file:
+                    self.__source__ = yaml.load(file, yaml.FullLoader)
 
-    def getstrategy(self, strategy):
-        expect(inspect.isclass(strategy)).to_be_truthy(ExpectedStrategyTypeError())
-        return self.__strategy__.get(type(strategy))
+    @property
+    def __env__(self):
+        return env['ENV'] if 'ENV' in env else 'development'
+
+    # noinspection PyPep8Naming
+    def getstrategy(self, T) -> T:
+        expect(inspect.isclass(T)).to_be_truthy(ExpectedStrategyTypeError())
+        return self.__strategy__.get(type(T))
 
     def usestrategy(self, strategy, useclass=None):
         expect(inspect.isclass(useclass)).to_be_truthy(ExpectedStrategyTypeError())
@@ -58,6 +79,7 @@ class ConfigurationBase:
             })
         else:
             raise ExpectedConfigurationStrategyError()
+        return self
 
     def hasstrategy(self, strategy):
         return type(strategy) in self.__strategy__
@@ -71,4 +93,5 @@ class ConfigurationBase:
     def set(self, path: str, value):
         return pydash.update(self.__source__, replace_slash_with_dot(path), value)
 
-
+    def unset(self, path: str):
+        return pydash.unset(self.__source__, replace_slash_with_dot(path))
