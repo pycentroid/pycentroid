@@ -1,4 +1,4 @@
-from .context import DataContext
+from .context import DataContext, DefaultDataContext
 from atmost.common import ApplicationBase
 from .configuration import DataConfiguration
 from os import getcwd
@@ -14,8 +14,8 @@ class DataApplication(ApplicationBase):
         # init data configuration
         self.services.use(DataConfiguration, DataConfiguration(self))
 
-    def create_context(self):
-        return DataContext(self)
+    def create_context(self) -> DataContext:
+        return DefaultDataContext(self)
 
     @property
     def configuration(self) -> DataConfiguration:

@@ -1,14 +1,20 @@
 from os.path import abspath, join
-from atmost.common import ConfigurationBase, ApplicationBase, expect
+from atmost.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, dict2object
 import importlib
+from atmost.query import DataAdapter
 
 
-class DataConfiguration(ConfigurationBase):
-    def __init__(self, application: ApplicationBase):
-        super().__init__(abspath(join(application.cwd, 'config')))
-        # load adapter types
-        adapter_types = self.get('adapterTypes')
-        self.__adapter_types__ = {}
+class DataAdapterStrategy(ConfigurationStrategy):
+
+    __adapters__ = []
+
+    def __init__(self, configuration):
+        super().__init__(configuration)
+        self.configure()
+
+    def configure(self):
+        adapter_types = self.configuration.get('adapterTypes')
+        self.__adapters__ = []
         if type(adapter_types) is list:
             for adapter_type in adapter_types:
                 if 'type' in adapter_type:
@@ -25,21 +31,33 @@ class DataConfiguration(ConfigurationBase):
                     expect(hasattr(module, class_name)).to_be_truthy(
                         Exception('The specified adapter type cannot be found in target module.')
                     )
-                    # get invariant name
-                    invariant_name = adapter_type['invariantName']
                     # and class
                     adapter_class = getattr(module, class_name)
-                    self.__adapter_types__.update({
-                        invariant_name: adapter_class
+                    adapter_type.update({
+                        'adapterClass': adapter_class
                     })
-        adapters = self.get('adapters')
-        if adapters is None:
-            self.set('adapters', [])
 
-    @property
-    def adapter_types(self):
-        return self.__adapter_types__
+        adapters = self.configuration.get('adapters')
+        if type(adapters) is list:
+            for adapter in adapters:
+                # find adapter type
+                adapter_type = next(
+                    filter(lambda x: x['invariantName'] == adapter['invariantName'], adapter_types), None
+                )
+                adapter.update({
+                    'adapterType': adapter_type.copy()
+                })
+                self.__adapters__.append(dict2object(adapter))
+
+    def get(self, name=None):
+        if name is None:
+            return next(filter(lambda x: x.default is True, self.__adapters__), None)
+        return next(filter(lambda x: x.name == name, self.__adapters__), None)
 
 
-
+class DataConfiguration(ConfigurationBase):
+    def __init__(self, application: ApplicationBase):
+        super().__init__(abspath(join(application.cwd, 'config')))
+        # use data adapter strategy
+        self.usestrategy(DataAdapterStrategy)
 

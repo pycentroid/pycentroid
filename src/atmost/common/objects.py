@@ -1,3 +1,4 @@
+from collections import namedtuple
 
 
 class AnyObject:
@@ -14,3 +15,10 @@ class AnyObject:
 
 def object(**kwargs):
     return AnyObject(**kwargs)
+
+
+def dict2object(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            d[k] = dict2object(v)
+    return namedtuple('object', d.keys())(*d.values())
