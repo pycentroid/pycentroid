@@ -1,7 +1,7 @@
 from os.path import abspath, join
-from atmost.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, dict2object
+from atmost.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, dict_to_object
 import importlib
-from atmost.query import DataAdapter
+from .loaders import SchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 
 
 class DataAdapterStrategy(ConfigurationStrategy):
@@ -47,7 +47,7 @@ class DataAdapterStrategy(ConfigurationStrategy):
                 adapter.update({
                     'adapterType': adapter_type.copy()
                 })
-                self.__adapters__.append(dict2object(adapter))
+                self.__adapters__.append(dict_to_object(adapter))
 
     def get(self, name=None):
         if name is None:
@@ -58,6 +58,7 @@ class DataAdapterStrategy(ConfigurationStrategy):
 class DataConfiguration(ConfigurationBase):
     def __init__(self, application: ApplicationBase):
         super().__init__(abspath(join(application.cwd, 'config')))
-        # use data adapter strategy
+        # use DataAdapterStrategy
         self.usestrategy(DataAdapterStrategy)
-
+        # use DefaultSchemaLoaderStrategy
+        self.usestrategy(SchemaLoaderStrategy, DefaultSchemaLoaderStrategy)

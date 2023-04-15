@@ -17,8 +17,8 @@ def object(**kwargs):
     return AnyObject(**kwargs)
 
 
-def dict2object(d):
+def dict_to_object(d):
     for k, v in d.items():
         if isinstance(v, dict):
-            d[k] = dict2object(v)
-    return namedtuple('object', d.keys())(*d.values())
+            d[k] = dict_to_object(v)
+    return namedtuple('AnyObject', d.keys())(*d.values())
