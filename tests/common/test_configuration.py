@@ -2,6 +2,7 @@ import pytest
 from unittest import TestCase
 from atmost.common import ConfigurationBase, ConfigurationStrategy
 from os import getcwd
+from os.path import join
 
 
 class TestStrategy(ConfigurationStrategy):
@@ -10,7 +11,7 @@ class TestStrategy(ConfigurationStrategy):
 
 def test_create_configuration():
     configuration = ConfigurationBase()
-    TestCase().assertEqual(configuration.cwd, getcwd())
+    TestCase().assertEqual(configuration.cwd, join(getcwd(), 'config'))
 
 
 def test_configuration_use_strategy():

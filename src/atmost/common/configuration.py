@@ -1,12 +1,14 @@
 import inspect
-import pydash
 import re
-import yaml
-from os import getcwd
-from .expect import expect
-from typing import TypeVar
-from os.path import abspath, join, isfile
 from os import environ as env
+from os import getcwd
+from os.path import join, isfile
+from typing import TypeVar
+
+import pydash
+import yaml
+
+from .expect import expect
 
 T = TypeVar('T')
 
@@ -41,7 +43,7 @@ class ConfigurationBase:
     cwd = None
 
     def __init__(self, cwd=None):
-        self.cwd = cwd or join(self.cwd, 'config')
+        self.cwd = cwd or join(getcwd(), 'config')
         # load configuration from file
         path = join(self.cwd, f'app.{self.__env__}.yml')
         if isfile(path):
@@ -60,29 +62,24 @@ class ConfigurationBase:
     # noinspection PyPep8Naming
     def getstrategy(self, T) -> T:
         expect(inspect.isclass(T)).to_be_truthy(ExpectedStrategyTypeError())
-        return self.__strategy__.get(type(T))
+        return self.__strategy__.get(T.__name__)
 
     def usestrategy(self, strategy, useclass=None):
         expect(inspect.isclass(useclass)).to_be_truthy(ExpectedStrategyTypeError())
         if useclass is None:
-            self.__strategy__.update({
-                type(strategy): strategy(self)
-            })
+            self.__strategy__[strategy.__name__] = strategy(self)
         elif inspect.isclass(useclass):
             instance = useclass(self)
-            self.__strategy__.update({
-                type(strategy): instance
-            })
+            self.__strategy__[strategy.__name__] = instance
         elif type(useclass) is ConfigurationStrategy:
-            self.__strategy__.update({
-                type(strategy): useclass
-            })
+            self.__strategy__[strategy.__name__] = useclass
         else:
             raise ExpectedConfigurationStrategyError()
         return self
 
     def hasstrategy(self, strategy):
-        return type(strategy) in self.__strategy__
+        expect(inspect.isclass(strategy)).to_be_truthy(ExpectedStrategyTypeError())
+        return strategy.__name__ in self.__strategy__
 
     def get(self, path: str):
         return pydash.get(self.__source__, replace_slash_with_dot(path))

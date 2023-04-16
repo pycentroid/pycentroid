@@ -20,26 +20,27 @@ class ServiceContainer:
     # noinspection PyPep8Naming
     def get(self, T) -> T:
         expect(inspect.isclass(T)).to_be_truthy(TypeError('Application service must be a type'))
-        return self.__services__.get(type(T))
+        return self.__services__.get(T.__name__)
 
     def use(self, service, strategy=None):
         expect(inspect.isclass(service)).to_be_truthy(TypeError('Application service must be a type'))
         if strategy is None:
             self.__services__.update({
-                type(service): service(self)
+                service.__name__: service(self)
             })
         elif inspect.isclass(strategy):
             self.__services__.update({
-                type(service): strategy(self)
+                service.__name__: strategy(self)
             })
         else:
             self.__services__.update({
-                type(service): strategy
+                service.__name__: strategy
             })
         return self
 
     def has(self, service) -> bool:
-        return type(service) in self.__services__
+        expect(inspect.isclass(service)).to_be_truthy(TypeError('Application service must be a type'))
+        return service.__name__ in self.__services__
 
 
 class ApplicationBase:
