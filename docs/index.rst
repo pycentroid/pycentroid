@@ -1,8 +1,8 @@
 =================
-themost-framework
+centroid
 =================
 
-This is the documentation of **themost-framework**.
+This is the documentation of **centroid**.
 
 .. note::
 

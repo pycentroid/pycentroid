@@ -1,0 +1,16 @@
+settings:
+  mail:
+    host: "127.0.0.1"
+    port: 25
+adapterTypes:
+  -
+    name: "SQLite Data Adapter"
+    invariantName: "sqlite"
+    type: "centroid.sqlite#SqliteAdapter"
+adapters:
+  -
+    name: "test"
+    invariantName: "sqlite"
+    default: true
+    options:
+      database: "tests/db/local.db"

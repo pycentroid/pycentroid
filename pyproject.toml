@@ -1,5 +1,5 @@
 [project]
-name = "themost_framework"
+name = "centroid"
 version = "1.0.1"
 authors = [
   { name="Kyriakos Barbounakis", email="k.barbounakis@gmail.com" },
@@ -14,5 +14,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/themost-framework/themost-framework-py"
-"Bug Tracker" = "https://github.com/pypa/themost-framework/themost-framework-py/issues"
+"Homepage" = "https://github.com/centroid-py/centroid"
+"Bug Tracker" = "https://github.com/centroid-py/centroid/issues"

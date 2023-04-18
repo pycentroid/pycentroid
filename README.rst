@@ -2,7 +2,7 @@
 *This project is under heavy development*
 
 =================
-themost_framework
+centroid
 =================
 
 @themost-framework for Python

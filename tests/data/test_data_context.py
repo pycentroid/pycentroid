@@ -1,14 +1,18 @@
 import pytest
+from centroid.data.application import DataApplication
+from os.path import abspath, join, dirname
+from unittest import TestCase
+from centroid.common import ApplicationBase, ApplicationService
 
-from themost_framework.data.data_application import DataApplication
-
-__author__ = "Kyriakos Barbounakis"
-__copyright__ = "Kyriakos Barbounakis"
-__license__ = "BSD-3-Clause"
+APP_PATH = abspath(join(dirname(__file__), '..'))
 
 
 def test_create_context():
-    app = DataApplication()
+    app = DataApplication(cwd=APP_PATH)
     context = app.create_context()
-    assert context.application is app
+    TestCase().assertIsNotNone(context.application)
+    TestCase().assertIsNotNone(context.db)
+    context.finalize()
+
+
 
