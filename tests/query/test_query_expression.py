@@ -1,7 +1,7 @@
 # noinspection PyUnresolvedReferences
 import pytest
 from unittest import TestCase
-from atmost.query import QueryExpression, QueryField, select
+from centroid.query import QueryExpression, QueryField, select
 
 
 def test_create_expr():

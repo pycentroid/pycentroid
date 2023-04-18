@@ -8,5 +8,5 @@ asyncio~=3.4.3
 requests-async~=0.6.2
 pydash~=7.0.0
 typing-extensions~=4.5.0
-atmost~=1.0.1
+centroid~=1.0.1
 PyYAML~=6.0

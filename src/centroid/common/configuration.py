@@ -50,7 +50,7 @@ class ConfigurationBase:
             with open(path, 'r') as file:
                 self.__source__ = yaml.load(file, yaml.FullLoader)
         else:
-            path = join(self.cwd, f'app.yml')
+            path = join(self.cwd, 'app.yml')
             if isfile(path):
                 with open(path, 'r') as file:
                     self.__source__ = yaml.load(file, yaml.FullLoader)

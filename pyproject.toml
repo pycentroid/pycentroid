@@ -1,5 +1,5 @@
 [project]
-name = "atmost"
+name = "centroid"
 version = "1.0.1"
 authors = [
   { name="Kyriakos Barbounakis", email="k.barbounakis@gmail.com" },
@@ -14,5 +14,5 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/atmost-py/atmost"
-"Bug Tracker" = "https://github.com/atmost-py/atmost/issues"
+"Homepage" = "https://github.com/centroid-py/centroid"
+"Bug Tracker" = "https://github.com/centroid-py/centroid/issues"

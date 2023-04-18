@@ -1,6 +1,6 @@
 import inspect
 from .query_expression import QueryExpression
-from atmost.common import expect
+from centroid.common import expect
 import logging
 from dill.source import getsource
 

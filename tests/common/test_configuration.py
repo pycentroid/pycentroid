@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from atmost.common import ConfigurationBase, ConfigurationStrategy
+from centroid.common import ConfigurationBase, ConfigurationStrategy
 from os import getcwd
 from os.path import join
 

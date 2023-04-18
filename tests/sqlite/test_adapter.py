@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from atmost.common import object
-from atmost.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
-from atmost.sqlite import SqliteAdapter
+from centroid.common import object
+from centroid.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
+from centroid.sqlite import SqliteAdapter
 from os.path import abspath, join, dirname
 import logging
 

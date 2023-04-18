@@ -1,4 +1,4 @@
-from atmost.sqlite import SqliteDialect
+from centroid.sqlite import SqliteDialect
 from unittest import TestCase
 
 

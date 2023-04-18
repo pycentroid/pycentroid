@@ -1,7 +1,7 @@
 import pytest
-from atmost.sqlite import SqliteAdapter
-from atmost.common import object
-from atmost.query import QueryEntity, QueryExpression
+from centroid.sqlite import SqliteAdapter
+from centroid.common import object
+from centroid.query import QueryEntity, QueryExpression
 from unittest import TestCase
 from os.path import abspath, join, dirname
 

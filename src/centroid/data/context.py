@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from typing import Callable
-from atmost.common import ApplicationBase, expect
+from centroid.common import ApplicationBase, expect
 from .configuration import DataConfiguration, DataAdapterStrategy
-from atmost.query import DataAdapter
+from centroid.query import DataAdapter
 
 
 class DataContext:

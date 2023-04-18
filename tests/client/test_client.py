@@ -1,7 +1,7 @@
 import pytest
 import requests
 from unittest import TestCase
-from atmost.client import ClientDataContext, ClientContextOptions
+from centroid.client import ClientDataContext, ClientContextOptions
 from urllib.parse import urljoin
 
 REMOTE_SERVER = 'http://localhost:3000/api/'

@@ -1,4 +1,4 @@
-from atmost.common.objects import AnyObject
+from centroid.common.objects import AnyObject
 from unittest import TestCase
 
 SAMPLE_SCHEMA = {

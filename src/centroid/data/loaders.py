@@ -1,9 +1,8 @@
 import json
-import logging
 from abc import abstractmethod
 from inspect import isclass
 
-from atmost.common import ConfigurationStrategy
+from centroid.common import ConfigurationStrategy
 from typing import List
 from os.path import abspath, join, isfile, splitext
 from os import listdir

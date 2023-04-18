@@ -6,7 +6,7 @@ adapterTypes:
   -
     name: "SQLite Data Adapter"
     invariantName: "sqlite"
-    type: "atmost.sqlite#SqliteAdapter"
+    type: "centroid.sqlite#SqliteAdapter"
 adapters:
   -
     name: "test"

@@ -1,6 +1,6 @@
-from atmost.data.loaders import SchemaLoaderStrategy
-from atmost.data.application import DataApplication
-from atmost.common.objects import AnyObject
+from centroid.data.loaders import SchemaLoaderStrategy
+from centroid.data.application import DataApplication
+from centroid.common.objects import AnyObject
 from os.path import abspath, join, dirname
 from unittest import TestCase
 

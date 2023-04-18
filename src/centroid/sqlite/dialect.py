@@ -1,4 +1,4 @@
-from atmost.query import SqlDialect, SqlFormatter, SqlDialectOptions
+from centroid.query import SqlDialect, SqlFormatter, SqlDialectOptions
 import re
 
 SqlDialectTypes = [

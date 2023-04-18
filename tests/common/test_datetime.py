@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from atmost.common.datetime import isdatetime, getdatetime, getdate
+from centroid.common.datetime import isdatetime, getdatetime, getdate
 from datetime import datetime
 
 

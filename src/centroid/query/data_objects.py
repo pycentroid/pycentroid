@@ -1,6 +1,6 @@
 from typing import Callable
 from abc import abstractmethod
-from atmost.common import AnyObject
+from centroid.common import AnyObject
 import logging
 
 

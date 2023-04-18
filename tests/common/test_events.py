@@ -1,7 +1,7 @@
 # noinspection PyUnresolvedReferences
 import pytest
 from unittest import TestCase
-from atmost.common import SyncSeriesEventEmitter
+from centroid.common import SyncSeriesEventEmitter
 
 
 def next_handler(event):

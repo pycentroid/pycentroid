@@ -1,5 +1,5 @@
 from .context import DataContext, DefaultDataContext
-from atmost.common import ApplicationBase
+from centroid.common import ApplicationBase
 from .configuration import DataConfiguration
 from os import getcwd
 

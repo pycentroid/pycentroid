@@ -1,8 +1,8 @@
 =================
-atmost
+centroid
 =================
 
-This is the documentation of **atmost**.
+This is the documentation of **centroid**.
 
 .. note::
 

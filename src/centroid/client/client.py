@@ -5,8 +5,8 @@ from urllib.parse import urljoin
 import requests_async as requests
 from requests.structures import CaseInsensitiveDict
 
-from atmost.common import expect
-from atmost.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
+from centroid.common import expect
+from centroid.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
 from .metadata import EdmSchema
 
 NSMAP = {

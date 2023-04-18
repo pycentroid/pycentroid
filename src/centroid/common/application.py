@@ -1,5 +1,5 @@
 import inspect
-from atmost.common import expect
+from centroid.common import expect
 from os import getcwd
 from typing import TypeVar
 

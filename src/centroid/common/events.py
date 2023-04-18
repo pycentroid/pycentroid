@@ -38,7 +38,7 @@ class SyncSeriesEventEmitter:
         """Appends an event handler and waits for event
         Parameters:
                     handler (Callable): An event handler to include
-        Returns: 
+        Returns:
                 subscription (SyncSubscription): An object which represents an event subscription for later use
         """
         handle = SyncEventHandler(handler)

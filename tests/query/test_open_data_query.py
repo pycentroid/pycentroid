@@ -1,9 +1,9 @@
 # noinspection PyUnresolvedReferences
 import pytest
 from unittest import TestCase
-from atmost.query.query_entity import QueryEntity
-from atmost.query.open_data_query import any, OpenDataQueryExpression
-from atmost.query.open_data_formatter import OpenDataFormatter
+from centroid.query.query_entity import QueryEntity
+from centroid.query.open_data_query import any, OpenDataQueryExpression
+from centroid.query.open_data_formatter import OpenDataFormatter
 
 
 def test_get_any_expression():

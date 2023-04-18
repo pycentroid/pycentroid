@@ -2,8 +2,8 @@ from math import floor
 # noinspection PyUnresolvedReferences
 import pytest
 from unittest import TestCase
-from atmost.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
-from atmost.common import year, month
+from centroid.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
+from centroid.common import year, month
 
 
 # noinspection PyMethodMayBeStatic

@@ -1,10 +1,10 @@
 from .dialect import SqliteDialect, SqliteFormatter
-from atmost.query import QueryExpression, DataAdapter, DataTable, DataView, DataTableIndex
+from centroid.query import QueryExpression, DataAdapter, DataTable, DataView, DataTableIndex
 import sqlite3
 import re
 import time
 from typing import Callable
-from atmost.common import AnyObject
+from centroid.common import AnyObject
 import logging
 
 

@@ -1,5 +1,5 @@
 from os.path import abspath, join
-from atmost.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, dict_to_object
+from centroid.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, dict_to_object
 import importlib
 from .loaders import SchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 

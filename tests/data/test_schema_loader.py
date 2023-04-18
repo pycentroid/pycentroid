@@ -1,6 +1,6 @@
 import pytest
-from atmost.data.application import DataApplication
-from atmost.data.loaders import SchemaLoaderStrategy, FileSchemaLoaderStrategy, DefaultSchemaLoaderStrategy
+from centroid.data.application import DataApplication
+from centroid.data.loaders import SchemaLoaderStrategy, FileSchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 from os.path import abspath, join, dirname
 from unittest import TestCase
 
