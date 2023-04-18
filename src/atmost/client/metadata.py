@@ -10,14 +10,14 @@ nsmap = {
 def get_annotation_string(element: ElementTree, annotation: str) -> str or None:
     child = element.find(f'edm:Annotation[@Term="{annotation}"]', nsmap)
     if child is not None:
-        return child.getstrategy('String')
+        return child.get('String')
     return None
 
 
 def get_annotation_bool(element: ElementTree, annotation: str) -> bool or None:
     child = element.find(f'edm:Annotation[@Term="{annotation}"]', nsmap)
     if child is not None:
-        return bool(child.getstrategy('Bool')) or bool(child.getstrategy('Tag'))
+        return bool(child.get('Bool')) or bool(child.get('Tag'))
     return None
 
 
@@ -28,7 +28,7 @@ class EdmPropertyRef:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
+        self.Name = element.get('Name')
         return self
 
 
@@ -51,12 +51,12 @@ class EdmAnnotation:
     Bool = None
 
     def __readxml__(self, element: ElementTree):
-        self.Term = element.getstrategy('Term')
-        self.String = element.getstrategy('String')
+        self.Term = element.get('Term')
+        self.String = element.get('String')
         if 'Tag' in element.attrib:
-            self.Tag = element.getstrategy('Tag')
+            self.Tag = element.get('Tag')
         if 'Bool' in element.attrib:
-            self.Bool = bool(element.getstrategy('Bool'))
+            self.Bool = bool(element.get('Bool'))
         return self
 
 
@@ -73,9 +73,9 @@ class EdmProperty:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
-        self.Type = element.getstrategy('Type')
-        self.Nullable = bool(element.getstrategy('Nullable')) if element.getstrategy('Nullable') is not None else True
+        self.Name = element.get('Name')
+        self.Type = element.get('Type')
+        self.Nullable = bool(element.get('Nullable')) if element.get('Nullable') is not None else True
 
         self.Computed = get_annotation_bool(element, 'Org.OData.Core.V1.Computed')
         self.Immutable = get_annotation_bool(element, 'Org.OData.Core.V1.Immutable')
@@ -96,8 +96,8 @@ class EdmNavigationProperty:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
-        self.Type = element.getstrategy('Type')
+        self.Name = element.get('Name')
+        self.Type = element.get('Type')
         self.Description = get_annotation_string(element, 'Org.OData.Core.V1.Description')
         self.LongDescription = get_annotation_string(element, 'Org.OData.Core.V1.LongDescription')
         return self
@@ -112,9 +112,9 @@ class EdmParameter:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
-        self.Type = element.getstrategy('Type')
-        self.Nullable = bool(element.getstrategy('Nullable'))
+        self.Name = element.get('Name')
+        self.Type = element.get('Type')
+        self.Nullable = bool(element.get('Nullable'))
         return self
 
 
@@ -126,8 +126,8 @@ class EdmReturnType:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Type = element.getstrategy('Type')
-        self.Nullable = bool(element.getstrategy('Nullable'))
+        self.Type = element.get('Type')
+        self.Nullable = bool(element.get('Nullable'))
         return self
 
 
@@ -141,8 +141,8 @@ class EdmProcedure:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
-        self.IsBound = bool(element.getstrategy('IsBound'))
+        self.Name = element.get('Name')
+        self.IsBound = bool(element.get('IsBound'))
         params = element.findall('edm:Parameter', nsmap)
         self.Parameter = list(map(lambda x: EdmParameter().__readxml__(x), params))
         return_type = element.find('edm:ReturnType', nsmap)
@@ -183,14 +183,14 @@ class EdmEntityType:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
-        self.OpenType = bool(element.getstrategy('OpenType')) if element.getstrategy('OpenType') is not None else False
+        self.Name = element.get('Name')
+        self.OpenType = bool(element.get('OpenType')) if element.get('OpenType') is not None else False
         # get base type
-        if element.getstrategy('BaseType') is not None:
-            self.BaseType = element.getstrategy('BaseType')
+        if element.get('BaseType') is not None:
+            self.BaseType = element.get('BaseType')
         implements = element.find('edm:Annotation[@Term="DataModel.OData.Core.V1.Implements"]', nsmap)
         if implements is not None:
-            self.ImplementsType = implements.getstrategy('String')
+            self.ImplementsType = implements.get('String')
         # get primary key
         key = element.find('Key', nsmap)
         if key is not None:
@@ -216,8 +216,8 @@ class EdmEntitySet:
         pass
 
     def __readxml__(self, element: ElementTree):
-        self.Name = element.getstrategy('Name')
-        self.EntityType = element.getstrategy('EntityType')
+        self.Name = element.get('Name')
+        self.EntityType = element.get('EntityType')
         self.ResourcePath = get_annotation_string(element, 'Org.OData.Core.V1.ResourcePath')
         return self
 

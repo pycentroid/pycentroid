@@ -19,11 +19,11 @@ def any(expr: callable):
 
 
 class OpenDataQueryExpression(QueryExpression):
-    
+
     def __init__(self, collection=None):
         super().__init__(collection)
         self.__expand__ = []
-    
+
     def expand(self, *args):
         for arg in args:
             if isinstance(arg, QueryExpression):

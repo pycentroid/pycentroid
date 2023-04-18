@@ -1,6 +1,6 @@
-from .query_expression import QueryExpression, QueryField
+from .query_expression import QueryExpression
 from .query_field import get_first_key
-from ..common import expect, object
+from ..common import expect, AnyObject
 from ..common.events import SyncSeriesEventEmitter
 from .utils import SqlUtils
 from .object_name_validator import ObjectNameValidator
@@ -55,7 +55,7 @@ class SqlDialect:
                 expr = re.sub(size_expr, '', expr)
 
         # search for size and scale expression => (?,?)
-        size_scale_expr = '\\(\\?,(\s+)?\\?\\)'
+        size_scale_expr = r'\(\?,(\s+)?\?\)'
         match = re.search(size_scale_expr, expr)
         if match is not None:
             if size is not None and scale is not None:
@@ -67,7 +67,7 @@ class SqlDialect:
         result += expr
         result += SqlDialect.Space
         # set null
-        result += 'NULL' if nullable == True else 'NOT NULL'
+        result += 'NULL' if nullable is True else 'NOT NULL'
         return result
 
     def __is_logical_expression__(expr):
@@ -122,7 +122,7 @@ class SqlDialect:
         name = value if value.startswith('$') is False else value[1:]
         if not name.__contains__('.'):
             # try to get in-process collection name, if any
-            event = object(collection=None)
+            event = AnyObject(collection=None)
             # raise resolving collection event
             self.resolving_collection.emit(event)
             # if collection has been defined
@@ -326,12 +326,12 @@ class SqlFormatter:
             alias = query.__collection__.alias
             joins = getattr(query, '__lookup__')
             for join in joins:
-                lookup = join.getstrategy('$lookup')
-                local_field = lookup.getstrategy('localField')
-                foreign_field = lookup.getstrategy('foreignField')
-                pipeline = lookup.getstrategy('pipeline')
-                from_collection = lookup.getstrategy('from')
-                as_collection = lookup.getstrategy('as')
+                lookup = join.get('$lookup')
+                local_field = lookup.get('localField')
+                foreign_field = lookup.get('foreignField')
+                pipeline = lookup.get('pipeline')
+                from_collection = lookup.get('from')
+                as_collection = lookup.get('as')
                 sql += '' if len(sql) == 0 else SqlDialect.Space
                 sql += lookup['direction'].upper()  # LEFT INNER or RIGHT
                 sql += SqlDialect.Space
@@ -349,9 +349,9 @@ class SqlFormatter:
                     sql += '='
                     sql += self.__dialect__.escape_name((as_collection or from_collection) + '.' + foreign_field)
                 elif pipeline is not None:
-                    match = pipeline.getstrategy('$match')
+                    match = pipeline.get('$match')
                     expect(match).to_be_truthy(TypeError('Pipeline match expression cannot be empty'))
-                    expr = match.getstrategy('$expr')
+                    expr = match.get('$expr')
                     expect(expr).to_be_truthy(TypeError('Expected a valid match express'))
                     sql += self.format_where(expr)
         return sql
@@ -367,10 +367,10 @@ class SqlFormatter:
         index = 0
         for item in query.__order_by__:
             # get direction
-            direction = item.getstrategy('direction')  # 1=ASC, -1=DESC
+            direction = item.get('direction')  # 1=ASC, -1=DESC
             if index > 0:
                 sql += ','
-            sql += self.__dialect__.escape(item.getstrategy('$expr'))
+            sql += self.__dialect__.escape(item.get('$expr'))
             sql += SqlDialect.Space
             if direction == -1:
                 sql += 'DESC'
@@ -394,7 +394,7 @@ class SqlFormatter:
             if type(item) is str:
                 sql += self.__dialect__.escape(item)
             else:
-                sql += self.__dialect__.escape(item.getstrategy('$expr'))
+                sql += self.__dialect__.escape(item.get('$expr'))
             index += 1
         return sql
 
@@ -547,7 +547,7 @@ class SqlFormatter:
         if len(join_sql) > 0:
             sql += SqlDialect.Space
             sql += join_sql
-        # validate where    
+        # validate where
         expect(query.__where__).to_be_truthy(
             Exception('Where expression cannot be empty while formatting a delete expression'))
         # format where

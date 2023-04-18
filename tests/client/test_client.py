@@ -21,7 +21,7 @@ def context() -> ClientDataContext:
     response = requests.post(url=url, data=data)
     context = ClientDataContext(ClientContextOptions(REMOTE_SERVER))
     token = response.json()
-    context.service.set('Authorization', 'Bearer ' + token.getstrategy('access_token'))
+    context.service.set('Authorization', 'Bearer ' + token.get('access_token'))
     return context
 
 

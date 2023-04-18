@@ -1,5 +1,4 @@
 # noinspection PyUnresolvedReferences
-import pytest
 from unittest import TestCase
 from atmost.query.open_data_parser import OpenDataParser
 

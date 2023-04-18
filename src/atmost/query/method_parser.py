@@ -11,7 +11,7 @@ class MethodParserDialect:
             resolver
         """
         self.resolver = resolver
-        
+
         def resolving_method(event):
             if event.instance_method:
                 return
@@ -38,7 +38,7 @@ class MethodParserDialect:
         return {
             '$max': list(args)
         }
-    
+
     def __mean__(self, *args):
         return {
             '$avg': list(args)
@@ -53,32 +53,32 @@ class MethodParserDialect:
         return {
             '$round': list(args)
         }
-    
+
     def __ceil__(self, *args):
         return {
             '$ceil': list(args)
         }
-    
+
     def __floor__(self, *args):
         return {
             '$floor': list(args)
         }
-    
+
     def __year__(self, *args):
         return {
             '$year': list(args)
         }
-    
+
     def __month__(self, *args):
         return {
             '$month': list(args)
         }
-    
+
     def __day__(self, *args):
         return {
             '$dayOfMonth': list(args)
         }
-    
+
     def __hour__(self, *args):
         return {
             '$hour': list(args)
@@ -121,22 +121,22 @@ class InstanceMethodParserDialect(InstanceMethodParser):
                         event.resolve = func
 
         self.resolver.resolving_method.subscribe(resolving_method)
-    
+
     def __upper__(self, *args):
         return {
             '$toUpper': list(args)
         }
-    
+
     def __lower__(self, *args):
         return {
             '$toLower': list(args)
         }
-    
+
     def __index__(self, *args):
         return {
             '$indexOfBytes': list(args)
         }
-    
+
     def __startswith__(self, *args):
         return {
             '$eq': [
@@ -149,7 +149,7 @@ class InstanceMethodParserDialect(InstanceMethodParser):
                 1
             ]
         }
-    
+
     def __endswith__(self, *args):
         return {
             '$eq': [
@@ -162,7 +162,7 @@ class InstanceMethodParserDialect(InstanceMethodParser):
                 1
             ]
         }
-    
+
     def ____contains____(self, *args):
         return {
             '$eq': [
@@ -175,28 +175,9 @@ class InstanceMethodParserDialect(InstanceMethodParser):
                 1
             ]
         }
-    
+
     def __strip__(self, *args):
         return {
             '$trim': list(args)
         }
-    
-    # def __startswith__(self, *args):
-    #     return {
-    #         '$eq': [
-    #             {
-    #                 '$indexOfBytes': list(args)
-    #             },
-    #             0
-    #         ]
-    #     }
-    
-    # def __endswith__(self, *args):
-    #     return {
-    #         '$eq': [
-    #             {
-    #                 '$indexOfBytes': args
-    #             },
-    #             0
-    #         ]
-    #     }
+

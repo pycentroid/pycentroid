@@ -1,6 +1,6 @@
 import ast
 from dill.source import getsource
-from ..common import expect, SyncSeriesEventEmitter, object
+from ..common import expect, SyncSeriesEventEmitter, AnyObject
 from .query_field import is_qualified_reference, format_any_field_reference
 from .method_parser import MethodParserDialect, InstanceMethodParserDialect
 
@@ -113,7 +113,7 @@ class ClosureParser:
             obj = expr.value
             if obj.id != self.args[0].arg:
                 attr = '$' + obj.id + '.' + attr[1:]
-            event = object(target=self, member=attr)
+            event = AnyObject(target=self, member=attr)
             if is_qualified_reference(attr):
                 event.fully_qualified_member = attr
                 self.resolving_join_member.emit(event)
@@ -131,7 +131,7 @@ class ClosureParser:
                 # get next value
                 obj = obj.value
             # emit event
-            event = object(target=self, member=attr)
+            event = AnyObject(target=self, member=attr)
             if is_qualified_reference(attr):
                 event.fully_qualified_member = attr
                 self.resolving_join_member.emit(event)
@@ -215,7 +215,7 @@ class ClosureParser:
             method = format_any_field_reference(expr.func.id)
         for arg in expr.args:
             arguments.append(self.parse_common(arg))
-        event = object(target=self, method=method, instance_method=instance_method)
+        event = AnyObject(target=self, method=method, instance_method=instance_method)
         self.resolving_method.emit(event)
         if event.resolve is not None:
             return event.resolve(*arguments)

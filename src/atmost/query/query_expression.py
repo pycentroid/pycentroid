@@ -1,9 +1,9 @@
 import inspect
-import typing
-from atmost.common import expect, object, NoneError, SyncSeriesEventEmitter
+from atmost.common import expect, AnyObject, NoneError, SyncSeriesEventEmitter
 from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
+
 
 class QueryExpression:
 
@@ -44,22 +44,21 @@ class QueryExpression:
         parser = ClosureParser()
 
         def resolving_join_member(event):
-            new_event = object(target=self,member=event.member,fully_qualified_name=event.fully_qualified_name)
+            new_event = AnyObject(target=self, member=event.member, fully_qualified_name=event.fully_qualified_name)
             self.resolving_join_member.emit(new_event)
         parser.resolving_join_member.subscribe(resolving_join_member)
 
         def resolving_member(event):
-            new_event = object(target=self,member=event.member)
+            new_event = AnyObject(target=self, member=event.member)
             self.resolving_member.emit(new_event)
         parser.resolving_member.subscribe(resolving_member)
 
         def resolving_method(event):
-            new_event = object(target=self,method=event.method)
+            new_event = AnyObject(target=self, method=event.method)
             self.resolving_method.emit(new_event)
         parser.resolving_method.subscribe(resolving_method)
 
         return parser
-
 
     def select(self, *args, **kwargs):
         """Defines a collection of attributes that are going to be collected
@@ -114,7 +113,7 @@ class QueryExpression:
         
         return self
     
-    def prepare(self, useOr = False):
+    def prepare(self, useOr=False):
         """Stores the underlying filter expression for further processing
         
         Args:
@@ -126,7 +125,7 @@ class QueryExpression:
         if self.__where__ is not None:
             if self.__prepared__ is not None:
                 prepared = self.__prepared__
-                if useOr == False:
+                if useOr is False:
                     self.__prepared__ = {
                         '$and': [
                             prepared,
@@ -454,7 +453,8 @@ class QueryExpression:
         """Finalizes a join expression by appending a lookup expression
 
         Args:
-            expr (QueryExpression): An instance of query expression which contains a where expression that is going to be used while combining collections
+            expr (QueryExpression): An instance of query expression which contains a where expression
+            that is going to be used while combining collections
 
         Returns:
             QueryExpression
@@ -480,7 +480,6 @@ class QueryExpression:
         self.__joining__ = None
         return self
         
-    
     def left_join(self, collection, local_field, foreign_field, alias=None):
         """Prepares a left join expression with the given collection
 
@@ -544,7 +543,7 @@ class QueryExpression:
                         'direction': direction
                     })
                 elif type(value) is int and expr[key] == 0:
-                    break;
+                    break
                 else:
                     self.__order_by__.append({
                         '$expr': value,
@@ -571,7 +570,10 @@ class QueryExpression:
         return self.__append_order__(expr, -1)
     
     def then_by(self, expr):
-        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'))
+        # noqa: E501
+        expect(self.__order_by__).to_be_truthy(Exception(
+            'Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'
+            ))
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:
@@ -580,7 +582,9 @@ class QueryExpression:
         return self.__append_order__(expr, 1)
 
     def then_by_descending(self, expr):
-        expect(self.__order_by__).to_be_truthy(Exception('Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'))
+        expect(self.__order_by__).to_be_truthy(Exception(
+            'Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'
+            ))
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:

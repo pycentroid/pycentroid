@@ -3,7 +3,7 @@ from enum import Enum
 
 from atmost.common.datetime import isdatetime, getdatetime
 from atmost.common.events import SyncSeriesEventEmitter
-from atmost.common.objects import object
+from atmost.common.objects import AnyDict
 from .query_field import format_any_field_reference, get_first_key
 
 
@@ -357,7 +357,7 @@ class OpenDataParser:
 
     def expect(self, token):
         if token is None:
-            raise Exception(f'Expected token.')
+            raise Exception('Expected token.')
         if self.current_token.type == token.type and str(self.current_token) != str(token):
             raise Exception(f'Expected {str(token)}.')
         self.move_next()
@@ -480,8 +480,8 @@ class OpenDataParser:
         if re.search(r'^\$it\/', identifier):
             identifier = re.sub(r'^\$it\/', '', identifier)
         # resolve member
-        member = format_any_field_reference(re.sub('\/', '.', identifier))
-        event = object(member=member, original_member=original_member)
+        member = format_any_field_reference(re.sub(r'\/', '.', identifier))
+        event = AnyDict(member=member, original_member=original_member)
         self.resolving_member.emit(event)
         return event.member
 
@@ -508,7 +508,7 @@ class OpenDataParser:
         if method in self.__method__:
             name = self.__method__.get(method)
         # emit resolving event
-        event = object(method=format_any_field_reference(name), original_method=method, args=args, expr=None)
+        event = AnyDict(method=format_any_field_reference(name), original_method=method, args=args, expr=None)
         self.resolving_method.emit(event)
         if event.expr is None:
             return dict({
@@ -567,7 +567,7 @@ class OpenDataParser:
         self.offset = 0
         results = []
         while not self.at_end():
-            offset = self.offset
+            # offset = self.offset
             result = self.parse_common_item()
             if self.current_token and self.current_token.type == TokenType.Identifier \
                     and self.current_token.identifier.lower() == 'as':
@@ -602,7 +602,7 @@ class OpenDataParser:
         if len(tokens) == 0:
             return results
         while not self.at_end():
-            offset = self.offset
+            # offset = self.offset
             expr = self.parse_common_item()
             direction = 'asc'
             if self.current_token is not None and self.current_token.type == TokenType.Identifier and \
@@ -728,8 +728,8 @@ class OpenDataParser:
             group_by = self.parse_group_by_sequence(query_options['$groupby'])
         if '$expand' in query_options:
             expand = self.parse_expand_sequence(query_options['$expand'])
-        return object(__where__=where, __select__=select, _order_by__=order_by, __group_by__=group_by,
-                      __expand__=expand)
+        # noqa: W391
+        return AnyDict(__where__=where, __select__=select, _order_by__=order_by, __group_by__=group_by, __expand__=expand)
 
     def parse_syntax(self):
         token = None
@@ -901,7 +901,7 @@ class OpenDataParser:
                     _current += 1
                 exponent_end = None if _current == len(_source) else self.skip_digits(_current)
                 if exponent_end is None:
-                    raise Exception(f'Expected digits after exponent at %s.', _offset)
+                    raise Exception(f'Expected digits after exponent at {_offset}.')
                 _current = exponent_end
                 have_exponent = True
 
