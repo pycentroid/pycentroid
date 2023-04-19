@@ -1,5 +1,5 @@
 [project]
-name = "centroid"
+name = "pycentroid"
 version = "1.0.1"
 authors = [
   { name="Kyriakos Barbounakis", email="k.barbounakis@gmail.com" },
