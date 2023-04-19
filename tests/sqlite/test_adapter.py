@@ -6,10 +6,6 @@ from centroid.sqlite import SqliteAdapter
 from os.path import abspath, join, dirname
 import logging
 
-__author__ = "Kyriakos Barbounakis"
-__copyright__ = "Kyriakos Barbounakis"
-__license__ = "BSD-3-Clause"
-
 connection_options = object(database=abspath(join(dirname(__file__), '../db/local.db')))
 
 
