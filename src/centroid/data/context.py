@@ -10,7 +10,7 @@ class DataContext:
 
     def __init__(self, application: ApplicationBase):
         self.application = application
-        return
+        pass
 
     @abstractmethod
     def db(self) -> DataAdapter or None:

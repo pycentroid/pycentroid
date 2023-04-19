@@ -42,10 +42,6 @@ class AnyDict(dict):
         return self.get(name, None)
 
 
-def object(**kwargs):
-    return AnyObject(**kwargs)
-
-
 def dict_to_object(d):
     for k, v in d.items():
         if isinstance(v, dict):

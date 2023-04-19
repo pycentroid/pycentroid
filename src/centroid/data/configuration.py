@@ -1,5 +1,5 @@
 from os.path import abspath, join
-from centroid.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, dict_to_object
+from centroid.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, AnyDict
 import importlib
 from .loaders import SchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 
@@ -47,7 +47,7 @@ class DataAdapterStrategy(ConfigurationStrategy):
                 adapter.update({
                     'adapterType': adapter_type.copy()
                 })
-                self.__adapters__.append(dict_to_object(adapter))
+                self.__adapters__.append(AnyDict(adapter))
 
     def get(self, name=None):
         if name is None:

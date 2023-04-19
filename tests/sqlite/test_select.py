@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import pytest
 
-from centroid.common import object
+from centroid.common import AnyObject
 from centroid.query import QueryEntity, QueryExpression
 from centroid.sqlite import SqliteAdapter
 from os.path import abspath, join, dirname
@@ -16,7 +16,7 @@ Customers = QueryEntity('PersonData', 'customer')
 
 @pytest.fixture()
 def db() -> SqliteAdapter:
-    return SqliteAdapter(object(database=abspath(join(dirname(__file__), '../db/local.db'))))
+    return SqliteAdapter(AnyObject(database=abspath(join(dirname(__file__), '../db/local.db'))))
 
 
 def test_select_and_join(db):

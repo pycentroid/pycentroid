@@ -1,6 +1,6 @@
 import pytest
 from centroid.sqlite import SqliteAdapter
-from centroid.common import object
+from centroid.common import AnyObject
 from centroid.query import QueryEntity, QueryExpression
 from unittest import TestCase
 from os.path import abspath, join, dirname
@@ -12,7 +12,7 @@ db = None
 
 @pytest.fixture()
 def db() -> SqliteAdapter:
-    return SqliteAdapter(object(database=abspath(join(dirname(__file__), '../db/local.db'))))
+    return SqliteAdapter(AnyObject(database=abspath(join(dirname(__file__), '../db/local.db'))))
 
 
 # noinspection PyShadowingNames

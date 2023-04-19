@@ -1,12 +1,12 @@
 from unittest import TestCase
 
-from centroid.common import object
+from centroid.common import AnyObject
 from centroid.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
 from centroid.sqlite import SqliteAdapter
 from os.path import abspath, join, dirname
 import logging
 
-connection_options = object(database=abspath(join(dirname(__file__), '../db/local.db')))
+connection_options = AnyObject(database=abspath(join(dirname(__file__), '../db/local.db')))
 
 
 def test_create_connection():
