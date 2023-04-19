@@ -1,4 +1,4 @@
-from ..common import expect, SyncSeriesEventEmitter, object
+from ..common import expect, SyncSeriesEventEmitter
 
 class MemberResolver(type):
 

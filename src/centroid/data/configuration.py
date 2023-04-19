@@ -47,7 +47,7 @@ class DataAdapterStrategy(ConfigurationStrategy):
                 adapter.update({
                     'adapterType': adapter_type.copy()
                 })
-                self.__adapters__.append(AnyDict(adapter))
+                self.__adapters__.append(AnyDict(**adapter))
 
     def get(self, name=None):
         if name is None:

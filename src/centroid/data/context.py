@@ -3,6 +3,9 @@ from typing import Callable
 from centroid.common import ApplicationBase, expect
 from .configuration import DataConfiguration, DataAdapterStrategy
 from centroid.query import DataAdapter
+from .types import DataContextBase, DataModelBase
+from .loaders import SchemaLoaderStrategy
+from .model import DataModel
 
 
 class DataContext:
@@ -12,9 +15,18 @@ class DataContext:
         self.application = application
         pass
 
+    @property
     @abstractmethod
-    def db(self) -> DataAdapter or None:
+    def db(self) -> DataAdapter:
         pass
+
+    def model(self, m) -> DataModelBase:
+        # get data model properties
+        configuration: DataConfiguration = self.application.services.get(DataConfiguration)
+        properties = configuration.getstrategy(SchemaLoaderStrategy).get(m)
+        # validate existence
+        expect(properties).to_be_truthy(Exception('The specified data model cannot be found'))
+        return DataModel(context=self, properties=properties)
 
     def finalize(self):
         if self.__db__ is not None:

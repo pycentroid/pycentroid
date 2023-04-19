@@ -1,6 +1,15 @@
+from abc import abstractmethod
 from enum import Enum
 from types import SimpleNamespace
-from typing import List
+from typing import List, Callable
+from centroid.common import ApplicationBase
+from centroid.query import DataAdapter
+
+
+class DataObjectState(Enum):
+    INSERT = 1
+    UPDATE = 2
+    DELETE = 4
 
 
 class PrivilegeMask(Enum):
@@ -136,3 +145,54 @@ class DataModelProperties(SimpleNamespace):
     constraints: List[DataModelConstraint]
     privileges: List[DataObjectPrivilege]
     eventListeners: List[DataModelEventListener]
+
+
+class DataContextBase:
+
+    application: ApplicationBase
+
+    @property
+    @abstractmethod
+    def db(self) -> DataAdapter:
+        pass
+
+    @abstractmethod
+    def model(self, m):
+        pass
+
+    @abstractmethod
+    def finalize(self):
+        pass
+
+    @abstractmethod
+    def execute_in_transaction(self, func: Callable):
+        pass
+
+
+class DataModelBase:
+    properties: DataModelProperties
+    context: DataContextBase
+
+    def __init__(self, context=None, properties=None, **kwargs):
+        self.context = context
+        self.properties = properties
+
+    @abstractmethod
+    async def insert(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def upsert(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def save(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def update(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def remove(self, o: object or List[object]):
+        pass
