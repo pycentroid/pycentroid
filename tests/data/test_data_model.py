@@ -9,8 +9,7 @@ APP_PATH = abspath(join(dirname(__file__), '..'))
 
 def test_get_model():
     app = DataApplication(cwd=APP_PATH)
-    d: dict = app.configuration.getstrategy(SchemaLoaderStrategy).get('Thing')
-    model = AnyObject(**d)
+    model = app.configuration.getstrategy(SchemaLoaderStrategy).get('Thing')
     TestCase().assertEqual(model.name, 'Thing')
 
 

@@ -2,7 +2,7 @@ import json
 from abc import abstractmethod
 from inspect import isclass
 
-from centroid.common import ConfigurationStrategy
+from centroid.common import ConfigurationStrategy, AnyDict
 from typing import List
 from os.path import abspath, join, isfile, splitext
 from os import listdir
@@ -65,7 +65,8 @@ class FileSchemaLoaderStrategy(SchemaLoaderStrategy):
             # get schema
             with open(join(self.path, item + '.json'), 'r') as file:
                 # load file
-                result = json.load(file)
+                d = json.load(file)
+                result = AnyDict(**d)
                 # set model
                 self.set(result)
         # and return definition

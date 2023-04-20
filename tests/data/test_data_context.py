@@ -14,5 +14,13 @@ def test_create_context():
     TestCase().assertIsNotNone(context.db)
     context.finalize()
 
+def test_get_model():
+    app = DataApplication(cwd=APP_PATH)
+    context = app.create_context()
+    model = context.model('Product')
+    TestCase().assertIsNotNone(model)
+    TestCase().assertEqual(model.properties.name, 'Product')
+    context.finalize()
+
 
 

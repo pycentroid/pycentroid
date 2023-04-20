@@ -9,7 +9,7 @@ from .model import DataModel
 
 
 class DataContext:
-    __db__: DataAdapter
+    __db__: DataAdapter = None
 
     def __init__(self, application: ApplicationBase):
         self.application = application
@@ -20,7 +20,7 @@ class DataContext:
     def db(self) -> DataAdapter:
         pass
 
-    def model(self, m) -> DataModelBase:
+    def model(self, m) -> DataModel:
         # get data model properties
         configuration: DataConfiguration = self.application.services.get(DataConfiguration)
         properties = configuration.getstrategy(SchemaLoaderStrategy).get(m)

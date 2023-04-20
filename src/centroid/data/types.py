@@ -2,7 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from types import SimpleNamespace
 from typing import List, Callable
-from centroid.common import ApplicationBase
+from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict
 from centroid.query import DataAdapter
 
 
@@ -70,7 +70,7 @@ class DataModelConstraint:
     fields: List[str]
 
 
-class DataField:
+class DataField(AnyDict):
     name: str
     """A string which represents the name of this attribute e.g. title, description, dateCreated etc"""
     description: str
@@ -169,13 +169,36 @@ class DataContextBase:
         pass
 
 
+class DataModelEventEmitter:
+
+    upgrade = AsyncSeriesEventEmitter()
+    save = AsyncSeriesEventEmitter()
+    remove = AsyncSeriesEventEmitter()
+    execute = AsyncSeriesEventEmitter()
+
+
 class DataModelBase:
     properties: DataModelProperties
     context: DataContextBase
+    before: DataModelEventEmitter = DataModelEventEmitter()
+    after: DataModelEventEmitter = DataModelEventEmitter()
 
     def __init__(self, context=None, properties=None, **kwargs):
         self.context = context
         self.properties = properties
+
+    @abstractmethod
+    def base(self):
+        pass
+
+    @abstractmethod
+    @property
+    def attributes(self) -> List[DataField]:
+        pass
+
+    @abstractmethod
+    def silent(self, value = True):
+        pass
 
     @abstractmethod
     async def insert(self, o: object or List[object]):
