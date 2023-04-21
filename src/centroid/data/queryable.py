@@ -24,12 +24,15 @@ class DataQueryable(OpenDataQueryExpression):
     async def get_item(self) -> object:
         # force take one
         self.take(1).skip(0)
+        if self.__select__ is None:
+            # get attributes
+            attributes = self.__model__.attributes
+            self.select(*list(map(lambda x:x.name, attributes)))
         # get context
         context: DataContextBase = self.__model__.context
         event = AnyObject(emitter=self, model=self.__model__)
         # stage #1 emit before and after upgrade
         await self.model.before.upgrade.emit(event)
-        await self.model.after.upgrade.emit(event)
         # stage #2 emit before execute
         await self.model.before.execute.emit(event)
         # execute query

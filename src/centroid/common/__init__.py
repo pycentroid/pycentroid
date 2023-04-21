@@ -1,5 +1,5 @@
 from .expect import Expected, expect, NoneError
-from .exceptions import NotImplementError
+from .exceptions import DataError, NotImplementError
 from .events import SyncSeriesEventEmitter, EventSubscription, AsyncSeriesEventEmitter
 from .objects import AnyDict, AnyObject
 from .datetime import isdatetime, year, month, day, hour, minute, second

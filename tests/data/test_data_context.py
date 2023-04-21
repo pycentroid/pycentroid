@@ -6,16 +6,17 @@ from centroid.common import ApplicationBase, ApplicationService
 
 APP_PATH = abspath(join(dirname(__file__), '..'))
 
+@pytest.fixture()
+def app() -> DataApplication:
+    return DataApplication(cwd=APP_PATH)
 
-def test_create_context():
-    app = DataApplication(cwd=APP_PATH)
+def test_create_context(app):
     context = app.create_context()
     TestCase().assertIsNotNone(context.application)
     TestCase().assertIsNotNone(context.db)
     context.finalize()
 
-def test_get_model():
-    app = DataApplication(cwd=APP_PATH)
+def test_get_model(app):
     context = app.create_context()
     model = context.model('Product')
     TestCase().assertIsNotNone(model)

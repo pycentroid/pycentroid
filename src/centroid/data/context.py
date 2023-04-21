@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Callable
 from centroid.common import ApplicationBase, expect
-from .configuration import DataConfiguration, DataAdapterStrategy
+from .configuration import DataConfiguration, DataAdapters
 from centroid.query import DataAdapter
 from .types import DataContextBase, DataModelBase
 from .loaders import SchemaLoaderStrategy
@@ -47,7 +47,7 @@ class NamedDataContext(DataContext):
     def db(self) -> DataAdapter or None:
         # get adapters
         configuration = self.application.services.get(DataConfiguration)
-        data_adapters: DataAdapterStrategy = configuration.getstrategy(DataAdapterStrategy)
+        data_adapters: DataAdapters = configuration.getstrategy(DataAdapters)
         adapter = data_adapters.get(self.name)
         # validate data adapter
         expect(adapter).to_be_truthy(Exception('The default data adapter cannot be found.'))

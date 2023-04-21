@@ -11,7 +11,8 @@ import importlib
 
 
 class SchemaLoaderStrategy(ConfigurationStrategy):
-    __models__ = {}
+    __models__: dict = {}
+    loaded: dict = {}
 
     def __init__(self, configuration):
         super().__init__(configuration)

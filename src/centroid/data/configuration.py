@@ -2,9 +2,20 @@ from os.path import abspath, join
 from centroid.common import ConfigurationBase, ConfigurationStrategy, ApplicationBase, expect, AnyDict
 import importlib
 from .loaders import SchemaLoaderStrategy, DefaultSchemaLoaderStrategy
+from .data_types import DataTypes
+
+class DataTypes(ConfigurationStrategy):
+
+    __types__ = DATA_TYPES.copy()
+
+    def __init__(self, configuration: ConfigurationBase):
+        super().__init__(configuration)
+
+    def has(self, type: str):
+        return type in self.__types__
 
 
-class DataAdapterStrategy(ConfigurationStrategy):
+class DataAdapters(ConfigurationStrategy):
 
     __adapters__ = []
 
@@ -58,7 +69,10 @@ class DataAdapterStrategy(ConfigurationStrategy):
 class DataConfiguration(ConfigurationBase):
     def __init__(self, application: ApplicationBase):
         super().__init__(abspath(join(application.cwd, 'config')))
-        # use DataAdapterStrategy
-        self.usestrategy(DataAdapterStrategy)
+        # use DataAdapters
+        self.usestrategy(DataAdapters)
+        # use DataTypes
+        self.usestrategy(DataTypes)
         # use DefaultSchemaLoaderStrategy
         self.usestrategy(SchemaLoaderStrategy, DefaultSchemaLoaderStrategy)
+

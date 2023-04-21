@@ -2,7 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from types import SimpleNamespace
 from typing import List, Callable
-from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict
+from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict, AnyObject
 from centroid.query import DataAdapter
 
 
@@ -145,6 +145,7 @@ class DataModelProperties(SimpleNamespace):
     constraints: List[DataModelConstraint]
     privileges: List[DataObjectPrivilege]
     eventListeners: List[DataModelEventListener]
+    seed: List[object]
 
 
 class DataContextBase:
@@ -168,7 +169,6 @@ class DataContextBase:
     def execute_in_transaction(self, func: Callable):
         pass
 
-
 class DataModelEventEmitter:
 
     upgrade = AsyncSeriesEventEmitter()
@@ -191,7 +191,6 @@ class DataModelBase:
     def base(self):
         pass
 
-    @abstractmethod
     @property
     def attributes(self) -> List[DataField]:
         pass
@@ -219,3 +218,18 @@ class DataModelBase:
     @abstractmethod
     async def remove(self, o: object or List[object]):
         pass
+
+
+class UpgradeEventArgs(AnyObject):
+
+    model: DataModelBase
+    done: bool = False
+    
+
+class DataEventArgs(AnyObject):
+
+    model: DataModelBase
+    state: DataObjectState
+    previous: object
+    target: object
+    emitter: object
