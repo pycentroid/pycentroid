@@ -19,8 +19,8 @@ def db() -> SqliteAdapter:
     return SqliteAdapter(AnyObject(database=abspath(join(dirname(__file__), '../db/local.db'))))
 
 
-def test_select_and_join(db):
-    items = db.execute(QueryExpression(People).select(
+async def test_select_and_join(db):
+    items = await db.execute(QueryExpression(People).select(
         lambda x, address: (x.id, x.familyName, x.givenName, address.addressLocality)
     ).join(PostalAddresses).on(
         lambda x, address: x.address == address.id
@@ -28,7 +28,7 @@ def test_select_and_join(db):
     TestCase().assertGreater(len(items), 0)
 
 
-def test_select_with_nested_filter(db):
+async def test_select_with_nested_filter(db):
     query = QueryExpression().select(
         lambda x: (x.orderedItem,
                    x.customer.familyName,
@@ -41,5 +41,5 @@ def test_select_with_nested_filter(db):
     ).where(
         lambda x: x.orderStatus == 1
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertGreater(len(items), 0)

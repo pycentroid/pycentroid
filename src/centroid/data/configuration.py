@@ -4,17 +4,6 @@ import importlib
 from .loaders import SchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 from .data_types import DataTypes
 
-class DataTypes(ConfigurationStrategy):
-
-    __types__ = DATA_TYPES.copy()
-
-    def __init__(self, configuration: ConfigurationBase):
-        super().__init__(configuration)
-
-    def has(self, type: str):
-        return type in self.__types__
-
-
 class DataAdapters(ConfigurationStrategy):
 
     __adapters__ = []

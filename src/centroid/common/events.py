@@ -33,7 +33,7 @@ class SyncSeriesEventEmitter:
     __handlers__ = []
 
     def __init__(self):
-        pass
+        self.__handlers__ = []
     
     def subscribe(self, handler):
         """Appends an event handler and waits for event
@@ -96,7 +96,7 @@ class AsyncSeriesEventEmitter:
     __handlers__ = []
 
     def __init__(self):
-        pass
+        self.__handlers__ = []
     
     def subscribe(self, handler):
         """Appends an event handler and waits for event

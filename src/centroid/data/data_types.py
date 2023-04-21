@@ -1,5 +1,6 @@
 from centroid.common import ConfigurationBase, ConfigurationStrategy, AnyDict
 from os.path import join, dirname
+import json
 
 
 class DataTypeProperties:
@@ -31,7 +32,7 @@ class DataTypes(ConfigurationStrategy):
     def __init__(self, configuration: ConfigurationBase):
         super().__init__(configuration)
         # load defaults
-        with open(join(dirname(__file__), 'resources/dataTypes.json', 'r')) as file:
+        with open(join(dirname(__file__), 'resources/dataTypes.json'), 'r') as file:
                 # load file
                 d = json.load(file)
                 self.__types__ = AnyDict(**d)

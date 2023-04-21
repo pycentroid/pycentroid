@@ -78,7 +78,8 @@ class DataModelUpgrade:
             columns.append(column)
         # do upgrade
         context.db.table(model.properties.view).change(columns)
-        # emit after upgrade
+        # emit after upgrade event
+        setattr(event, 'done', True)
         await event.model.after.upgrade.emit(event)
 
     

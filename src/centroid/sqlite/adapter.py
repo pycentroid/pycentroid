@@ -13,7 +13,7 @@ class SqliteTableIndex(DataTableIndex):
     def __init__(self, table, adapter):
         super().__init__(table, adapter)
 
-    def create(self, name: str, columns: list):
+    async def create(self, name: str, columns: list):
         self.drop(name)
         sql = 'CREATE INDEX'
         sql += SqliteDialect.Space
@@ -25,23 +25,23 @@ class SqliteTableIndex(DataTableIndex):
         sql += '('
         sql += ','.join(map(lambda x: SqliteDialect().escape_name(x.name), columns))
         sql += ');'
-        self.__adapter__.execute(sql)
+        await self.__adapter__.execute(sql)
 
-    def exists(self, name: str):
+    async def exists(self, name: str):
         table = SqliteDialect().escape_name(self.table)
-        results = self.__adapter__.execute(f'PRAGMA INDEX_LIST({table})')
+        results = await self.__adapter__.execute(f'PRAGMA INDEX_LIST({table})')
         return next(filter(lambda x: x.origin == 'c' and x.name == name, results), None) is not None
 
-    def drop(self, name: str):
+    async def drop(self, name: str):
         exists = self.exists(name)
         if exists:
             index = SqliteDialect().escape_name(name)
-            self.__adapter__.execute(f'DROP INDEX {index}')
+            await self.__adapter__.execute(f'DROP INDEX {index}')
 
-    def list(self):
+    async def list(self):
         table = SqliteDialect().escape_name(self.table)
         # get index list
-        results = self.__adapter__.execute(f'PRAGMA INDEX_LIST({table})')
+        results = await self.__adapter__.execute(f'PRAGMA INDEX_LIST({table})')
         # prepare index list
         filtered = filter(lambda x: x.origin == 'c', results)
         # with name and columns
@@ -49,7 +49,7 @@ class SqliteTableIndex(DataTableIndex):
         # enumerate indexes
         for index in indexes:
             # and get column list
-            columns = self.__adapter__.execute(f'PRAGMA INDEX_INFO({index.name})')
+            columns = await self.__adapter__.execute(f'PRAGMA INDEX_INFO({index.name})')
             index.columns = list(map(lambda x: AnyObject(name=x.name), columns))
         return indexes
 
@@ -58,7 +58,7 @@ class SqliteTable(DataTable):
     def __init__(self, table, adapter):
         super().__init__(table, adapter)
 
-    def create(self, fields: list):
+    async def create(self, fields: list):
         if len(fields) == 0:
             Exception('Field collection cannot be empty while creating a database table.')
         dialect = SqliteDialect()
@@ -69,14 +69,14 @@ class SqliteTable(DataTable):
         sql += ','.join(map(lambda x: dialect.format_type(name=x.name, type=x.type, nullable=x.nullable, size=x.size,
                                                           scale=x.scale), fields))
         sql += ')'
-        return self.__adapter__.execute(sql)
+        return await self.__adapter__.execute(sql)
 
-    def change(self, fields: list):
-        exists = self.__adapter__.table(self.table).exists()
+    async def change(self, fields: list):
+        exists = await self.__adapter__.table(self.table).exists()
         if not exists:
-            return self.create(fields)
+            return await self.create(fields)
         # get table fields
-        existing_fields = self.columns()
+        existing_fields = await self.columns()
         dialect = SqliteDialect()
         sqls = []
         table = dialect.escape_name(self.table)
@@ -111,13 +111,13 @@ class SqliteTable(DataTable):
 
             # drop indexes
             table_indexes = self.indexes()
-            indexes = table_indexes.list()
+            indexes = await table_indexes.list()
             for index in indexes:
-                table_indexes.drop(index.name)
+                await table_indexes.drop(index.name)
 
-            self.__adapter__.execute(f'ALTER TABLE {table} RENAME TO {rename}')
+            await self.__adapter__.execute(f'ALTER TABLE {table} RENAME TO {rename}')
             # create new table
-            self.create(fields)
+            await self.create(fields)
             # get all existing fields that are existing also into the new table
             insert_fields = []
             for existing_field in existing_fields:
@@ -140,39 +140,39 @@ class SqliteTable(DataTable):
             sql += 'FROM'
             sql += SqliteDialect.Space
             sql += rename
-            self.__adapter__.execute(sql)
+            await self.__adapter__.execute(sql)
             # important note: the renamed table is not being dropped for security reasons
             # this cleanup operation may be done by using SQLite data tools
             return
 
         if len(sqls) > 0:
             for sql in sqls:
-                self.__adapter__.execute(sql)
+                await self.__adapter__.execute(sql)
 
-    def exists(self):
+    async def exists(self):
         table = self.table
-        results = self.__adapter__.execute(
+        results = await self.__adapter__.execute(
             f'SELECT COUNT(*) count FROM sqlite_master WHERE name=\'{table}\' AND type=\'table\';')
         if type(results) is list:
             if len(results) > 0:
                 return results[0].count > 0
         return False
 
-    def drop(self):
-        return self.__adapter__.execute(f'DROP TABLE IF EXISTS {self.table};')
+    async def drop(self):
+        return await self.__adapter__.execute(f'DROP TABLE IF EXISTS {self.table};')
 
-    def version(self):
-        migration_exists = self.__adapter__.table('migrations').exists()
+    async def version(self):
+        migration_exists = await self.__adapter__.table('migrations').exists()
         if not migration_exists:
             return None
         table = SqliteDialect().escape(self.table)
-        results = self.__adapter__.execute(f'SELECT MAX(version) AS version FROM migrations WHERE appliesTo={table}')
+        results = await self.__adapter__.execute(f'SELECT MAX(version) AS version FROM migrations WHERE appliesTo={table}')
         if len(results) > 0:
             return results[0].version
         return None
 
-    def columns(self):
-        results = self.__adapter__.execute(f'PRAGMA table_info({self.table});')
+    async def columns(self):
+        results = await self.__adapter__.execute(f'PRAGMA table_info({self.table});')
         cols = []
         for result in results:
             col = AnyObject(name=result.name, ordinal=result.cid, type=result.type,
@@ -196,7 +196,7 @@ class SqliteView(DataView):
     def __init__(self, view: str, adapter: DataAdapter):
         super().__init__(view, adapter)
 
-    def create(self, query: QueryExpression):
+    async def create(self, query: QueryExpression):
         # drop view if exists
         self.drop()
         # and create
@@ -207,20 +207,20 @@ class SqliteView(DataView):
         sql += 'AS'
         sql += SqliteDialect.Space
         sql += SqliteFormatter().format_select(query)
-        return self.__adapter__.execute(sql)
+        return await self.__adapter__.execute(sql)
 
-    def exists(self):
+    async def exists(self):
         view = self.view
-        results = self.__adapter__.execute(
+        results = await self.__adapter__.execute(
             f'SELECT COUNT(*) count FROM sqlite_master WHERE name=\'{view}\' AND type=\'view\';')
         if type(results) is list:
             if len(results) > 0:
                 return results[0].count > 0
         return False
 
-    def drop(self):
+    async def drop(self):
         view = SqliteDialect().escape_name(self.view)
-        return self.__adapter__.execute(f'DROP VIEW IF EXISTS {view};')
+        return await self.__adapter__.execute(f'DROP VIEW IF EXISTS {view};')
 
 
 def regexp_like(value, pattern, match_type=None):
@@ -249,23 +249,23 @@ class SqliteAdapter(DataAdapter):
         self.__last_insert_id__ = None
         self.options = options
 
-    def open(self):
+    async def open(self):
         if self.__raw_connection__ is None:
             self.__raw_connection__ = sqlite3.connect(self.options.database)
             self.__raw_connection__.create_function('REGEXP', 2, regexp)
             self.__raw_connection__.create_function('REGEXP_LIKE', 3, regexp_like)
 
-    def close(self):
+    async def close(self):
         if self.__raw_connection__ is not None:
             self.__raw_connection__.close()
             self.__raw_connection__ = None
 
-    def execute(self, query, values=None):
+    async def execute(self, query, values=None):
         cur: sqlite3.Cursor or None = None
         try:
             self.last_insert_id = None
             # ensure that database connection is open
-            self.open()
+            await self.open()
             # open cursor
             cur = self.__raw_connection__.cursor()
             sql = None
@@ -311,7 +311,7 @@ class SqliteAdapter(DataAdapter):
             if cur is not None:
                 cur.close()
 
-    def execute_in_transaction(self, func: Callable):
+    async def execute_in_transaction(self, func: Callable):
         """Begins a transactional operation by executing the given callback
 
         Args:
@@ -321,15 +321,15 @@ class SqliteAdapter(DataAdapter):
             ex: Any exception that will be thrown by the callable
         """
         if self.__transaction__:
-            func()
+            await func()
             return
-        self.open()
+        await self.open()
         # begin transaction
         self.__raw_connection__.execute('BEGIN;')
         self.__transaction__ = True
         # execute callable
         try:
-            func()
+            await func()
             self.__raw_connection__.execute('COMMIT;')
         except Exception as error:
             self.__raw_connection__.execute('ROLLBACK;')
@@ -337,10 +337,10 @@ class SqliteAdapter(DataAdapter):
         finally:
             self.__transaction__ = False
 
-    def select_identity(self):
+    async def select_identity(self):
         raise NotImplementedError()
 
-    def last_identity(self):
+    async def last_identity(self):
         return self.__last_insert_id__
 
     def table(self, table: str) -> SqliteTable:

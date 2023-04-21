@@ -16,8 +16,8 @@ def db() -> SqliteAdapter:
 
 
 # noinspection PyShadowingNames
-def test_select(db):
-    items = db.execute(QueryExpression(Products).select(
+async def test_select(db):
+    items = await db.execute(QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category)
     ))
     TestCase().assertGreater(len(items), 0)
@@ -30,50 +30,50 @@ def test_select(db):
 
 
 # noinspection PyShadowingNames
-def test_take(db):
+async def test_take(db):
     query = QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category)
     ).where(
         lambda x: x.category == 'Laptops'
     ).take(10)
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertEqual(len(items), 10)
     for item in items:
         TestCase().assertEqual(item.category, 'Laptops')
 
 
 # noinspection PyShadowingNames
-def test_and(db):
+async def test_and(db):
     query = QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category)
     ).where(
         lambda x: x.category == 'Laptops' and x.price > 500
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     for item in items:
         TestCase().assertEqual(item.category, 'Laptops')
 
 
 # noinspection PyShadowingNames
-def test_or(db):
+async def test_or(db):
     query = QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category)
     ).where(
         lambda x: x.category == 'Laptops' or x.category == 'Desktops'
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     for item in items:
         TestCase().assertEqual(item.category in ['Laptops', 'Desktops'], True)
 
 
 # noinspection PyShadowingNames
-def test_complex_logical(db):
+async def test_complex_logical(db):
     query = QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category, x.price)
     ).where(
         lambda x: (x.category == 'Laptops' or x.category == 'Desktops') and x.price <= 800
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertGreater(len(items), 0)
     for item in items:
         TestCase().assertEqual(item.category in ['Laptops', 'Desktops'], True)
@@ -81,13 +81,13 @@ def test_complex_logical(db):
 
 
 # noinspection PyShadowingNames
-def test_complex_logical_or(db):
+async def test_complex_logical_or(db):
     query = QueryExpression(Products).select(
         lambda x: [x.id, x.name, x.category, x.price]
     ).where(
         lambda x: (x.category == 'Laptops' or x.category == 'Desktops') and x.price <= 800
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertGreater(len(items), 0)
     for item in items:
         TestCase().assertEqual(item.category in ['Laptops', 'Desktops'], True)
@@ -95,13 +95,13 @@ def test_complex_logical_or(db):
 
 
 # noinspection PyShadowingNames
-def test_order_by(db):
+async def test_order_by(db):
     query = QueryExpression(Products).select(lambda x: (x.id, x.name, x.category, x.price)).where(
         lambda x: x.category == 'Laptops'
     ).order_by(
         lambda x: (x.price,)
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertGreater(len(items), 0)
     for index, item in enumerate(items):
         if index > 0:
@@ -109,13 +109,13 @@ def test_order_by(db):
 
 
 # noinspection PyShadowingNames
-def test_order_by_descending(db):
+async def test_order_by_descending(db):
     query = QueryExpression(Products).select(lambda x: (x.id, x.name, x.category, x.price)).where(
         lambda x: x.category == 'Laptops'
     ).order_by_descending(
         lambda x: (x.price,)
     )
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertGreater(len(items), 0)
     for index, item in enumerate(items):
         if index > 0:
@@ -123,13 +123,13 @@ def test_order_by_descending(db):
 
 
 # noinspection PyShadowingNames
-def test_where_with_args(db):
+async def test_where_with_args(db):
     query = QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category, x.price)
     ).where((
         lambda x, category: x.category == category
     ), category='Laptops')
-    items = db.execute(query)
+    items = await db.execute(query)
     TestCase().assertGreater(len(items), 0)
     for item in items:
         TestCase().assertEqual(item.category, 'Laptops')
