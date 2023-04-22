@@ -272,7 +272,7 @@ class SqliteAdapter(DataAdapter):
             # format query
             if type(query) is str:
                 sql = query
-            elif type(query) is QueryExpression:
+            elif isinstance(query, QueryExpression):
                 sql = SqliteFormatter().format(query)
             else:
                 TypeError('Expected string or an instance of query expression')

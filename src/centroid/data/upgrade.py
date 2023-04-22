@@ -1,14 +1,12 @@
-from typing import List
 from .types import DataContextBase, DataModelBase, DataField, DataModelProperties, DataEventArgs, UpgradeEventArgs
-from .queryable import DataQueryable
 from .configuration import DataConfiguration
 from .loaders import SchemaLoaderStrategy
-from pydash import assign
 from centroid.common import expect, DataError
 from centroid.query import DataColumn
 from .data_types import DataTypes
 import json
 from os.path import dirname, join
+
 
 class DataModelUpgrade:
 
@@ -49,13 +47,15 @@ class DataModelUpgrade:
             # and exit
             return
         # get base model
-        base: DataModel = event.model.base()
+        base: DataModelBase = event.model.base()
         if base is not None:
             # try to upgrade base model
             upgrade_event = DataEventArgs(model=base)
             await base.before.upgrade.emit(upgrade_event)
         # get model attributes
-        attributes = list(filter(lambda x:x.model==event.model.properties.name and bool(x.many) is False, event.model.attributes))
+        attributes = list(
+            filter(lambda x: x.model == event.model.properties.name and bool(x.many) is False, event.model.attributes)
+            )
         if base is not None:
             # get primary key
             attr: DataField = next(filter(lambda x: x.primary is True, base.attributes), None)
@@ -80,7 +80,9 @@ class DataModelUpgrade:
             else:
                 # try to find attribute type as data model
                 parent = context.model(attribute.type)
-                expect(parent).to_be_truthy(DataError('The specified type cannot be found', None, event.model.properties.name, attribute.name)) 
+                expect(parent).to_be_truthy(
+                    DataError('The specified type cannot be found', None, event.model.properties.name, attribute.name)
+                    )
                 # find primary key
                 attr = next(filter(lambda x: x.primary is True, parent.attributes), None)
                 expect(attr).to_be_truthy(DataError('Primary key cannot be found', None, parent.properties.name))
@@ -105,8 +107,9 @@ class DataModelUpgrade:
         setattr(event, 'done', True)
         await event.model.after.upgrade.emit(event)
 
-    
     async def after(event: UpgradeEventArgs):
-        pass
-        
-        
+        items = event.model.properties.seed
+        if isinstance(items, list) and len(items) > 0:
+            length = await event.model.as_queryable().silent().count()
+            if length == 0:
+                await event.model.insert(items)

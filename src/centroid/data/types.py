@@ -1,6 +1,5 @@
 from abc import abstractmethod
 from enum import Enum
-from types import SimpleNamespace
 from typing import List, Callable
 from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict, AnyObject
 from centroid.query import DataAdapter
@@ -88,7 +87,7 @@ class DataField(AnyDict):
     editable: bool
     """A boolean which indicates whether this attribute is editable or not."""
     readonly: bool
-    """A boolean which indicates whether this attribute is readonly or not. 
+    """A boolean which indicates whether this attribute is readonly or not.
     A readonly value must have a default value or a calculated value."""
     primary: bool
     """A boolean which indicates whether this attribute is a key column or not."""
@@ -152,10 +151,8 @@ class DataModelProperties(AnyDict):
         return self.source if self.source is not None else f'{self.name}Base'
 
     def get_view(self):
-        return self.view if self.view is not None else f'{self.name}View'
+        return self.view if self.view is not None else f'{self.name}Data'
 
-
-    
 
 class DataContextBase:
 
@@ -178,6 +175,7 @@ class DataContextBase:
     def execute_in_transaction(self, func: Callable):
         pass
 
+
 class DataModelEventEmitter:
 
     upgrade = AsyncSeriesEventEmitter()
@@ -192,7 +190,7 @@ class DataModelBase:
     before: DataModelEventEmitter = DataModelEventEmitter()
     after: DataModelEventEmitter = DataModelEventEmitter()
 
-    def __init__(self, context: DataContextBase=None, properties: DataModelProperties=None, **kwargs):
+    def __init__(self, context: DataContextBase = None, properties: DataModelProperties = None, **kwargs):
         self.context = context
         self.properties = properties
 
@@ -205,7 +203,7 @@ class DataModelBase:
         pass
 
     @abstractmethod
-    def silent(self, value = True):
+    def silent(self, value=True):
         pass
 
     @abstractmethod
@@ -215,6 +213,9 @@ class DataModelBase:
     @abstractmethod
     async def migrate(self):
         pass
+
+    def key(self):
+        return next(filter(lambda x: x.primary is True, self.attributes), None)
 
     @abstractmethod
     async def upsert(self, o: object or List[object]):

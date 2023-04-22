@@ -3,7 +3,6 @@ from typing import Callable
 from centroid.common import ApplicationBase, expect
 from .configuration import DataConfiguration, DataAdapters
 from centroid.query import DataAdapter
-from .types import DataContextBase, DataModelBase
 from .loaders import SchemaLoaderStrategy
 from .model import DataModel
 
@@ -28,9 +27,9 @@ class DataContext:
         expect(properties).to_be_truthy(Exception(f'{m} cannot be found.'))
         return DataModel(context=self, properties=properties)
 
-    def finalize(self):
+    async def finalize(self):
         if self.__db__ is not None:
-            self.__db__.close()
+            await self.__db__.close()
 
     def execute_in_transaction(self, func: Callable):
         return self.db.execute_in_transaction(func)
