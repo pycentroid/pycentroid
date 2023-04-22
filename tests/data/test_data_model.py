@@ -1,7 +1,9 @@
 import pytest
 from centroid.data.loaders import SchemaLoaderStrategy
 from centroid.data.application import DataApplication
+from centroid.data.types import DataModelProperties
 from centroid.data.model import DataModel
+from centroid.data.configuration import DataConfiguration
 from centroid.common.objects import AnyObject
 from os.path import abspath, join, dirname
 from unittest import TestCase
@@ -27,6 +29,34 @@ def test_get_attributes(app):
     name = next(filter(lambda x: x.name=='name', model.attributes), None)
     TestCase().assertIsNotNone(category)
     TestCase().assertEqual(name.model, 'Thing')
+    context.finalize()
+
+def test_get_primary_key(app):
+    context = app.create_context()
+    model: DataModel = context.model('Product')
+    TestCase().assertIsNotNone(model)
+    TestCase().assertIsNotNone(model.attributes)
+    attr = next(filter(lambda x: x.primary is True, model.attributes), None)
+    TestCase().assertIsNotNone(attr)
+    context.finalize()
+
+def test_get_source(app):
+    model = DataModelProperties(name='TestAction')
+    TestCase().assertEqual(model.get_source(), 'TestActionBase')
+    TestCase().assertEqual(model.get_view(), 'TestActionView')
+    TestCase().assertEqual(model, {
+        'name': 'TestAction'
+    })
+    model = DataModelProperties(name='TestAction', source='TestActions')
+    TestCase().assertEqual(model.get_source(), 'TestActions')
+    model.source = 'TestActionBase'
+
+    
+
+async def test_upgrade(app):
+    context = app.create_context()
+    model: DataModel = context.model('InteractAction')
+    await model.migrate()
     context.finalize()
 
 

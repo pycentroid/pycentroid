@@ -8,6 +8,7 @@ from os.path import abspath, join, isfile, splitext
 from os import listdir
 import re
 import importlib
+from .types import DataModelProperties
 
 
 class SchemaLoaderStrategy(ConfigurationStrategy):
@@ -55,7 +56,7 @@ class FileSchemaLoaderStrategy(SchemaLoaderStrategy):
                     results.append(name)
         return results
     
-    def get(self, name: str):
+    def get(self, name: str) -> DataModelProperties:
         if self.__items__ is None:
             self.__items__ = self.read()
         # case-insensitive search
@@ -67,7 +68,7 @@ class FileSchemaLoaderStrategy(SchemaLoaderStrategy):
             with open(join(self.path, item + '.json'), 'r') as file:
                 # load file
                 d = json.load(file)
-                result = AnyDict(**d)
+                result = DataModelProperties(**d)
                 # set model
                 self.set(result)
         # and return definition
@@ -100,7 +101,7 @@ class DefaultSchemaLoaderStrategy(FileSchemaLoaderStrategy):
                         loader['loaderClass'] = LoaderClass
                         self.loaders.append(LoaderClass(configuration))
 
-    def get(self, name: str):
+    def get(self, name: str) -> DataModelProperties:
         model = super().get(name)
         if model is not None:
             return model

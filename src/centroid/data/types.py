@@ -21,7 +21,7 @@ class PrivilegeMask(Enum):
     ALL = 31
 
 
-class DataObjectPrivilege:
+class DataObjectPrivilege(AnyDict):
     mask: PrivilegeMask
     """A number which represents permission mask (1=Read, 2=Create, 4=Update, 8=Delete, 16=Execute)"""
     type: str
@@ -37,8 +37,8 @@ class DataObjectPrivilege:
 
 
 class DataFieldValidation:
-    minValue = None
-    maxValue = None
+    minValue: object
+    maxValue: object
     minLength: int
     maxLength: int
     pattern: str
@@ -48,7 +48,7 @@ class DataFieldValidation:
     validator: str
 
 
-class DataFieldAssociationMapping:
+class DataFieldAssociationMapping(AnyDict):
     associationType: str
     associationAdapter: str
     associationObjectField: str
@@ -61,7 +61,7 @@ class DataFieldAssociationMapping:
     privileges: List[DataObjectPrivilege]
 
 
-class DataModelConstraint:
+class DataModelConstraint(AnyDict):
     type: str
     """A string which represents the type of this constraint e.g. unique"""
     description: str
@@ -83,16 +83,16 @@ class DataField(AnyDict):
     """A number which represents the maximum size for this attribute e.g. the size of a text field etc"""
     scale: int
     """A number which represents the number of digits of a decimal number"""
-    nullable = True
+    nullable: bool
     """A boolean which indicates whether this attribute is nullable or not."""
-    editable = True
+    editable: bool
     """A boolean which indicates whether this attribute is editable or not."""
-    readonly = False
+    readonly: bool
     """A boolean which indicates whether this attribute is readonly or not. 
     A readonly value must have a default value or a calculated value."""
-    primary = False
+    primary: bool
     """A boolean which indicates whether this attribute is a key column or not."""
-    indexed = False
+    indexed: bool
     """A boolean which indicates whether this attribute is an indexed column or not."""
     property: str
     """A string which optionally represents the name of this attribute in object mapping.
@@ -102,7 +102,7 @@ class DataField(AnyDict):
     represents a one-to-many or many-to-many association between two models."""
     multiplicity: str
     """A string which defines the multiplicity level of an association between two objects"""
-    expandable = False
+    expandable: bool
     """A boolean value which indicates whether the associated object(s) will be automatically expanded or not."""
     nested: bool
     """A boolean which indicates whether this attribute defines an association between two models
@@ -111,14 +111,15 @@ class DataField(AnyDict):
     validation: DataFieldValidation
 
 
-class DataModelEventListener:
+class DataModelEventListener(AnyDict):
     name: str
     """A string which the name of this event listener e.g. 'After Update Person'"""
     type: str
     """A string which represents the path of the module that exports this listener."""
 
 
-class DataModelProperties(SimpleNamespace):
+class DataModelProperties(AnyDict):
+    
     name: str
     """A string which represents the name of this model e.g. Order, Customer, Person etc"""
     title: str
@@ -129,24 +130,32 @@ class DataModelProperties(SimpleNamespace):
     implements: str
     """A string which represents the model which is implemented by this model
     e.g. ActionStatusType model implements Enumeration model etc"""
-    sealed = False
+    sealed: bool
     """A boolean which indicates whether this model is being upgraded automatically or not."""
-    hidden = False
+    hidden: bool
     """A boolean which indicates whether this model is hidden or not. The default value is false."""
     classPath: str
     """A string which represents a module path that exports a class which maps this database model"""
+    version: str
+    """The version of this item"""
     source: str
     """A string which holds the database object of this model."""
     view: str
-    """A string which holds the database object that is going to be used for fetching data."""
-    version: str
-    """The version of this item"""
+    """A string which holds the database object that is going to be used while fetching data."""
     fields: List[DataField]
     constraints: List[DataModelConstraint]
     privileges: List[DataObjectPrivilege]
     eventListeners: List[DataModelEventListener]
     seed: List[object]
 
+    def get_source(self):
+        return self.source if self.source is not None else f'{self.name}Base'
+
+    def get_view(self):
+        return self.view if self.view is not None else f'{self.name}View'
+
+
+    
 
 class DataContextBase:
 
@@ -183,7 +192,7 @@ class DataModelBase:
     before: DataModelEventEmitter = DataModelEventEmitter()
     after: DataModelEventEmitter = DataModelEventEmitter()
 
-    def __init__(self, context=None, properties=None, **kwargs):
+    def __init__(self, context: DataContextBase=None, properties: DataModelProperties=None, **kwargs):
         self.context = context
         self.properties = properties
 
@@ -201,6 +210,10 @@ class DataModelBase:
 
     @abstractmethod
     async def insert(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def migrate(self):
         pass
 
     @abstractmethod

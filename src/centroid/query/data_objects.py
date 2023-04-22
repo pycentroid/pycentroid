@@ -1,6 +1,6 @@
 from typing import Callable
 from abc import abstractmethod
-from centroid.common import AnyObject
+from centroid.common import AnyDict
 import logging
 
 
@@ -24,7 +24,7 @@ class DataAdapterBase:
     async def execute_in_transaction(self, func: Callable):
         pass
 
-class DataColumn(AnyObject):
+class DataColumn(AnyDict):
     def __init__(self, **kwargs):
         self.name = None
         self.type = None

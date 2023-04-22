@@ -25,7 +25,7 @@ class DataContext:
         configuration: DataConfiguration = self.application.services.get(DataConfiguration)
         properties = configuration.getstrategy(SchemaLoaderStrategy).get(m)
         # validate existence
-        expect(properties).to_be_truthy(Exception('The specified data model cannot be found'))
+        expect(properties).to_be_truthy(Exception(f'{m} cannot be found.'))
         return DataModel(context=self, properties=properties)
 
     def finalize(self):
@@ -33,7 +33,7 @@ class DataContext:
             self.__db__.close()
 
     def execute_in_transaction(self, func: Callable):
-        return self.__db__.execute_in_transaction(func)
+        return self.db.execute_in_transaction(func)
 
 
 class NamedDataContext(DataContext):
