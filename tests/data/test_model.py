@@ -3,6 +3,7 @@ from centroid.data.loaders import SchemaLoaderStrategy
 from centroid.data.application import DataApplication
 from centroid.data.types import DataModelProperties
 from centroid.data.model import DataModel
+from centroid.data.context import DataContext
 from os.path import abspath, join, dirname
 from unittest import TestCase
 from centroid.query import TestUtils
@@ -12,17 +13,17 @@ APP_PATH = abspath(join(dirname(__file__), '..'))
 
 
 @pytest.fixture()
-def app() -> DataApplication:
-    return DataApplication(cwd=APP_PATH)
+def context() -> DataContext:
+    app = DataApplication(cwd=APP_PATH)
+    return app.create_context()
 
 
-def test_get_model(app):
-    model = app.configuration.getstrategy(SchemaLoaderStrategy).get('Thing')
+def test_get_model(context):
+    model = context.application.configuration.getstrategy(SchemaLoaderStrategy).get('Thing')
     TestCase().assertEqual(model.name, 'Thing')
 
 
-def test_get_attributes(app):
-    context = app.create_context()
+def test_get_attributes(context):
     model: DataModel = context.model('Product')
     TestCase().assertIsNotNone(model)
     TestCase().assertIsNotNone(model.attributes)
@@ -35,8 +36,7 @@ def test_get_attributes(app):
     context.finalize()
 
 
-def test_get_primary_key(app):
-    context = app.create_context()
+def test_get_primary_key(context):
     model: DataModel = context.model('Product')
     TestCase().assertIsNotNone(model)
     TestCase().assertIsNotNone(model.attributes)
@@ -45,7 +45,7 @@ def test_get_primary_key(app):
     context.finalize()
 
 
-def test_get_source(app):
+def test_get_source():
     model = DataModelProperties(name='TestAction')
     TestCase().assertEqual(model.get_source(), 'TestActionBase')
     TestCase().assertEqual(model.get_view(), 'TestActionData')
@@ -57,11 +57,29 @@ def test_get_source(app):
     model.source = 'TestActionBase'
 
 
-async def test_upgrade(app):
-    context = app.create_context()
-
+async def test_upgrade(context):
+    
     async def execute():
         model: DataModel = context.model('InteractAction')
         await model.migrate()
     await TestUtils(context.db).execute_in_transaction(execute)
     await context.finalize()
+
+
+def test_many_to_one(context):
+    
+    mapping = context.model('Action').infermapping('actionStatus')
+    TestCase().assertIsNotNone(mapping)
+    TestCase().assertEqual(mapping.associationType, 'association')
+
+    mapping = context.model('InteractAction').infermapping('actionStatus')
+    TestCase().assertIsNotNone(mapping)
+    TestCase().assertEqual(mapping.associationType, 'association')
+    TestCase().assertEqual(mapping.childModel, 'InteractAction')
+
+
+def test_many_to_many(context):
+    
+    mapping = context.model('AuthClient').infermapping('scopes')
+    TestCase().assertIsNotNone(mapping)
+    TestCase().assertEqual(mapping.associationType, 'junction')

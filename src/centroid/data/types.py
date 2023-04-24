@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import List, Callable
-from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict, AnyObject
-from centroid.query import DataAdapter
+from typing import List, Callable, NamedTuple
+from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict
+from centroid.query import DataAdapter, QueryExpression
 
 
 class DataObjectState(Enum):
@@ -216,6 +216,17 @@ class DataModelBase:
 
     def key(self):
         return next(filter(lambda x: x.primary is True, self.attributes), None)
+    
+    def get_attribute(self, name: str):
+        return next(filter(lambda x: x.name == name, self.attributes), None)
+
+    @abstractmethod
+    def infermapping(self, o: object):
+        pass
+
+    @abstractmethod
+    async def inferstate(self, o: object):
+        pass
 
     @abstractmethod
     async def upsert(self, o: object or List[object]):
@@ -234,16 +245,22 @@ class DataModelBase:
         pass
 
 
-class UpgradeEventArgs(AnyObject):
-
+class UpgradeEventArgs(NamedTuple):
+    
     model: DataModelBase
     done: bool = False
-    
 
-class DataEventArgs(AnyObject):
+
+class ExecuteEventArgs(NamedTuple):
+
+    model: DataModelBase
+    emitter: QueryExpression
+    results: List[object] = None
+
+
+class DataEventArgs(NamedTuple):
 
     model: DataModelBase
     state: DataObjectState
-    previous: object
-    target: object
-    emitter: object
+    previous: object = None
+    target: object = None

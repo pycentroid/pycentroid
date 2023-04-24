@@ -4,6 +4,7 @@ import importlib
 from .loaders import SchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 from .data_types import DataTypes
 
+
 class DataAdapters(ConfigurationStrategy):
 
     __adapters__ = []

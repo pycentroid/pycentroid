@@ -33,10 +33,9 @@ class DataTypes(ConfigurationStrategy):
         super().__init__(configuration)
         # load defaults
         with open(join(dirname(__file__), 'resources/dataTypes.json'), 'r') as file:
-                # load file
-                d = json.load(file)
-                self.__types__ = AnyDict(**d)
-        
+            # load file
+            d = json.load(file)
+            self.__types__ = AnyDict(**d)
 
     def has(self, data_type: str) -> bool:
         return data_type in self.__types__.keys()

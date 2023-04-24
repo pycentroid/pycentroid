@@ -1,5 +1,4 @@
-from .types import DataModelBase
-from centroid.common import AnyObject
+from .types import DataModelBase, UpgradeEventArgs, ExecuteEventArgs
 from centroid.query import OpenDataQueryExpression, QueryField, QueryEntity
 from typing import List
 
@@ -37,18 +36,17 @@ class DataQueryable(OpenDataQueryExpression):
             # get attributes
             attributes = self.__model__.attributes
             self.select(*list(map(lambda x: x.name, attributes)))
-        # get context
-        event = AnyObject(emitter=self, model=self.__model__)
         # stage #1 emit before upgrade
-        await self.model.before.upgrade.emit(event)
+        await self.model.before.upgrade.emit(UpgradeEventArgs(model=self.model))
         # stage #2 emit before execute
+        event = ExecuteEventArgs(model=self.model, emitter=self)
         await self.model.before.execute.emit(event)
         # execute query
         results = await self.model.context.db.execute(self)
         if len(results) == 0:
             return None
         else:
-            event = AnyObject(emitter=self, model=self.__model__, result=results[0])
+            event = ExecuteEventArgs(model=self.model, emitter=self, results=results)
             # stage #3 emit after execute
             await self.model.after.execute.emit(event)
             return results[0]
@@ -58,15 +56,15 @@ class DataQueryable(OpenDataQueryExpression):
             # get attributes
             attributes = self.__model__.attributes
             self.select(*list(map(lambda x: x.name, attributes)))
-        event = AnyObject(emitter=self, model=self.__model__)
         # stage #1 emit before upgrade
-        await self.model.before.upgrade.emit(event)
+        await self.model.before.upgrade.emit(UpgradeEventArgs(model=self.model))
         # stage #2 emit before execute
+        event = ExecuteEventArgs(model=self.model, emitter=self)
         await self.model.before.execute.emit(event)
         # execute query
         results = await self.model.context.db.execute(self)
         # stage #3 emit after execute
-        event = AnyObject(emitter=self, model=self.__model__, results=results)
+        event = ExecuteEventArgs(model=self.model, emitter=self, results=results)
         await self.model.after.execute.emit(event)
         return results
 

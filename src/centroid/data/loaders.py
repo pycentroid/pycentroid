@@ -1,8 +1,7 @@
 import json
 from abc import abstractmethod
 from inspect import isclass
-
-from centroid.common import ConfigurationStrategy, AnyDict
+from centroid.common import ConfigurationStrategy
 from typing import List
 from os.path import abspath, join, isfile, splitext
 from os import listdir
