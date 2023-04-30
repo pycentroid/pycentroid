@@ -16,9 +16,11 @@ def format_field_reference(name: str):
 def format_any_field_reference(name: str):
     return re.sub(r'^\$?(\w+)', r'$\1', name)
 
+
 def is_qualified_reference(name: str):
     pattern = r'(\$\w+)\.((\w+)+)?'
     return re.search(pattern, name)
+
 
 def get_first_key(any_dict: dict):
     """Returns the first key of a dictionary
@@ -225,7 +227,7 @@ class QueryField(dict):
         return self
 
     def startswith(self, search: str):
-       return self.__search__('^' + re.escape(search))
+        return self.__search__('^' + re.escape(search))
     
     def endswith(self, search: str):
         return self.__search__(re.escape(search) + '$')

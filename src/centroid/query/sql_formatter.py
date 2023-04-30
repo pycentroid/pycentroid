@@ -22,6 +22,7 @@ class SqlDialect:
     From = 'FROM'
     Where = 'WHERE'
     Select = 'SELECT'
+    Distinct = 'DISTINCT'
     Update = 'UPDATE'
     Delete = 'DELETE'
     Insert = 'INSERT INTO'
@@ -405,6 +406,9 @@ class SqlFormatter:
         # and collection alias
         collection_alias = query.__collection__.alias
         sql = SqlDialect.Select
+        if query.__distinct__ is True:
+            sql += SqlDialect.Space
+            sql += SqlDialect.Distinct
         if query.__select__ is None:
             sql += ' * '  # wildcard select
         else:

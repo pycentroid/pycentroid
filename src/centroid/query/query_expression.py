@@ -3,6 +3,34 @@ from centroid.common import expect, AnyObject, NoneError, SyncSeriesEventEmitter
 from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
+from types import SimpleNamespace
+from enum import Enum
+
+
+class ResolvingJoinMemberEvent(SimpleNamespace):
+
+    target: object
+    member: str
+    fully_qualified_name: str
+
+
+class ResolvingMemberEvent(SimpleNamespace):
+
+    target: object
+    member: str
+
+
+class ResolvingMethodEvent(SimpleNamespace):
+
+    target: object
+    member: str
+
+
+class JOIN_DIRECTION(str, Enum):
+
+    LEFT = 'left'
+    RIGHT = 'right'
+    INNER = 'inner'
 
 
 class QueryExpression:
@@ -26,6 +54,7 @@ class QueryExpression:
         self.__joining__ = None
         self.__left__: QueryField or None = None
         self.__last_logical = None
+        self.__distinct__ = None
         
         if collection is not None:
             self.__set_collection__(collection)
@@ -110,7 +139,11 @@ class QueryExpression:
         elif inspect.isfunction(args[0]):
             # parse callable as where statement
             self.__where__ = self.get_closure_parser().parse_filter(*args, kwargs)
-        
+        elif isinstance(args[0], QueryField):
+            self.__left__ = args[0]
+        else:
+            raise Exception('Invalid argument. Expected a string, a lambda function or an instance of query field.')
+
         return self
     
     def prepare(self, useOr=False):
@@ -421,7 +454,7 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def join(self, collection, alias=None):
+    def join(self, collection, alias: str = None, direction: str = 'inner'):
         """Prepares a join expression with the given collection
 
         Args:
@@ -435,7 +468,7 @@ class QueryExpression:
             self.__joining__ = {
                 '$lookup': {
                     'from': collection.collection,
-                    'direction': 'inner',
+                    'direction': direction,
                     'as': collection.alias
                 }
             }
@@ -443,7 +476,7 @@ class QueryExpression:
             self.__joining__ = {
                 '$lookup': {
                     'from': collection,
-                    'direction': 'inner',
+                    'direction': direction,
                     'as': alias
                 }
             }
@@ -643,3 +676,7 @@ class QueryExpression:
                     ]
                 }
         self.__left__ = None
+
+    def distinct(self, value=True):
+        self.__distinct__ = value
+        return self

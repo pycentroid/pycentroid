@@ -1,7 +1,8 @@
 # noinspection PyUnresolvedReferences
+# noqa: F401
 import pytest
 from unittest import TestCase
-from centroid.query import QueryExpression, QueryField, select
+from centroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter
 
 
 def test_create_expr():
@@ -103,3 +104,37 @@ def test_select_map():
         'category': 1,
         'price': 1
     })
+
+
+def test_where_with_query_field():
+
+    products = QueryEntity('Product')
+    q = QueryExpression(products).where(
+        QueryField('category').from_collection(products.collection)
+    ).equal('Desktops')
+    TestCase().assertEqual(q.__where__, {
+        '$eq': [
+            '$Product.category',
+            'Desktops'
+        ]
+    })
+    formatter = SqlFormatter()
+
+    sql = formatter.format_where(q.__where__)
+    TestCase().assertEqual(sql, '(Product.category=\'Desktops\')')
+
+    orders = QueryEntity('Order')
+    q = QueryExpression(orders).where(
+        QueryField('orderedItem').from_collection(orders.collection)
+    ).equal(
+        QueryField('id').from_collection(products.collection)
+    )
+    TestCase().assertEqual(q.__where__, {
+        '$eq': [
+            '$Order.orderedItem',
+            '$Product.id'
+        ]
+    })
+    sql = formatter.format_where(q.__where__)
+    TestCase().assertEqual(sql, '(Order.orderedItem=Product.id)')
+    

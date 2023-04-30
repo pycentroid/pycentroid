@@ -68,6 +68,9 @@ class DataModel(DataModelBase):
     
     def as_queryable(self):
         return DataQueryable(self)
+    
+    def where(self, **kwargs):
+        return DataQueryable(self).where(**kwargs)
 
     def get_super_types(self) -> List[str]:
         results = []
@@ -192,9 +195,16 @@ class DataModel(DataModelBase):
             attributes.insert(0, key)
         # enumerate attributes
         for attribute in attributes:
-            property = attribute.property or attribute.name
-            if hasattr(obj, property):
-                result[attribute.name] = obj[property]
+            # get property name
+            prop = attribute.property or attribute.name
+            if hasattr(obj, prop):
+                # get mapping
+                mapping = self.infermapping(attribute.name)
+                if mapping is None:
+                    result[attribute.name] = obj[prop]
+                else:
+                    # todo: resolve value
+                    result[attribute.name] = obj[prop]
         return result
     
     def __pre_update__(self, obj: object) -> dict:

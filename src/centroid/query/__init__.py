@@ -1,5 +1,7 @@
-from .query_expression import QueryExpression
-from .query_field import QueryField
+# flake8: noqa: F401
+from .query_expression import JOIN_DIRECTION, QueryExpression, ResolvingJoinMemberEvent, ResolvingMemberEvent, ResolvingMethodEvent
+from .query_field import QueryField, trim_field_reference, format_collection_reference,\
+     format_field_reference, format_any_field_reference, is_qualified_reference
 from .query_value import QueryValue
 from .query_entity import QueryEntity
 from .utils import SqlUtils, SelectMap, select, CancelTransactionError, TestUtils

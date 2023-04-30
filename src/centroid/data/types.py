@@ -20,6 +20,11 @@ class PrivilegeMask(Enum):
     ALL = 31
 
 
+class DataAssociationType(str, Enum):
+    ASSOCIATION = 'association'
+    JUNCTION = 'junction'
+
+
 class DataObjectPrivilege(AnyDict):
     mask: PrivilegeMask
     """A number which represents permission mask (1=Read, 2=Create, 4=Update, 8=Delete, 16=Execute)"""
@@ -220,6 +225,10 @@ class DataModelBase:
     def get_attribute(self, name: str):
         return next(filter(lambda x: x.name == name, self.attributes), None)
 
+    @abstractmethod
+    def get_super_types(self) -> List[str]:
+        pass
+    
     @abstractmethod
     def infermapping(self, o: object):
         pass
