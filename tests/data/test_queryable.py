@@ -5,6 +5,7 @@ from centroid.data.context import DataContext
 from unittest import TestCase
 from types import SimpleNamespace
 
+
 APP_PATH = abspath(join(dirname(__file__), '..'))
 
 
@@ -41,7 +42,34 @@ async def test_find(context: DataContext):
 
 
 async def test_query_association(context: DataContext):
-    results = await context.model('Order').as_queryable().where(
+    results = await context.model('Order').where(
         lambda x: x.orderedItem.category == 'Desktops'
         ).get_items()
     TestCase().assertGreater(len(results), 0)
+
+
+async def test_find_by_obj(context: DataContext):
+    results = await context.model('Order').find(
+        {
+            'orderedItem': 84,
+            'orderStatus': {
+                'name': 'Processing'
+            }
+        }
+    ).get_items()
+    TestCase().assertGreater(len(results), 0)
+    for result in results:
+        TestCase().assertEqual(result.orderedItem, 84)
+        TestCase().assertEqual(result.orderStatus, 7)
+
+
+async def test_expand(context: DataContext):
+    results = await context.model('Order').where(
+        lambda x: x.orderStatus.alternateName == 'OrderProcessing'
+    ).expand(
+        lambda x: (x.customer,)
+        ).take(25).get_items()
+    TestCase().assertGreater(len(results), 0)
+    for result in results:
+        TestCase().assertEqual(result.orderedItem, 84)
+        TestCase().assertEqual(result.orderStatus, 7)

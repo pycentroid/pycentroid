@@ -71,7 +71,7 @@ class QueryField(dict):
         })
         return self
 
-    def as_(self, alias: str):
+    def _as(self, alias: str):
         return self.asattr(alias)
 
     def __use_datetime_function__(self, date_function, timezone=None):

@@ -1,5 +1,4 @@
 # noinspection PyUnresolvedReferences
-import pytest
 from unittest import TestCase
 from centroid.query.query_entity import QueryEntity
 from centroid.query.open_data_query import any, OpenDataQueryExpression

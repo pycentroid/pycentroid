@@ -1,5 +1,7 @@
 from collections import namedtuple
 from types import SimpleNamespace
+from datetime import datetime, date, time
+import inspect
 
 
 class AnyObject(SimpleNamespace):
@@ -65,3 +67,16 @@ def dict_to_object(d):
         if isinstance(v, dict):
             d[k] = dict_to_object(v)
     return namedtuple('X', d.keys())(*d.values())
+
+
+def is_object_like(obj):
+    """Determines whether the given value is an object or not
+    """
+    if obj is None:
+        return False
+    for t in [str, int, float, bool, datetime, date, time]:
+        if isinstance(obj, t):
+            return False
+    if inspect.isfunction(obj) or inspect.isclass(obj):
+        return False
+    return isinstance(obj, object)

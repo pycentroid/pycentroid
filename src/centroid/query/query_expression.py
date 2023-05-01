@@ -454,7 +454,7 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def join(self, collection, alias: str = None, direction: str = 'inner'):
+    def join(self, collection, alias: str = None, direction: JOIN_DIRECTION = JOIN_DIRECTION.INNER):
         """Prepares a join expression with the given collection
 
         Args:

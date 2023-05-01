@@ -1,6 +1,3 @@
-# noinspection PyUnresolvedReferences
-# noqa: F401
-import pytest
 from unittest import TestCase
 from centroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter
 

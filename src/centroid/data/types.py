@@ -224,6 +224,9 @@ class DataModelBase:
     
     def get_attribute(self, name: str):
         return next(filter(lambda x: x.name == name, self.attributes), None)
+    
+    def getattr(self, name: str):
+        return next(filter(lambda x: x.name == name, self.attributes), None)
 
     @abstractmethod
     def get_super_types(self) -> List[str]:

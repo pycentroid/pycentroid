@@ -6,8 +6,9 @@ from .configuration import DataConfiguration
 from .data_types import DataTypes
 from pydash import assign
 from centroid.query import QueryExpression, QueryEntity
-from centroid.common import DataError
+from centroid.common import DataError, expect
 from .upgrade import DataModelUpgrade
+from .listeners.expand import ExpandListener
 import inflect
 
 pluralize = inflect.engine()
@@ -26,6 +27,8 @@ class DataModel(DataModelBase):
         super().__init__(context, properties)
         self.before.upgrade.subscribe(DataModelUpgrade.before)
         self.after.upgrade.subscribe(DataModelUpgrade.after)
+        # append execute listeners
+        self.after.execute.subscribe(ExpandListener.after_execute)
 
     def silent(self, value: bool = True):
         self.__silent__ = value
@@ -69,8 +72,11 @@ class DataModel(DataModelBase):
     def as_queryable(self):
         return DataQueryable(self)
     
-    def where(self, **kwargs):
-        return DataQueryable(self).where(**kwargs)
+    def where(self, *args, **kwargs):
+        return DataQueryable(self).where(*args, **kwargs)
+
+    def find(self, obj: object):
+        return DataQueryable(self).find(obj)
 
     def get_super_types(self) -> List[str]:
         results = []
@@ -81,7 +87,10 @@ class DataModel(DataModelBase):
         return results
 
     def infermapping(self, name: str) -> DataFieldAssociationMapping:
-        attribute: DataModelAttribute = self.get_attribute(name)
+        attribute: DataModelAttribute = self.getattr(name)
+        expect(attribute).to_be_truthy(
+            DataError(message='Attribute not found.', model=self.properties.name, field=name, code='ERR_ATTR')
+        )
         if attribute is None:
             return None
         data_types: DataTypes = self.context.application.services.get(DataConfiguration).getstrategy(DataTypes)

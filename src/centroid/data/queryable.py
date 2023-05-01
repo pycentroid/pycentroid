@@ -1,7 +1,7 @@
 from .types import DataModelBase, UpgradeEventArgs, ExecuteEventArgs, DataField, DataFieldAssociationMapping, DataAssociationType
 from centroid.query import JOIN_DIRECTION, OpenDataQueryExpression, QueryExpression , QueryField,\
-     QueryEntity, ResolvingJoinMemberEvent, trim_field_reference
-from centroid.common import expect
+     QueryEntity, ResolvingJoinMemberEvent, ResolvingMemberEvent, trim_field_reference
+from centroid.common import expect, DataError, is_object_like
 from typing import List
 from types import SimpleNamespace
 
@@ -15,8 +15,15 @@ class DataQueryable(OpenDataQueryExpression):
         super().__init__(model.properties.view)
         self.__model__ = model
         self.__collection__ = QueryEntity(model.properties.get_view())
+        self.resolving_member.subscribe(self.__on_resolving_member__)
         self.resolving_join_member.subscribe(self.__on_resolving_join_member__)
     
+    def __on_resolving_member__(self, event: ResolvingMemberEvent):
+        attribute = self.model.getattr(trim_field_reference(event.member))
+        expect(attribute).to_be_truthy(
+            DataError(message='Attribute not found.', model=self.model.properties.name, field=event.member, code='ERR_ATTR')
+            )
+
     def __on_resolving_join_member__(self, event: ResolvingJoinMemberEvent):
         # split member expression e.g. [ 'customer', 'address', 'addressLocality' ]
         members = event.member.split('.')
@@ -30,38 +37,40 @@ class DataQueryable(OpenDataQueryExpression):
             expect(mapping).to_be_truthy(
                 Exception('The data association mapping cannot be empty while resolving nested attributes.')
                 )
-            expect(mapping.many).to_be_falsy(
-                Exception('The usage of many-to-many associations is not supported while filtering, grouping or sorting items.')
-                )
             join_model: DataModelBase = None
             # get local field
-            local_field: DataField = model.get_attribute(member)
+            local_field: DataField = model.getattr(member)
             foreign_field: DataField = None
             # get join model and foreign field
             if mapping.parentModel != model.properties.name:
                 join_model = self.model.context.model(mapping.parentModel)
-                foreign_field = join_model.get_attribute(mapping.parentField)
+                foreign_field = join_model.getattr(mapping.parentField)
             else:
                 join_model = self.model.context.model(mapping.childModel)
-                foreign_field = join_model.get_attribute(mapping.childField)
+                foreign_field = join_model.getattr(mapping.childField)
+            if next(filter(lambda x: x['as'] == member, self.__lookup__), None) is not None:
+                return
+            if mapping.many is True:
+                self.distinct()
             if mapping.associationType == DataAssociationType.ASSOCIATION:
                 # create join entity
                 join_entity = QueryEntity(join_model.properties.get_view(), alias=member)
                 local_collection = local_entity.alias or local_entity.collection
+                # todo: find if lookup has been already defined
                 self.join(join_entity, direction=JOIN_DIRECTION.LEFT).on(
-                    QueryExpression().where(
-                        QueryField(local_field.name).from_collection(local_collection)
-                        ).equal(
-                            QueryField(foreign_field.name).from_collection(join_entity.alias)
-                            )
-                )
+                        QueryExpression().where(
+                            QueryField(local_field.name).from_collection(local_collection)
+                            ).equal(
+                                QueryField(foreign_field.name).from_collection(join_entity.alias)
+                                )
+                    )
             elif mapping.associationType == DataAssociationType.JUNCTION:
                 # get junction entity
-                junction_entity = QueryEntity(mapping.associationAdapter, alias=member)
+                junction_entity = QueryEntity(mapping.associationAdapter, alias='_' + member + '_')
                 # get join entity
                 join_entity = QueryEntity(join_model.properties.get_view(), alias=member)
                 local_collection = local_entity.alias or local_entity.collection
-                self.join(junction_entity, direction=JOIN_DIRECTION.INNER).on(
+                self.join(junction_entity, direction=JOIN_DIRECTION.LEFT).on(
                     QueryExpression().where(
                         QueryField(local_field.name).from_collection(local_collection)
                         ).equal(
@@ -73,6 +82,14 @@ class DataQueryable(OpenDataQueryExpression):
                 self.join(join_entity, direction=JOIN_DIRECTION.INNER).on(
                     QueryExpression().where(associated_object).equal(associated_value)
                 )
+            else:
+                raise Exception('Invalid or unsupported association type.')
+            # set model attribute (for future use)
+            lookup: dict = self.__lookup__[-1]
+            if lookup is not None:
+                lookup.update({
+                    'model': join_model.properties.name
+                })
             # set current model
             model = join_model
             index += 1
@@ -143,12 +160,29 @@ class DataQueryable(OpenDataQueryExpression):
             if hasattr(source, prop):
                 # get value
                 value = getattr(source, prop)
-                where['$and'].append({
-                    '$eq': [
-                        '$' + attribute.name,
-                        value
-                    ]
-                })
+                # check if value is object-like
+                if is_object_like(value):
+                    mapping = self.model.infermapping(prop)
+                    # mapping should be defined
+                    expect(mapping).to_be_truthy(
+                        DataError('Data association mapping cannot be determined.', model=self.model.properties.name, field=prop)
+                        )
+                    associated_model = self.model.context.model(attribute.type)
+                    expect(associated_model).to_be_truthy(
+                        DataError('Associated model cannot be found', model=self.model.properties.name, field=prop)
+                    )
+                    # prepare query for associated object
+                    q: QueryExpression = associated_model.find(value)
+                    # get where statement
+                    raise Exception('Nested query is not supported yet')
+                else:
+                    # append comparison expression
+                    where['$and'].append({
+                        '$eq': [
+                            '$' + attribute.name,
+                            value
+                        ]
+                    })
         if len(where['$and']) == 0:
             return self.where(key.name).equal(None)
         self.__where__ = where
