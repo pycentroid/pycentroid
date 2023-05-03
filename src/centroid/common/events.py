@@ -71,6 +71,7 @@ class SyncSeriesEventEmitter:
         for handler in self.__handlers__:
             handler.execute(*args)
 
+
 class AsyncEventHandler:
     def __init__(self, handler):
         self.handler = handler

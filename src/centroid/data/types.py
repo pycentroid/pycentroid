@@ -183,21 +183,30 @@ class DataContextBase:
 
 class DataModelEventEmitter:
 
-    upgrade = AsyncSeriesEventEmitter()
-    save = AsyncSeriesEventEmitter()
-    remove = AsyncSeriesEventEmitter()
-    execute = AsyncSeriesEventEmitter()
+    upgrade: AsyncSeriesEventEmitter
+    save: AsyncSeriesEventEmitter
+    remove: AsyncSeriesEventEmitter
+    execute: AsyncSeriesEventEmitter
+
+    def __init__(self):
+        self.upgrade = AsyncSeriesEventEmitter()
+        self.save = AsyncSeriesEventEmitter()
+        self.remove = AsyncSeriesEventEmitter()
+        self.execute = AsyncSeriesEventEmitter()
 
 
 class DataModelBase:
+    
     properties: DataModelProperties
     context: DataContextBase
-    before: DataModelEventEmitter = DataModelEventEmitter()
-    after: DataModelEventEmitter = DataModelEventEmitter()
+    before: DataModelEventEmitter
+    after: DataModelEventEmitter
 
     def __init__(self, context: DataContextBase = None, properties: DataModelProperties = None, **kwargs):
         self.context = context
         self.properties = properties
+        self.before = DataModelEventEmitter()
+        self.after = DataModelEventEmitter()
 
     @abstractmethod
     def base(self):

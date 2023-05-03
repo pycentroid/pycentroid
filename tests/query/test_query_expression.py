@@ -1,5 +1,6 @@
 from unittest import TestCase
-from centroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter
+from centroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter, SelectExpressionEncoder
+import json
 
 
 def test_create_expr():
@@ -135,3 +136,56 @@ def test_where_with_query_field():
     sql = formatter.format_where(q.__where__)
     TestCase().assertEqual(sql, '(Order.orderedItem=Product.id)')
     
+
+def test_encode_query():
+    q = QueryExpression('Product').select(
+        lambda x: select(id=x.id, name=x.name, category=x.category, price=x.price)
+    ).where('category').not_equal('Laptops')
+    expr = json.dumps(q, cls=SelectExpressionEncoder)
+    TestCase().assertEqual(expr, json.dumps({
+        '$project': {
+            'id': 1,
+            'name': 1,
+            'category': 1,
+            'price': 1
+        },
+        '$match': {
+            '$ne': [
+                '$category',
+                'Laptops'
+            ]
+        }
+    }))
+
+
+def test_join_expression():
+    q = QueryExpression('Order').select(
+        lambda x: (x.id, x.customer,)
+    ).join(
+        QueryExpression('Person').select(
+            lambda x: (x.id,)
+        ).as_('customer')
+    ).on(
+        QueryExpression().where(
+            QueryField('customer').from_collection('Order')
+        ).equal(
+            QueryField('id').from_collection('customer')
+        )
+    )
+    sql = SqlFormatter().format(q)
+    TestCase().assertEqual(sql, 'SELECT Order.id,Order.customer FROM Order '
+                                'INNER JOIN (SELECT id FROM Person) customer ON (Order.customer=customer.id)')
+    
+    Person = QueryEntity('Person')
+    Order = QueryEntity('Order')
+    q1 = QueryExpression(Person, alias='customer').select(
+        lambda x: (x.id,)
+        ).take(10)
+    q = QueryExpression(Order).select(
+        lambda x: (x.id, x.customer,)
+    ).join(q1).on(
+        lambda x, customer: x.customer == customer.id
+        )
+    sql = SqlFormatter().format(q)
+    TestCase().assertEqual(sql, 'SELECT Order.id,Order.customer FROM Order '
+                                'INNER JOIN (SELECT id FROM Person LIMIT 10) customer ON (Order.customer=customer.id)')

@@ -71,5 +71,5 @@ async def test_expand(context: DataContext):
         ).take(25).get_items()
     TestCase().assertGreater(len(results), 0)
     for result in results:
-        TestCase().assertEqual(result.orderedItem, 84)
-        TestCase().assertEqual(result.orderStatus, 7)
+        TestCase().assertIsNotNone(result.orderedItem.id)
+        TestCase().assertIsNotNone(result.customer.id)

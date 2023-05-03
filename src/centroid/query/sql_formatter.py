@@ -338,7 +338,16 @@ class SqlFormatter:
                 sql += SqlDialect.Space
                 sql += SqlDialect.Join
                 sql += SqlDialect.Space
-                sql += self.__dialect__.escape_name(from_collection)
+                if isinstance(from_collection, QueryExpression):
+                    sql += '('
+                    formatter = self.__class__()
+                    expect(from_collection.__select__).to_be_truthy(
+                        Exception('Expected select expression')
+                        )
+                    sql += formatter.format(from_collection)
+                    sql += ')'
+                else:
+                    sql += self.__dialect__.escape_name(from_collection)
                 if as_collection is not None:
                     sql += SqlDialect.Space
                     sql += self.__dialect__.escape_name(as_collection)

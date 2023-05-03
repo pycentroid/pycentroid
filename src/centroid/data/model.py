@@ -10,8 +10,34 @@ from centroid.common import DataError, expect
 from .upgrade import DataModelUpgrade
 from .listeners.expand import ExpandListener
 import inflect
+import re
 
 pluralize = inflect.engine()
+
+
+def is_plural(text: str) -> bool:
+    # an exception for inflect package (word ends with double 's')
+    if text.endswith('ss'):
+        return False
+    # if word is singular
+    if pluralize.singular_noun(text) is False:
+        # return false
+        return False
+    # split camel case string e.g. orderStatus
+    if re.search(r'[A-Z]', text) is not None:
+        matches = re.finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)', text)
+        segments = [m.group(0).lower() for m in matches]
+        # and check the last segment
+        return pluralize.singular_noun(segments[-1]) is not False
+    # split snake case string e.g. order_status
+    # trim underscore from the beginning or the end of txt
+    s = re.sub('(^_+)|(_+$)', '', text)
+    # check if word is snake case
+    if re.search(r'_', s) is not None:
+        # split and check the last segment only
+        return pluralize.singular_noun(s.split('_')[-1]) is not False
+    p = pluralize.plural(pluralize.singular_noun(text))
+    return p == text
 
 
 class DataModelAttribute(DataField):
@@ -61,8 +87,8 @@ class DataModel(DataModelBase):
                 clone = assign(found, field)
                 attr = DataModelAttribute(**clone)
             # # check many attribute
-            # if attr.many is None and pluralize.singular_noun(attr.name) is not False:
-            #     attr.many = True
+            if attr.many is None and is_plural(attr.name):
+                attr.many = True
             if attr.many is None and attr.multiplicity == 'ZeroOrOne':
                 attr.many = True
             attributes.append(attr)

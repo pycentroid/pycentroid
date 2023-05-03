@@ -1,6 +1,6 @@
 from ..types import DataModelBase, ExecuteEventArgs, DataFieldAssociationMapping, DataAssociationType
 from ..queryable import DataQueryable
-from centroid.query import QueryExpression
+from centroid.query import QueryExpression, QueryField
 from centroid.common import expect, DataError
 
 
@@ -31,13 +31,52 @@ class ExpandListener:
                 DataError('Data association cannot be determined', model=model.properties.name, field=attribute.name)
             )
             if mapping.associationType == DataAssociationType.ASSOCIATION:
-                if attribute.many is False:
+                # one-to-many
+                if attribute.many is True:
                     # get associated model
-                    parent = model.context.model(attribute.type)
+                    child_model = model.context.model(attribute.type)
+                    # get current query in order to use it as sub-query in join expression
+                    join_query = query
+                    # query children after joining collection with current query
+                    children = await child_model.as_queryable().distinct().join(join_query, 'q0').on(
+                        QueryExpression().where(
+                            QueryField(mapping.childField)
+                        ).equal(
+                            QueryField(mapping.parentField).from_collection('q0')
+                        )
+                    ).get_items()
+                    if isinstance(event.results, list):
+                        # copy children to its parent
+                        for result in event.results:
+                            # get parent
+                            value = getattr(result, mapping.parentField)
+                            # filter children
+                            items = filter(lambda x: getattr(x, mapping.childField) == value, children)
+                            # and set property value (an array of items)
+                            # todo: copy items before set (needs analysis)
+                            setattr(result, attribute.name, items)
+                # many-to-one
                 else:
-                    # one-to-many
-                    child = model.context.model(attribute.type)
-                    pass
+                    # get parent model
+                    parent_model = model.context.model(attribute.type)
+                    # get current query
+                    join_query = query
+                    # todo: optimize sub-query
+                    parents = await parent_model.as_queryable().distinct().join(join_query, 'q0').on(
+                        QueryExpression().where(
+                            QueryField(mapping.parentField).from_collection(parent_model.properties.get_view())
+                        ).equal(
+                            QueryField(mapping.childField).from_collection('q0')
+                        )
+                    ).get_items()
+                    if isinstance(event.results, list):
+                        for result in event.results:
+                            # get parent
+                            value = getattr(result, mapping.childField)
+                            parent = next(filter(lambda x: getattr(x, mapping.parentField) == value, parents), None)
+                            # and set property value
+                            # todo: copy items before set (needs analysis)
+                            setattr(result, attribute.name, parent)
+
             elif mapping.associationType == DataAssociationType.JUNCTION:
                 pass
-

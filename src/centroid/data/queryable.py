@@ -17,6 +17,7 @@ class DataQueryable(OpenDataQueryExpression):
         self.__collection__ = QueryEntity(model.properties.get_view())
         self.resolving_member.subscribe(self.__on_resolving_member__)
         self.resolving_join_member.subscribe(self.__on_resolving_join_member__)
+        self.__silent__ = False
     
     def __on_resolving_member__(self, event: ResolvingMemberEvent):
         attribute = self.model.getattr(trim_field_reference(event.member))
@@ -222,7 +223,7 @@ class DataQueryable(OpenDataQueryExpression):
         if self.__select__ is None:
             # get attributes
             attributes = self.__model__.attributes
-            self.select(*list(map(lambda x: x.name, attributes)))
+            self.select(*list(map(lambda x: x.name, filter(lambda x: x.many is not True, attributes))))
         # stage #1 emit before upgrade
         await self.model.before.upgrade.emit(UpgradeEventArgs(model=self.model))
         # stage #2 emit before execute
