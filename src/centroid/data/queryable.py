@@ -2,7 +2,7 @@ from .types import DataModelBase, UpgradeEventArgs, ExecuteEventArgs, DataField,
 from centroid.query import JOIN_DIRECTION, OpenDataQueryExpression, QueryExpression , QueryField,\
      QueryEntity, ResolvingJoinMemberEvent, ResolvingMemberEvent, trim_field_reference
 from centroid.common import expect, DataError, is_object_like
-from typing import List
+from typing import List, Self
 from types import SimpleNamespace
 
 
@@ -10,6 +10,7 @@ class DataQueryable(OpenDataQueryExpression):
 
     __model__: DataModelBase
     __silent__ = False
+    __levels__ = 2
 
     def __init__(self, model: DataModelBase):
         super().__init__(model.properties.view)
@@ -18,6 +19,7 @@ class DataQueryable(OpenDataQueryExpression):
         self.resolving_member.subscribe(self.__on_resolving_member__)
         self.resolving_join_member.subscribe(self.__on_resolving_join_member__)
         self.__silent__ = False
+        self.__levels__ = 2
     
     def __on_resolving_member__(self, event: ResolvingMemberEvent):
         attribute = self.model.getattr(trim_field_reference(event.member))
@@ -97,6 +99,10 @@ class DataQueryable(OpenDataQueryExpression):
 
     def silent(self, value: bool = True):
         self.__silent__ = value
+        return self
+
+    def levels(self, value: int) -> Self:
+        self.__levels__ = value if value >= 1 else 1
         return self
 
     @property

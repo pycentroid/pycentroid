@@ -9,7 +9,7 @@ class Expected:
         self.__value__ = value
 
         """_summary_
-        Validates the given value or expression and throws exception if it's undefined or false 
+        Validates the given value or expression and throws exception if it's undefined or false
         """
     def to_be_truthy(self, error: Exception):
         if self.__value__ is None:
@@ -20,7 +20,7 @@ class Expected:
             raise error
 
         """_summary_
-        Validates the given value or expression and throws exception if it's other than undefined or false 
+        Validates the given value or expression and throws exception if it's other than undefined or false
         """
     def to_be_falsy(self, error: Exception):
         if self.__value__ is None:
@@ -44,9 +44,19 @@ class Expected:
         if self.__value__ > value:
             return
         raise error
-    
+
     def to_be_greater_or_equal(self, value, error: Exception):
         if self.__value__ >= value:
+            return
+        raise error
+
+    def to_be_lower_than(self, value, error: Exception):
+        if self.__value__ < value:
+            return
+        raise error
+
+    def to_be_lower_or_equal(self, value, error: Exception):
+        if self.__value__ <= value:
             return
         raise error
 

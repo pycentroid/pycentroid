@@ -98,7 +98,7 @@ async def test_expand_many_to_many(context: DataContext):
         TestCase().assertIsInstance(result.members, list)
 
 
-async def test_expand_many_to_many_parents(context: DataContext):
+async def test_expand_many_to_many_parent_objects(context: DataContext):
     results = await context.model('User').as_queryable().expand(
         lambda x: (x.groups,)
         ).take(10).get_items()

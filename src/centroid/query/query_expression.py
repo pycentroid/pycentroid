@@ -9,6 +9,14 @@ from typing import Self
 import json
 
 
+class QueryExpressionType(str, Enum):
+
+    SELECT = 'SELECT',
+    INSERT = 'INSERT',
+    UPDATE = 'UPDATE',
+    DELETE = 'DELETE'
+
+
 class ResolvingJoinMemberEvent(SimpleNamespace):
 
     target: object
@@ -706,6 +714,20 @@ class QueryExpression:
     def distinct(self, value=True):
         self.__distinct__ = value
         return self
+
+    def get_type(self) -> QueryExpressionType:
+        """Returns the type of this expression
+
+        Returns:
+            QueryExpressionType: The type of this expression (SELECT, INSERT, UPDATE or DELETE)
+        """
+        if self.__update__ is not None:
+            return QueryExpressionType.UPDATE
+        elif self.__insert__ is not None:
+            return QueryExpressionType.INSERT
+        elif self.___delete___ is not None:
+            return QueryExpressionType.DELETE
+        return QueryExpressionType.SELECT
 
 
 class SelectExpressionEncoder(json.JSONEncoder):
