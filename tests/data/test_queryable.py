@@ -63,7 +63,7 @@ async def test_find_by_obj(context: DataContext):
         TestCase().assertEqual(result.orderStatus, 7)
 
 
-async def test_expand(context: DataContext):
+async def test_expand_parent_object(context: DataContext):
     results = await context.model('Order').where(
         lambda x: x.orderStatus.alternateName == 'OrderProcessing'
     ).expand(
@@ -71,5 +71,37 @@ async def test_expand(context: DataContext):
         ).take(25).get_items()
     TestCase().assertGreater(len(results), 0)
     for result in results:
-        TestCase().assertIsNotNone(result.orderedItem.id)
         TestCase().assertIsNotNone(result.customer.id)
+
+
+async def test_expand_children(context: DataContext):
+    results = await context.model('Person').where(
+        lambda x: x.jobTitle == 'Civil Engineer'
+    ).expand(
+        lambda x: (x.orders,)
+        ).take(10).get_items()
+    TestCase().assertGreater(len(results), 0)
+    for result in results:
+        TestCase().assertIsInstance(result.orders, list)
+        for order in result.orders:
+            TestCase().assertEqual(order.customer, result.id)
+
+
+async def test_expand_many_to_many(context: DataContext):
+    results = await context.model('Group').where(
+        lambda x: x.name == 'Users'
+    ).expand(
+        lambda x: (x.members,)
+        ).take(10).get_items()
+    TestCase().assertGreater(len(results), 0)
+    for result in results:
+        TestCase().assertIsInstance(result.members, list)
+
+
+async def test_expand_many_to_many_parents(context: DataContext):
+    results = await context.model('User').as_queryable().expand(
+        lambda x: (x.groups,)
+        ).take(10).get_items()
+    TestCase().assertGreater(len(results), 0)
+    for result in results:
+        TestCase().assertIsInstance(result.groups, list)

@@ -203,7 +203,7 @@ class DataQueryable(OpenDataQueryExpression):
         if self.__select__ is None:
             # get attributes
             attributes = self.__model__.attributes
-            self.select(*list(map(lambda x: x.name, attributes)))
+            self.select(*list(map(lambda x: x.name, filter(lambda x: x.many is not True, attributes))))
         # stage #1 emit before upgrade
         await self.model.before.upgrade.emit(UpgradeEventArgs(model=self.model))
         # stage #2 emit before execute

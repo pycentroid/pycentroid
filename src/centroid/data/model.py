@@ -165,7 +165,7 @@ class DataModel(DataModelBase):
                 return DataFieldAssociationMapping(**mapping)
 
             # find fields with type equal to current model
-            fields = list(filter(lambda x: x.type == self.properties.name, model.attributes))
+            fields = list(filter(lambda x: x.type == self.properties.name and x.many is False, model.attributes))
             if len(fields) == 0:
                 # set many-to-many association (between models)
                 mapping = assign({
@@ -175,11 +175,25 @@ class DataModel(DataModelBase):
                     'associationValueField': 'value',
                     'childModel': model.properties.name,
                     'childField': model.key().name,
-                    'cascade': 'delete'
-                }, original_mapping, {
+                    'cascade': 'delete',
                     'parentModel': self.properties.name,
-                    'parentField': self.key().name,
-                })
+                    'parentField': self.key().name
+                }, original_mapping)
+                # get super types
+                super_types = self.get_super_types()
+                if 'childModel' in original_mapping:
+                    child_model_type = getattr(original_mapping, 'childModel')
+                    # if the defined child model is inherited by the current model
+                    if child_model_type in super_types:
+                        # update association mapping and set child model to current model
+                        mapping['childModel'] = self.properties.name
+                elif 'parentModel' in original_mapping:
+                    parent_model_type = getattr(original_mapping, 'parentModel')
+                    # if the defined parent model is inherited by the current model
+                    if parent_model_type in super_types:
+                        # update association mapping and set parent model to current model
+                        mapping['parentModel'] = self.properties.name
+
                 return DataFieldAssociationMapping(**mapping)
             elif len(fields) == 1:
                 # set one-to-many association

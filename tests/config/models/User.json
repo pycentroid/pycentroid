@@ -51,6 +51,8 @@
                 "childModel":"User",
                 "childField":"id",
                 "associationType":"junction",
+                "associationObjectField": "parentId",
+                "associationValueField": "valueId",
                 "cascade":"delete"
             }
         },
