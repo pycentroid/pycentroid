@@ -29,7 +29,7 @@
             "name": "target",
             "title": "target",
             "description": "Indicates a target EntryPoint for an Action.",
-            "type": "EntryPoint"
+            "type": "Thing"
         },
         {
             "@id": "http://schema.org/agent",

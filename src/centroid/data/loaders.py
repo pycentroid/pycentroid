@@ -1,17 +1,18 @@
 import json
 from abc import abstractmethod
 from inspect import isclass
-
 from centroid.common import ConfigurationStrategy
 from typing import List
 from os.path import abspath, join, isfile, splitext
 from os import listdir
 import re
 import importlib
+from .types import DataModelProperties
 
 
 class SchemaLoaderStrategy(ConfigurationStrategy):
-    __models__ = {}
+    __models__: dict = {}
+    loaded: dict = {}
 
     def __init__(self, configuration):
         super().__init__(configuration)
@@ -54,7 +55,7 @@ class FileSchemaLoaderStrategy(SchemaLoaderStrategy):
                     results.append(name)
         return results
     
-    def get(self, name: str):
+    def get(self, name: str) -> DataModelProperties:
         if self.__items__ is None:
             self.__items__ = self.read()
         # case-insensitive search
@@ -65,7 +66,8 @@ class FileSchemaLoaderStrategy(SchemaLoaderStrategy):
             # get schema
             with open(join(self.path, item + '.json'), 'r') as file:
                 # load file
-                result = json.load(file)
+                d = json.load(file)
+                result = DataModelProperties(**d)
                 # set model
                 self.set(result)
         # and return definition
@@ -98,7 +100,7 @@ class DefaultSchemaLoaderStrategy(FileSchemaLoaderStrategy):
                         loader['loaderClass'] = LoaderClass
                         self.loaders.append(LoaderClass(configuration))
 
-    def get(self, name: str):
+    def get(self, name: str) -> DataModelProperties:
         model = super().get(name)
         if model is not None:
             return model

@@ -16,9 +16,11 @@ def format_field_reference(name: str):
 def format_any_field_reference(name: str):
     return re.sub(r'^\$?(\w+)', r'$\1', name)
 
+
 def is_qualified_reference(name: str):
     pattern = r'(\$\w+)\.((\w+)+)?'
     return re.search(pattern, name)
+
 
 def get_first_key(any_dict: dict):
     """Returns the first key of a dictionary
@@ -58,7 +60,7 @@ class QueryField(dict):
         self.__setitem__(key, 1)
         return self
 
-    def as_(self, alias: str):
+    def asattr(self, alias: str):
         key: str = get_first_key(self)
         if key is None:
             raise 'Field name cannot be empty when defining an alias'
@@ -68,6 +70,9 @@ class QueryField(dict):
             key: value
         })
         return self
+
+    def _as(self, alias: str):
+        return self.asattr(alias)
 
     def __use_datetime_function__(self, date_function, timezone=None):
         field: str = get_first_key(self)
@@ -178,20 +183,20 @@ class QueryField(dict):
 
     def index_of(self, search):
         return self.__use_method_call__('$indexOfBytes', search)
-
-    def get_min(self):
+    
+    def min(self):
         return self.__use_method_call__('$min')
 
-    def get_count(self):
+    def max(self):
+        return self.__use_method_call__('$max')
+
+    def count(self):
         return self.__use_method_call__('$count')
     
-    def get_count(self):
-        return self.__use_method_call__('$count')
-
-    def get_sum(self):
+    def sum(self):
         return self.__use_method_call__('$sum')
 
-    def get_average(self):
+    def average(self):
         return self.__use_method_call__('$avg')
 
     def to_lower(self):
@@ -222,7 +227,7 @@ class QueryField(dict):
         return self
 
     def startswith(self, search: str):
-       return self.__search__('^' + re.escape(search))
+        return self.__search__('^' + re.escape(search))
     
     def endswith(self, search: str):
         return self.__search__(re.escape(search) + '$')

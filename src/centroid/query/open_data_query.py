@@ -3,6 +3,7 @@ from .query_expression import QueryExpression
 from centroid.common import expect
 import logging
 from dill.source import getsource
+from typing import List
 
 
 def any(expr: callable):
@@ -19,6 +20,8 @@ def any(expr: callable):
 
 
 class OpenDataQueryExpression(QueryExpression):
+
+    __expand__: List[QueryExpression]
 
     def __init__(self, collection=None):
         super().__init__(collection)

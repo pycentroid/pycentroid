@@ -22,6 +22,7 @@ class SqlDialect:
     From = 'FROM'
     Where = 'WHERE'
     Select = 'SELECT'
+    Distinct = 'DISTINCT'
     Update = 'UPDATE'
     Delete = 'DELETE'
     Insert = 'INSERT INTO'
@@ -337,7 +338,16 @@ class SqlFormatter:
                 sql += SqlDialect.Space
                 sql += SqlDialect.Join
                 sql += SqlDialect.Space
-                sql += self.__dialect__.escape_name(from_collection)
+                if isinstance(from_collection, QueryExpression):
+                    sql += '('
+                    formatter = self.__class__()
+                    expect(from_collection.__select__).to_be_truthy(
+                        Exception('Expected select expression')
+                        )
+                    sql += formatter.format(from_collection)
+                    sql += ')'
+                else:
+                    sql += self.__dialect__.escape_name(from_collection)
                 if as_collection is not None:
                     sql += SqlDialect.Space
                     sql += self.__dialect__.escape_name(as_collection)
@@ -405,6 +415,9 @@ class SqlFormatter:
         # and collection alias
         collection_alias = query.__collection__.alias
         sql = SqlDialect.Select
+        if query.__distinct__ is True:
+            sql += SqlDialect.Space
+            sql += SqlDialect.Distinct
         if query.__select__ is None:
             sql += ' * '  # wildcard select
         else:

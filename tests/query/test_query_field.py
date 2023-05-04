@@ -1,62 +1,62 @@
 # noinspection PyUnresolvedReferences
-import pytest
 from unittest import TestCase
 from centroid.query.query_field import QueryField
 
 
 def test_create_field():
     field = QueryField('name')
-    assert not field is {
+    TestCase().assertEqual(field, {
         'name': 1
-    }
+    })
 
 
 def test_use_from_collection():
     field = QueryField('name').from_collection('Product')
-    assert not field is {
+    TestCase().assertEqual(field, {
         'Product.name': 1
-    }
+    })
     field = QueryField('name').from_collection('$Product')
-    assert not field is {
+    TestCase().assertEqual(field, {
         'Product.name': 1
-    }
+    })
 
 
 def test_use_get_date():
     field = QueryField('dateCreated').from_collection('Product').get_date()
-    assert not field is {
+    TestCase().assertEqual(field, {
         '$dayOfMonth': {
             'date': '$Product.dateCreated',
             'timezone': None
         }
-    }
+    })
     field = QueryField('dateCreated').from_collection('Product').day()
-    assert not field is {
+    TestCase().assertEqual(field, {
         '$dayOfMonth': {
             'date': '$Product.dateCreated',
             'timezone': None
         }
-    }
+    })
 
 
 def test_use_get_month():
     field = QueryField('dateCreated').from_collection('Product').get_month()
-    assert not field is {
+    TestCase().assertEqual(field, {
         '$month': {
             'date': '$Product.dateCreated',
             'timezone': None
         }
-    }
-    field = QueryField('dateCreated').from_collection('Product').month().as_('monthCreated')
-    assert not field is {
+    })
+    
+    field = QueryField('dateCreated').from_collection('Product').month()._as('monthCreated')
+    TestCase().assertEqual(field, {
         'monthCreated': {
             '$month': {
                 'date': '$Product.dateCreated',
                 'timezone': None
             }
         }
-    }
-
+    })
+    
 
 def test_use_get_year():
     field = QueryField('dateCreated').from_collection('Product').get_year()
@@ -66,7 +66,7 @@ def test_use_get_year():
             'timezone': None
         }
     })
-    field = QueryField('dateCreated').from_collection('Product').year().as_('yearCreated')
+    field = QueryField('dateCreated').from_collection('Product').year()._as('yearCreated')
     TestCase().assertDictEqual(field, {
         'yearCreated': {
             '$year': {
@@ -85,7 +85,7 @@ def test_use_get_hours():
             'timezone': None
         }
     })
-    field = QueryField('dateCreated').from_collection('Product').hour().as_('hourCreated')
+    field = QueryField('dateCreated').from_collection('Product').hour()._as('hourCreated')
     TestCase().assertDictEqual(field, {
         'hourCreated': {
             '$hour': {
@@ -104,7 +104,7 @@ def test_use_get_minutes():
             'timezone': None
         }
     })
-    field = QueryField('dateCreated').from_collection('Product').minute().as_('minuteCreated')
+    field = QueryField('dateCreated').from_collection('Product').minute()._as('minuteCreated')
     TestCase().assertDictEqual(field, {
         'minuteCreated': {
             '$minute': {
@@ -123,7 +123,7 @@ def test_use_get_seconds():
             'timezone': None
         }
     })
-    field = QueryField('dateCreated').from_collection('Product').second().as_('secondCreated')
+    field = QueryField('dateCreated').from_collection('Product').second()._as('secondCreated')
     TestCase().assertDictEqual(field, {
         'secondCreated': {
             '$second': {
@@ -135,7 +135,7 @@ def test_use_get_seconds():
 
 
 def test_use_add():
-    field = QueryField('price').from_collection('Product').add(100).as_('discountPrice')
+    field = QueryField('price').from_collection('Product').add(100)._as('discountPrice')
     TestCase().assertDictEqual(field, {
         'discountPrice': {
             '$add': [
@@ -162,7 +162,7 @@ def test_use_concat():
     field = QueryField('familyName').from_collection('Person').concat(
         ' ',
         QueryField('givenName').from_collection('Person')
-    ).as_('name')
+    ).asattr('name')
     TestCase().assertDictEqual(field, {
         'name': {
             '$concat': [

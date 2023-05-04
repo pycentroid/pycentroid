@@ -1,6 +1,14 @@
+from abc import abstractmethod
 from enum import Enum
-from types import SimpleNamespace
-from typing import List
+from typing import List, Callable, NamedTuple
+from centroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict
+from centroid.query import DataAdapter, QueryExpression
+
+
+class DataObjectState(Enum):
+    INSERT = 1
+    UPDATE = 2
+    DELETE = 4
 
 
 class PrivilegeMask(Enum):
@@ -12,7 +20,12 @@ class PrivilegeMask(Enum):
     ALL = 31
 
 
-class DataObjectPrivilege:
+class DataAssociationType(str, Enum):
+    ASSOCIATION = 'association'
+    JUNCTION = 'junction'
+
+
+class DataObjectPrivilege(AnyDict):
     mask: PrivilegeMask
     """A number which represents permission mask (1=Read, 2=Create, 4=Update, 8=Delete, 16=Execute)"""
     type: str
@@ -28,8 +41,8 @@ class DataObjectPrivilege:
 
 
 class DataFieldValidation:
-    minValue = None
-    maxValue = None
+    minValue: object
+    maxValue: object
     minLength: int
     maxLength: int
     pattern: str
@@ -39,7 +52,7 @@ class DataFieldValidation:
     validator: str
 
 
-class DataFieldAssociationMapping:
+class DataFieldAssociationMapping(AnyDict):
     associationType: str
     associationAdapter: str
     associationObjectField: str
@@ -52,7 +65,7 @@ class DataFieldAssociationMapping:
     privileges: List[DataObjectPrivilege]
 
 
-class DataModelConstraint:
+class DataModelConstraint(AnyDict):
     type: str
     """A string which represents the type of this constraint e.g. unique"""
     description: str
@@ -61,7 +74,7 @@ class DataModelConstraint:
     fields: List[str]
 
 
-class DataField:
+class DataField(AnyDict):
     name: str
     """A string which represents the name of this attribute e.g. title, description, dateCreated etc"""
     description: str
@@ -74,16 +87,16 @@ class DataField:
     """A number which represents the maximum size for this attribute e.g. the size of a text field etc"""
     scale: int
     """A number which represents the number of digits of a decimal number"""
-    nullable = True
+    nullable: bool
     """A boolean which indicates whether this attribute is nullable or not."""
-    editable = True
+    editable: bool
     """A boolean which indicates whether this attribute is editable or not."""
-    readonly = False
-    """A boolean which indicates whether this attribute is readonly or not. 
+    readonly: bool
+    """A boolean which indicates whether this attribute is readonly or not.
     A readonly value must have a default value or a calculated value."""
-    primary = False
+    primary: bool
     """A boolean which indicates whether this attribute is a key column or not."""
-    indexed = False
+    indexed: bool
     """A boolean which indicates whether this attribute is an indexed column or not."""
     property: str
     """A string which optionally represents the name of this attribute in object mapping.
@@ -93,7 +106,7 @@ class DataField:
     represents a one-to-many or many-to-many association between two models."""
     multiplicity: str
     """A string which defines the multiplicity level of an association between two objects"""
-    expandable = False
+    expandable: bool
     """A boolean value which indicates whether the associated object(s) will be automatically expanded or not."""
     nested: bool
     """A boolean which indicates whether this attribute defines an association between two models
@@ -102,14 +115,15 @@ class DataField:
     validation: DataFieldValidation
 
 
-class DataModelEventListener:
+class DataModelEventListener(AnyDict):
     name: str
     """A string which the name of this event listener e.g. 'After Update Person'"""
     type: str
     """A string which represents the path of the module that exports this listener."""
 
 
-class DataModelProperties(SimpleNamespace):
+class DataModelProperties(AnyDict):
+    
     name: str
     """A string which represents the name of this model e.g. Order, Customer, Person etc"""
     title: str
@@ -120,19 +134,154 @@ class DataModelProperties(SimpleNamespace):
     implements: str
     """A string which represents the model which is implemented by this model
     e.g. ActionStatusType model implements Enumeration model etc"""
-    sealed = False
+    sealed: bool
     """A boolean which indicates whether this model is being upgraded automatically or not."""
-    hidden = False
+    hidden: bool
     """A boolean which indicates whether this model is hidden or not. The default value is false."""
     classPath: str
     """A string which represents a module path that exports a class which maps this database model"""
+    version: str
+    """The version of this item"""
     source: str
     """A string which holds the database object of this model."""
     view: str
-    """A string which holds the database object that is going to be used for fetching data."""
-    version: str
-    """The version of this item"""
+    """A string which holds the database object that is going to be used while fetching data."""
     fields: List[DataField]
     constraints: List[DataModelConstraint]
     privileges: List[DataObjectPrivilege]
     eventListeners: List[DataModelEventListener]
+    seed: List[object]
+
+    def get_source(self):
+        return self.source if self.source is not None else f'{self.name}Base'
+
+    def get_view(self):
+        return self.view if self.view is not None else f'{self.name}Data'
+
+
+class DataContextBase:
+
+    application: ApplicationBase
+
+    @property
+    @abstractmethod
+    def db(self) -> DataAdapter:
+        pass
+
+    @abstractmethod
+    def model(self, m):
+        pass
+
+    @abstractmethod
+    def finalize(self):
+        pass
+
+    @abstractmethod
+    def execute_in_transaction(self, func: Callable):
+        pass
+
+
+class DataModelEventEmitter:
+
+    upgrade: AsyncSeriesEventEmitter
+    save: AsyncSeriesEventEmitter
+    remove: AsyncSeriesEventEmitter
+    execute: AsyncSeriesEventEmitter
+
+    def __init__(self):
+        self.upgrade = AsyncSeriesEventEmitter()
+        self.save = AsyncSeriesEventEmitter()
+        self.remove = AsyncSeriesEventEmitter()
+        self.execute = AsyncSeriesEventEmitter()
+
+
+class DataModelBase:
+    
+    properties: DataModelProperties
+    context: DataContextBase
+    before: DataModelEventEmitter
+    after: DataModelEventEmitter
+
+    def __init__(self, context: DataContextBase = None, properties: DataModelProperties = None, **kwargs):
+        self.context = context
+        self.properties = properties
+        self.before = DataModelEventEmitter()
+        self.after = DataModelEventEmitter()
+
+    @abstractmethod
+    def base(self):
+        pass
+
+    @property
+    def attributes(self) -> List[DataField]:
+        pass
+
+    @abstractmethod
+    def silent(self, value=True):
+        pass
+
+    @abstractmethod
+    async def insert(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def migrate(self):
+        pass
+
+    def key(self):
+        return next(filter(lambda x: x.primary is True, self.attributes), None)
+    
+    def get_attribute(self, name: str):
+        return next(filter(lambda x: x.name == name, self.attributes), None)
+    
+    def getattr(self, name: str):
+        return next(filter(lambda x: x.name == name, self.attributes), None)
+
+    @abstractmethod
+    def get_super_types(self) -> List[str]:
+        pass
+    
+    @abstractmethod
+    def infermapping(self, o: object):
+        pass
+
+    @abstractmethod
+    async def inferstate(self, o: object):
+        pass
+
+    @abstractmethod
+    async def upsert(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def save(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def update(self, o: object or List[object]):
+        pass
+
+    @abstractmethod
+    async def remove(self, o: object or List[object]):
+        pass
+
+
+class UpgradeEventArgs(NamedTuple):
+    
+    model: DataModelBase
+    done: bool = False
+
+
+class ExecuteEventArgs(NamedTuple):
+
+    model: DataModelBase
+    emitter: QueryExpression
+    results: List[object] = None
+
+
+class DataEventArgs(NamedTuple):
+
+    model: DataModelBase
+    state: DataObjectState
+    previous: object = None
+    target: object = None

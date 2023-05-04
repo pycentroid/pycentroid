@@ -3,6 +3,44 @@ from centroid.common import expect, AnyObject, NoneError, SyncSeriesEventEmitter
 from .closure_parser import ClosureParser
 from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
+from types import SimpleNamespace
+from enum import Enum
+from typing import Self
+import json
+
+
+class QueryExpressionType(str, Enum):
+
+    SELECT = 'SELECT',
+    INSERT = 'INSERT',
+    UPDATE = 'UPDATE',
+    DELETE = 'DELETE'
+
+
+class ResolvingJoinMemberEvent(SimpleNamespace):
+
+    target: object
+    member: str
+    fully_qualified_name: str
+
+
+class ResolvingMemberEvent(SimpleNamespace):
+
+    target: object
+    member: str
+
+
+class ResolvingMethodEvent(SimpleNamespace):
+
+    target: object
+    member: str
+
+
+class JOIN_DIRECTION(str, Enum):
+
+    LEFT = 'left'
+    RIGHT = 'right'
+    INNER = 'inner'
 
 
 class QueryExpression:
@@ -11,7 +49,7 @@ class QueryExpression:
     resolving_join_member = SyncSeriesEventEmitter()
     resolving_method = SyncSeriesEventEmitter()
     
-    def __init__(self, collection=None):
+    def __init__(self, collection=None, alias=None):
         self.__where__ = None
         self.__prepared__ = None
         self.__order_by__ = None
@@ -26,10 +64,12 @@ class QueryExpression:
         self.__joining__ = None
         self.__left__: QueryField or None = None
         self.__last_logical = None
+        self.__distinct__ = None
+        self.__alias__ = alias
         
         if collection is not None:
             self.__set_collection__(collection)
-
+    
     def __set_collection__(self, collection):
         if type(collection) is QueryEntity:
             self.__collection__ = collection
@@ -39,6 +79,19 @@ class QueryExpression:
 
     def from_collection(self, collection):
         return self.__set_collection__(collection)
+
+    def as_(self, alias: str) -> Self:
+        self.__alias__ = alias
+        return self
+
+    @property
+    def alias(self) -> str:
+        """Returns the alias of this expression when is going to be used a sub-query
+
+        Returns:
+            str: A string which represents the alias of this query expression
+        """
+        return self.__alias__
 
     def get_closure_parser(self) -> ClosureParser:
         parser = ClosureParser()
@@ -110,7 +163,11 @@ class QueryExpression:
         elif inspect.isfunction(args[0]):
             # parse callable as where statement
             self.__where__ = self.get_closure_parser().parse_filter(*args, kwargs)
-        
+        elif isinstance(args[0], QueryField):
+            self.__left__ = args[0]
+        else:
+            raise Exception('Invalid argument. Expected a string, a lambda function or an instance of query field.')
+
         return self
     
     def prepare(self, useOr=False):
@@ -421,21 +478,31 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def join(self, collection, alias=None):
+    def join(self, collection, alias: str = None, direction: JOIN_DIRECTION = JOIN_DIRECTION.INNER):
         """Prepares a join expression with the given collection
 
         Args:
-            collection (str | QueryEntity): The collection to join
+            collection (str | QueryEntity | QueryExpression): The collection to join
             alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
 
         Returns:
             self
         """
+        if isinstance(collection, QueryExpression):
+            self.__joining__ = {
+                '$lookup': {
+                    'from': collection,
+                    'direction': direction,
+                    'as': alias or collection.alias
+                }
+            }
+            return self
+
         if isinstance(collection, QueryEntity):
             self.__joining__ = {
                 '$lookup': {
                     'from': collection.collection,
-                    'direction': 'inner',
+                    'direction': direction,
                     'as': collection.alias
                 }
             }
@@ -443,7 +510,7 @@ class QueryExpression:
             self.__joining__ = {
                 '$lookup': {
                     'from': collection,
-                    'direction': 'inner',
+                    'direction': direction,
                     'as': alias
                 }
             }
@@ -468,7 +535,7 @@ class QueryExpression:
             expect(query).to_be_instance_of(QueryExpression, Exception('Expected an instance of query expression'))
             # get where statement
             expr = query.__where__
-        # add pipelien
+        # add pipeline
         lookup.__setitem__('pipeline', {
             '$match': {
                 '$expr': expr
@@ -643,3 +710,56 @@ class QueryExpression:
                     ]
                 }
         self.__left__ = None
+
+    def distinct(self, value=True):
+        self.__distinct__ = value
+        return self
+
+    def get_type(self) -> QueryExpressionType:
+        """Returns the type of this expression
+
+        Returns:
+            QueryExpressionType: The type of this expression (SELECT, INSERT, UPDATE or DELETE)
+        """
+        if self.__update__ is not None:
+            return QueryExpressionType.UPDATE
+        elif self.__insert__ is not None:
+            return QueryExpressionType.INSERT
+        elif self.___delete___ is not None:
+            return QueryExpressionType.DELETE
+        return QueryExpressionType.SELECT
+
+
+class SelectExpressionEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, QueryExpression):
+            if obj.__select__ is not None:
+                result = {
+                    '$project': obj.__select__
+                }
+                if obj.__distinct__ is not None and obj.__distinct__ is True:
+                    result['$distinct'] = True
+                if obj.__limit__ > 0:
+                    result['$limit'] = obj.__limit__
+                    if obj.__skip__ > 0:
+                        result['$skip'] = obj.__skip__
+                if obj.__lookup__ is not None and len(obj.__lookup__) > 0:
+                    result['$lookup'] = obj.__lookup__
+                if obj.__order_by__ is not None:
+                    result['$sort'] = obj.__order_by__
+                if obj.__group_by__ is not None:
+                    result['$group'] = obj.__group_by__
+                if obj.__prepared__ is not None:
+                    if obj.__where__ is not None:
+                        result['$match'] = {
+                            '$and': [
+                                obj.__prepared__,
+                                obj.__where__
+                            ]
+                        }
+                    else:
+                        result['$match'] = obj.__prepared__
+                elif obj.__where__ is not None:
+                    result['$match'] = obj.__where__
+                return result
+        return json.JSONEncoder.default(self, obj)

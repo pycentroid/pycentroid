@@ -1,6 +1,4 @@
 from math import floor
-# noinspection PyUnresolvedReferences
-import pytest
 from unittest import TestCase
 from centroid.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
 from centroid.common import year, month
@@ -42,7 +40,8 @@ def test_format_select_with_lambda():
     )
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql,
-                           'SELECT id,name,category,price FROM ProductData WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
+                           'SELECT id,name,category,price FROM ProductData '
+                           'WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
 
 
 def test_format_select_with_map():
@@ -53,7 +52,8 @@ def test_format_select_with_map():
     )
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql,
-                           'SELECT id,name AS productName,category FROM Product WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
+                           'SELECT id,name AS productName,category FROM Product '
+                           'WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
 
 
 def test_format_update():
@@ -75,19 +75,15 @@ def test_format_update():
 
 
 def test_format_insert():
-    object = lambda: None
-    object.name = 'Lenovo Yoga 2'
     products = QueryEntity('ProductData')
-    query = QueryExpression().insert(
-        object
-    ).into(products)
+    query = QueryExpression().insert({
+        'name': 'Lenovo Yoga 2'
+    }).into(products)
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql, 'INSERT INTO ProductData(name) VALUES (\'Lenovo Yoga 2\')')
 
 
 def test_format_join():
-    object = lambda: None
-    object.name = 'Lenovo Yoga 2'
     query = QueryExpression('OrderData').select(
         'id', 'customer', 'orderDate', 'orderedItem'
     ).join(collection='ProductData').on(
@@ -98,7 +94,8 @@ def test_format_join():
         )
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT OrderData.id,OrderData.customer,OrderData.orderDate,OrderData.orderedItem FROM OrderData INNER JOIN ProductData ON (OrderData.orderedItem=ProductData.id)')
+    TestCase().assertEqual(sql, 'SELECT OrderData.id,OrderData.customer,OrderData.orderDate,OrderData.orderedItem FROM OrderData '
+                                'INNER JOIN ProductData ON (OrderData.orderedItem=ProductData.id)')
 
 
 def test_format_order_by():
@@ -128,7 +125,7 @@ def test_format_limit_select():
 
 def test_format_group_by():
     query = QueryExpression().select(
-        QueryField('id').get_count().as_('total'),
+        QueryField('id').count().asattr('total'),
         QueryField('category')
     ).from_collection('ProductData').group_by(QueryField('category'))
     sql = SqlFormatter().format(query)
@@ -159,7 +156,7 @@ def test_use_trim():
     TestCase().assertEqual(sql, 'SELECT id,name,UPPER(category) AS category FROM ProductData')
 
 
-def test_use_trim():
+def test_use_upper():
     query = QueryExpression('ProductData').select(
         lambda x: select(id=x.id, name=x.name.strip(), category=x.category.upper())
     )
@@ -193,7 +190,7 @@ def test_use_substring():
 
 def test_startswith():
     query = QueryExpression('ProductData').where(
-        lambda x: x.name.startswith('Apple') == True
+        lambda x: x.name.startswith('Apple') is True
     )
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'^Apple\', \'m\')=1)=true)')
@@ -201,7 +198,7 @@ def test_startswith():
 
 def test_endswith():
     query = QueryExpression('ProductData').where(
-        lambda x: x.name.endswith('Printer')==True
+        lambda x: x.name.endswith('Printer') is True
     )
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer$\', \'m\')=1)=true)')
@@ -209,7 +206,7 @@ def test_endswith():
 
 def test_contains():
     query = QueryExpression('ProductData').where(
-        lambda x: x.name.__contains__('Printer') == True
+        lambda x: x.name.__contains__('Printer') is True
     )
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer\', \'m\')=1)=true)')
@@ -221,4 +218,5 @@ def test_if_expr():
     )
     sql = SqlFormatter().format(query)
     TestCase().assertEqual(sql,
-                           'SELECT id,name,(CASE (price>800) WHEN 1 THEN \'expensive\' ELSE \'normal\' END) AS priceStatus FROM ProductData')
+                           'SELECT id,name,(CASE (price>800) WHEN 1 THEN \'expensive\' ELSE \'normal\' END) AS priceStatus FROM '
+                           'ProductData')

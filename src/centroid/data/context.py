@@ -1,27 +1,38 @@
 from abc import abstractmethod
 from typing import Callable
 from centroid.common import ApplicationBase, expect
-from .configuration import DataConfiguration, DataAdapterStrategy
+from .configuration import DataConfiguration, DataAdapters
 from centroid.query import DataAdapter
+from .loaders import SchemaLoaderStrategy
+from .model import DataModel
 
 
 class DataContext:
-    __db__: DataAdapter
+    __db__: DataAdapter = None
 
     def __init__(self, application: ApplicationBase):
         self.application = application
-        return
-
-    @abstractmethod
-    def db(self) -> DataAdapter or None:
         pass
 
-    def finalize(self):
+    @property
+    @abstractmethod
+    def db(self) -> DataAdapter:
+        pass
+
+    def model(self, m) -> DataModel:
+        # get data model properties
+        configuration: DataConfiguration = self.application.services.get(DataConfiguration)
+        properties = configuration.getstrategy(SchemaLoaderStrategy).get(m)
+        # validate existence
+        expect(properties).to_be_truthy(Exception(f'{m} cannot be found.'))
+        return DataModel(context=self, properties=properties)
+
+    async def finalize(self):
         if self.__db__ is not None:
-            self.__db__.close()
+            await self.__db__.close()
 
     def execute_in_transaction(self, func: Callable):
-        return self.__db__.execute_in_transaction(func)
+        return self.db.execute_in_transaction(func)
 
 
 class NamedDataContext(DataContext):
@@ -35,7 +46,7 @@ class NamedDataContext(DataContext):
     def db(self) -> DataAdapter or None:
         # get adapters
         configuration = self.application.services.get(DataConfiguration)
-        data_adapters: DataAdapterStrategy = configuration.getstrategy(DataAdapterStrategy)
+        data_adapters: DataAdapters = configuration.getstrategy(DataAdapters)
         adapter = data_adapters.get(self.name)
         # validate data adapter
         expect(adapter).to_be_truthy(Exception('The default data adapter cannot be found.'))

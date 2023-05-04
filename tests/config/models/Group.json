@@ -14,7 +14,18 @@
             "name": "members",
             "title": "members",
             "description": "Contains the collection of group members (users or groups).",
-            "type": "Account"
+            "type": "User",
+            "mapping": {
+                "associationAdapter":"GroupMembers",
+                "parentModel":"Group",
+                "parentField":"id",
+                "childModel":"User",
+                "childField":"id",
+                "associationObjectField": "parentId",
+                "associationValueField": "valueId",
+                "associationType":"junction",
+                "cascade":"delete"
+            }
         }
     ],
     "privileges": [

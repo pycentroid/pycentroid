@@ -1,10 +1,30 @@
 from typing import Callable
 from abc import abstractmethod
-from centroid.common import AnyObject
+from centroid.common import AnyDict
 import logging
 
 
-class DataColumn(AnyObject):
+class DataAdapterBase:
+
+    __raw_connection__ = None
+
+    @abstractmethod
+    async def open(self):
+        pass
+
+    @abstractmethod
+    async def close(self):
+        pass
+
+    @abstractmethod
+    async def execute(self, query, values=None):
+        pass
+
+    @abstractmethod
+    async def execute_in_transaction(self, func: Callable):
+        pass
+
+class DataColumn(AnyDict):
     def __init__(self, **kwargs):
         self.name = None
         self.type = None
@@ -14,9 +34,87 @@ class DataColumn(AnyObject):
         super().__init__(**kwargs)
 
 
-class DataAdapter:
+class DataTableIndex:
 
-    __raw_connection__ = None
+    def __init__(self, table: str, adapter: DataAdapterBase):
+        self.table = table
+        self.__adapter__ = adapter
+
+    @abstractmethod
+    async def create(self, name: str, columns: list):
+        pass
+
+    @abstractmethod
+    async def exists(self, name: str):
+        pass
+
+    @abstractmethod
+    async def drop(self, name: str):
+        pass
+
+    @abstractmethod
+    async def list(self):
+        pass
+
+
+class DataTable:
+
+    def __init__(self, table: str, adapter: DataAdapterBase):
+        self.table = table
+        self.__adapter__ = adapter
+
+    @abstractmethod
+    async def create(self, fields: list):
+        pass
+
+    @abstractmethod
+    async def change(self, fields: list):
+        pass
+
+    @abstractmethod
+    async def exists(self):
+        pass
+
+    @abstractmethod
+    async def drop(self):
+        pass
+
+    @abstractmethod
+    async def version(self):
+        pass
+
+    @abstractmethod
+    async def columns(self):
+        pass
+
+    @abstractmethod
+    async def indexes(self) -> DataTableIndex:
+        pass
+
+
+class DataView:
+
+    def __init__(self, view: str, adapter: DataAdapterBase):
+        self.view = view
+        self.__adapter__ = adapter
+
+    @abstractmethod
+    async def create(self, query):
+        pass
+
+    @abstractmethod
+    async def exists(self):
+        pass
+
+    @abstractmethod
+    async def drop(self):
+        pass
+
+
+class DataAdapter(DataAdapterBase):
+
+    def __init__(self):
+        super().__init__()
 
     def __del__(self):
         try:
@@ -26,106 +124,35 @@ class DataAdapter:
             logging.warning(error)
 
     @abstractmethod
-    def open(self):
+    async def open(self):
         pass
 
     @abstractmethod
-    def close(self):
+    async def close(self):
         pass
 
     @abstractmethod
-    def execute(self, query, values=None):
+    async def execute(self, query, values=None):
         pass
 
     @abstractmethod
-    def execute_in_transaction(self, func: Callable):
+    async def execute_in_transaction(self, func: Callable):
         pass
 
     @abstractmethod
-    def select_identity(self):
+    async def select_identity(self):
         pass
 
     @abstractmethod
-    def last_identity(self):
+    async def last_identity(self):
         pass
 
     @abstractmethod
-    def upgrade(self, table_upgrade):
-        pass
-
-
-class DataTable:
-
-    def __init__(self, table: str, adapter: DataAdapter):
-        self.table = table
-        self.__adapter__ = adapter
-
-    @abstractmethod
-    def create(self, fields: list):
+    def table(self, table: str) -> DataTable:
         pass
 
     @abstractmethod
-    def change(self, fields: list):
-        pass
-
-    @abstractmethod
-    def exists(self):
-        pass
-
-    @abstractmethod
-    def drop(self):
-        pass
-
-    @abstractmethod
-    def version(self):
-        pass
-
-    @abstractmethod
-    def columns(self):
-        pass
-
-    @abstractmethod
-    def indexes(self):
+    def view(self, view: str) -> DataView:
         pass
 
 
-class DataTableIndex:
-
-    def __init__(self, table: str, adapter: DataAdapter):
-        self.table = table
-        self.__adapter__ = adapter
-
-    @abstractmethod
-    def create(self, name: str, columns: list):
-        pass
-
-    @abstractmethod
-    def exists(self, name: str):
-        pass
-
-    @abstractmethod
-    def drop(self, name: str):
-        pass
-
-    @abstractmethod
-    def list(self):
-        pass
-
-
-class DataView:
-
-    def __init__(self, view: str, adapter: DataAdapter):
-        self.view = view
-        self.__adapter__ = adapter
-
-    @abstractmethod
-    def create(self, query):
-        pass
-
-    @abstractmethod
-    def exists(self):
-        pass
-
-    @abstractmethod
-    def drop(self):
-        pass
