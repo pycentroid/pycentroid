@@ -15,3 +15,4 @@ from .data_objects import DataAdapter, DataTable, DataView, DataTableIndex, Data
 from .open_data_parser import OpenDataParser, Token, TokenOperator, TokenType, LiteralToken, SyntaxToken, StringType, LiteralType, IdentifierToken
 from .open_data_formatter import OpenDataFormatter, OpenDataDialect
 from .open_data_query import OpenDataQueryExpression
+from .sql_parser import SqlParser

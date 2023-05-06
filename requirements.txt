@@ -11,3 +11,4 @@ typing-extensions~=4.5.0
 pycentroid~=1.0.1
 PyYAML~=6.0
 inflect~=6.0.4
+sqlglot=~12.1.0
