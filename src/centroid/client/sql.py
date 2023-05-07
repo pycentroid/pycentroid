@@ -1,9 +1,7 @@
 from sqlglot import exp, parse_one, Expression
 from sqlglot.expressions import Table, Column, Where, Alias
 from sqlglot import expressions
-from .query_expression import QueryField, QueryEntity, format_field_reference
-from .open_data_parser import TokenOperator
-from .open_data_query import OpenDataQueryExpression
+from centroid.query import QueryField, QueryEntity, format_field_reference, TokenOperator, OpenDataQueryExpression
 from typing import List
 from centroid.common import SyncSeriesEventEmitter
 

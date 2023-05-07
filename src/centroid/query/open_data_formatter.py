@@ -29,6 +29,9 @@ class OpenDataDialect(SqlDialect):
         if final_right == 'null':
             return f'NOT {self.escape(left)} ne null'
         return f'(NOT {self.escape(left)} ne {final_right})'
+    
+    def __gt__(self, left, right):
+        return f'({self.escape(left)} gt {self.escape(right)})'
 
     def __gte__(self, left, right):
         return f'({self.escape(left)} ge {self.escape(right)})'
@@ -131,7 +134,7 @@ class OpenDataDialect(SqlDialect):
         for arg in args:
             exprs.append(self.escape(arg))
         result = '('
-        result += ' and '.join(exprs)
+        result += ' add '.join(exprs)
         result += ')'
         return result
 
