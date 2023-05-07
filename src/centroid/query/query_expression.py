@@ -390,22 +390,22 @@ class QueryExpression:
     
     def get_min(self):
         expect(self.__left__).to_be_truthy(NoneError)
-        self.__left__.get_min()
+        self.__left__.min()
         return self
 
     def get_max(self):
         expect(self.__left__).to_be_truthy(NoneError)
-        self.__left__.get_max()
+        self.__left__.max()
         return self
     
     def get_count(self):
         expect(self.__left__).to_be_truthy(NoneError)
-        self.__left__.get_average()
+        self.__left__.count()
         return self
 
     def get_average(self):
         expect(self.__left__).to_be_truthy(NoneError)
-        self.__left__.get_average()
+        self.__left__.average()
         return self
     
     def startswith(self, search):

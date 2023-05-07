@@ -241,17 +241,15 @@ class OpenDataFormatter(SqlFormatter):
         result = self.format_select(query)
         if query.__limit__ > 0:
             result.update({
-                '$count': 'true'
+                '$count': True
             })
-            result.update([
-                '$top',
-                query.__limit__
-            ])
+            result.update({
+                '$top': query.__limit__
+            })
         if query.__skip__ > 0:
-            result.update([
-                '$skip',
-                query.__skip__
-            ])
+            result.update({
+                '$skip': query.__skip__
+            })
         return result
 
     def format_order(self, query):
@@ -260,7 +258,7 @@ class OpenDataFormatter(SqlFormatter):
         if len(query.__order_by__) == 0:
             return None
         return ','.join(
-            map(lambda x: self.__dialect__.escape(x.getstrategy('$expr')) + ' ' + x.getstrategy('direction'), query.__order_by__))
+            map(lambda x: self.__dialect__.escape(x.get('$expr')) + ' ' + x.get('direction'), query.__order_by__))
 
     def format_select(self, query):
         result = {}

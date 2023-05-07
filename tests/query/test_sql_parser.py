@@ -78,4 +78,172 @@ def test_parse_unary_expression():
     }
 
 
+def test_parse_function_expression():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,FLOOR(price) as price FROM Product WHERE category=\'Laptops\'')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Laptops\')',
+        '$select': 'id,name,floor(price) as price'
+    }
+
+
+def test_parse_function_expression_with_args():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,ROUND(price,2) as price FROM Product WHERE category=\'Laptops\'')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Laptops\')',
+        '$select': 'id,name,round(price,2) as price'
+    }
+
+
+def test_parse_order_by_statement():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,price FROM Product WHERE category=\'Laptops\' ORDER BY price')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Laptops\')',
+        '$select': 'id,name,price',
+        '$orderby': 'price asc'
+    }
+
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,price FROM Product WHERE category=\'Laptops\' '
+                                                 'ORDER BY price,dateReleased DESC')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Laptops\')',
+        '$select': 'id,name,price',
+        '$orderby': 'price asc,dateReleased desc'
+    }
+
+
+def test_parse_order_by_statement_with_func():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,price FROM Product WHERE category=\'Laptops\' '
+                                                 'ORDER BY FLOOR(price),dateReleased DESC')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Laptops\')',
+        '$select': 'id,name,price',
+        '$orderby': 'floor(price) asc,dateReleased desc'
+    }
+
+
+def test_parse_aggregate_func():
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT MAX(price) as price FROM Product WHERE category=\'Desktops\'')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Desktops\')',
+        '$select': 'max(price) as price'
+    }
+    
+    expr: OpenDataQueryExpression = parser.parse('SELECT COUNT(id) as total FROM Product WHERE category=\'Desktops\'')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$filter': '(category eq \'Desktops\')',
+        '$select': 'count(id) as total'
+    }
+
+
+def test_parse_group_by_statement():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT category,COUNT(id) as total FROM Product GROUP BY category')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': 'category,count(id) as total',
+        '$groupby': 'category'
+    }
+
+
+def test_parse_where_with_like():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product WHERE name LIKE \'%Apple%\'')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': '*',
+        '$filter': '(contains(name,\'Apple\') eq true)'
+    }
+
+    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product WHERE name LIKE \'Lenovo%\'')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': '*',
+        '$filter': '(startswith(name,\'Lenovo\') eq true)'
+    }
+
+
+def test_parse_date_function():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product WHERE YEAR(Product.releaseDate) = 2019'
+                                                 ' AND MONTH(Product.releaseDate) = 4'
+                                                 ' AND DAY(Product.releaseDate) = 24')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': '*',
+        '$filter': '(((year(releaseDate) eq 2019) and (month(releaseDate) eq 4)) and (day(releaseDate) eq 24))'
+    }
+
+
+def test_parse_limit_select():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product LIMIT 10')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': '*',
+        '$count': True,
+        '$top': 10
+    }
+
+    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product LIMIT 10, 50')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': '*',
+        '$count': True,
+        '$top': 10,
+        '$skip': 50
+    }
+
+
+def test_parse_between():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse('SELECT name,price FROM Product WHERE price BETWEEN 500 AND 1000')
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': 'name,price',
+        '$filter': '((price ge 500) and (price le 1000))'
+    }
+
+
+def test_parse_select_with_between_expr():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse("""
+    SELECT name, price
+    FROM Product
+    WHERE year(releaseDate) = 2019
+    AND month(releaseDate) BETWEEN 1 AND 6
+    ORDER BY price ASC
+    LIMIT 5
+    """)
+    params = OpenDataFormatter().format(expr)
+    assert params == {
+        '$select': 'name,price',
+        '$filter': '((year(releaseDate) eq 2019) and ((month(releaseDate) ge 1) and (month(releaseDate) le 6)))',
+        '$orderby': 'price asc',
+        '$count': True,
+        '$top': 5
+    }
+
+
     

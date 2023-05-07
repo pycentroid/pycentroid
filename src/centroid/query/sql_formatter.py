@@ -152,11 +152,17 @@ class SqlDialect:
     def __gte__(self, left, right):
         return f'({self.escape(left)}>={self.escape(right)})'
 
+    def __ge__(self, left, right):
+        return self.__gte__(left, right)
+
     def __lt__(self, left, right):
         return f'({self.escape(left)}<{self.escape(right)})'
 
     def __lte__(self, left, right):
         return f'({self.escape(left)}<={self.escape(right)})'
+
+    def __le__(self, left, right):
+        return self.__lte__(left, right)
 
     def __floor__(self, expr):
         return f'FLOOR({self.escape(expr)})'
