@@ -246,4 +246,12 @@ def test_parse_select_with_between_expr():
     }
 
 
+def test_parse_select1():
+
+    parser = PseudoSqlParser()
+    expr: OpenDataQueryExpression = parser.parse("SELECT AVG(grade) FROM StudentGrade WHERE name = 'Artificial Intelligence'")
+    params = OpenDataFormatter().format(expr)
+    assert params is not None
+
+
     

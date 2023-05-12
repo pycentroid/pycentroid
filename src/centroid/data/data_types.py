@@ -7,8 +7,8 @@ class DataTypeProperties:
 
     maxValue: int
     minValue: int
-    minValue: int
-    maxValue: int
+    minLength: int
+    maxLength: int
     pattern: str
     patternMessage: str
 
@@ -23,6 +23,7 @@ class DataType:
     supertypes: list[str]
     sqltype: str
     version: str
+    properties: DataTypeProperties
 
 
 class DataTypes(ConfigurationStrategy):

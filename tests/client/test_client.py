@@ -1,6 +1,5 @@
 import pytest
 import requests
-from unittest import TestCase
 from centroid.client import ClientDataContext, ClientContextOptions
 from urllib.parse import urljoin
 
@@ -27,24 +26,24 @@ def context() -> ClientDataContext:
 
 def test_context():
     ctx = ClientDataContext(ClientContextOptions(REMOTE_SERVER))
-    TestCase().assertIsNotNone(ctx)
+    assert ctx is not None
 
 
 async def test_get_items(context):
     items = await context.model('Products').as_queryable().where(
         lambda x: x.category == 'Laptops'
     ).get_items()
-    TestCase().assertIsNotNone(items)
+    assert items is not None
 
 
 async def test_get_metadata(context):
     schema = await context.get_metadata()
-    TestCase().assertIsNotNone(schema)
+    assert schema is not None
 
 
 async def test_get_item(context):
     item = await context.model('Products').as_queryable().where(
         lambda x: x.category == 'Laptops' and x.name.startswith('Apple')
     ).get_item()
-    TestCase().assertIsNotNone(item)
-    TestCase().assertTrue(item['name'].startswith('Apple'))
+    assert item is not None
+    assert item['name'].startswith('Apple')
