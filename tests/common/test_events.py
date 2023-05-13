@@ -44,6 +44,7 @@ def test_use_subscribe_once():
     TestCase().assertEqual(len(event_series.__handlers__), 1)
     subscription2.unsubscribe()
 
+
 async def test_use_async_subscribe():
     series = AsyncSeriesEventEmitter()
 
