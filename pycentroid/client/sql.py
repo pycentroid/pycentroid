@@ -1,5 +1,5 @@
 from sqlglot import exp, parse_one, Expression
-from sqlglot.expressions import Table, Column, Where, Alias, Func, Order, Group, Limit, Offset
+from sqlglot.expressions import Table, Column, Where, Condition, Func, Order, Group, Limit, Offset
 from sqlglot import expressions
 from pycentroid.query import QueryField, QueryEntity, format_field_reference, TokenOperator, OpenDataQueryExpression
 from typing import List
@@ -104,7 +104,7 @@ class PseudoSqlParser():
         else:
             return QueryEntity(table.name, table.alias)
 
-    def parse_column(self, column: Column | Alias) -> QueryField:
+    def parse_column(self, column: Condition) -> QueryField:
         if not column.alias:
             return QueryField(column.name)
         else:

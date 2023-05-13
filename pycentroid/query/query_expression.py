@@ -5,7 +5,6 @@ from .query_entity import QueryEntity
 from .query_field import QueryField, get_field_expression, format_field_reference
 from types import SimpleNamespace
 from enum import Enum
-from typing import Self
 import json
 
 
@@ -80,7 +79,7 @@ class QueryExpression:
     def from_collection(self, collection):
         return self.__set_collection__(collection)
 
-    def as_(self, alias: str) -> Self:
+    def as_(self, alias: str):
         self.__alias__ = alias
         return self
 

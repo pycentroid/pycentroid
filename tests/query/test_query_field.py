@@ -147,7 +147,7 @@ def test_use_add():
 
 
 def test_use_multiply():
-    field = QueryField('price').from_collection('Product').multiply(0.75).as_('discountPrice')
+    field = QueryField('price').from_collection('Product').multiply(0.75).asattr('discountPrice')
     TestCase().assertDictEqual(field, {
         'discountPrice': {
             '$multiply': [

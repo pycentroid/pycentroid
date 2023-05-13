@@ -2,7 +2,7 @@ from .types import DataModelBase, UpgradeEventArgs, ExecuteEventArgs, DataField,
 from pycentroid.query import JOIN_DIRECTION, OpenDataQueryExpression, QueryExpression , QueryField,\
      QueryEntity, ResolvingJoinMemberEvent, ResolvingMemberEvent, trim_field_reference
 from pycentroid.common import expect, DataError, is_object_like
-from typing import List, Self
+from typing import List
 from types import SimpleNamespace
 
 
@@ -101,7 +101,7 @@ class DataQueryable(OpenDataQueryExpression):
         self.__silent__ = value
         return self
 
-    def levels(self, value: int) -> Self:
+    def levels(self, value: int):
         self.__levels__ = value if value >= 1 else 1
         return self
 
