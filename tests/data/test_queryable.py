@@ -1,7 +1,7 @@
 import pytest
 from os.path import abspath, join, dirname
-from centroid.data.application import DataApplication
-from centroid.data.context import DataContext
+from pycentroid.data.application import DataApplication
+from pycentroid.data.context import DataContext
 from unittest import TestCase
 from types import SimpleNamespace
 

@@ -1,9 +1,9 @@
 import pytest
 import typing
-from centroid.data.application import DataApplication, DataConfiguration
+from pycentroid.data.application import DataApplication, DataConfiguration
 from os.path import abspath, join, dirname
 from unittest import TestCase
-from centroid.common import ApplicationBase, ApplicationService
+from pycentroid.common import ApplicationBase, ApplicationService
 
 APP_PATH = abspath(join(dirname(__file__), '..'))
 

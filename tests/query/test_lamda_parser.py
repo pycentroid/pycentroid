@@ -1,6 +1,6 @@
 import pytest
 from unittest import TestCase
-from centroid.query import ClosureParser, QueryExpression, QueryField, select
+from pycentroid.query import ClosureParser, QueryExpression, QueryField, select
 from dill.source import getsource
 import ast
 

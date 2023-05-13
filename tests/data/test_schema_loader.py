@@ -1,6 +1,6 @@
 import pytest
-from centroid.data.application import DataApplication
-from centroid.data.loaders import SchemaLoaderStrategy, FileSchemaLoaderStrategy, DefaultSchemaLoaderStrategy
+from pycentroid.data.application import DataApplication
+from pycentroid.data.loaders import SchemaLoaderStrategy, FileSchemaLoaderStrategy, DefaultSchemaLoaderStrategy
 from os.path import abspath, join, dirname
 from unittest import TestCase
 

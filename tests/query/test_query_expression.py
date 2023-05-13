@@ -1,5 +1,5 @@
 from unittest import TestCase
-from centroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter, SelectExpressionEncoder
+from pycentroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter, SelectExpressionEncoder
 import json
 
 

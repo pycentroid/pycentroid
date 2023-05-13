@@ -1,12 +1,12 @@
 import pytest
-from centroid.data.loaders import SchemaLoaderStrategy
-from centroid.data.application import DataApplication
-from centroid.data.types import DataModelProperties
-from centroid.data.model import DataModel
-from centroid.data.context import DataContext
+from pycentroid.data.loaders import SchemaLoaderStrategy
+from pycentroid.data.application import DataApplication
+from pycentroid.data.types import DataModelProperties
+from pycentroid.data.model import DataModel
+from pycentroid.data.context import DataContext
 from os.path import abspath, join, dirname
 from unittest import TestCase
-from centroid.query import TestUtils
+from pycentroid.query import TestUtils
 
 
 APP_PATH = abspath(join(dirname(__file__), '..'))

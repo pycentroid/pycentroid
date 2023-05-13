@@ -1,11 +1,11 @@
-import pytest
 from unittest import TestCase
-from centroid.common import ConfigurationBase, ConfigurationStrategy
+from pycentroid.common import ConfigurationBase, ConfigurationStrategy
 from os import getcwd
 from os.path import join
 
 
 class TestStrategy(ConfigurationStrategy):
+    __test__ = False
     remote = 'https://example.com'
 
 

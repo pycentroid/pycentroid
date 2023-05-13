@@ -1,6 +1,6 @@
 # noinspection PyUnresolvedReferences
 from unittest import TestCase
-from centroid.query.open_data_parser import OpenDataParser
+from pycentroid.query.open_data_parser import OpenDataParser
 
 
 def test_parse_select():

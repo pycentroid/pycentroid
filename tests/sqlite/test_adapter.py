@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from centroid.common import AnyObject
-from centroid.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
-from centroid.sqlite import SqliteAdapter, SqliteFormatter
+from pycentroid.common import AnyObject
+from pycentroid.query import DataColumn, QueryEntity, QueryExpression, select, TestUtils
+from pycentroid.sqlite import SqliteAdapter, SqliteFormatter
 from os.path import abspath, join, dirname
 import logging
 

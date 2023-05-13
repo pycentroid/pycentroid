@@ -1,5 +1,5 @@
 import pytest
-from centroid.data.application import DataApplication
+from pycentroid.data.application import DataApplication
 from os.path import abspath, join, dirname
 from unittest import TestCase
 

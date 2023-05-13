@@ -1,4 +1,4 @@
-from centroid.common.objects import AnyObject, is_object_like
+from pycentroid.common.objects import AnyObject, is_object_like
 from unittest import TestCase
 from datetime import datetime, date
 from collections import namedtuple

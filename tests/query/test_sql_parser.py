@@ -1,6 +1,6 @@
 import pytest
-from centroid.query import SqlFormatter, OpenDataFormatter, OpenDataQueryExpression
-from centroid.client import PseudoSqlParser
+from pycentroid.query import SqlFormatter, OpenDataFormatter, OpenDataQueryExpression
+from pycentroid.client import PseudoSqlParser
 
 
 def test_parse_simple_select():

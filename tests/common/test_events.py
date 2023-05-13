@@ -2,7 +2,7 @@
 import pytest
 import time
 from unittest import TestCase
-from centroid.common import SyncSeriesEventEmitter, AsyncSeriesEventEmitter, AnyDict
+from pycentroid.common import SyncSeriesEventEmitter, AsyncSeriesEventEmitter, AnyDict
 
 
 def next_handler(event):

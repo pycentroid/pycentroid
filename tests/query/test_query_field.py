@@ -1,6 +1,6 @@
 # noinspection PyUnresolvedReferences
 from unittest import TestCase
-from centroid.query.query_field import QueryField
+from pycentroid.query.query_field import QueryField
 
 
 def test_create_field():

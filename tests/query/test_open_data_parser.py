@@ -1,9 +1,9 @@
 # noinspection PyUnresolvedReferences
 import pytest
 from unittest import TestCase
-from centroid.query.open_data_parser import OpenDataParser, SyntaxToken
-from centroid.query.query_expression import QueryExpression
-from centroid.query.sql_formatter import SqlFormatter
+from pycentroid.query.open_data_parser import OpenDataParser, SyntaxToken
+from pycentroid.query.query_expression import QueryExpression
+from pycentroid.query.sql_formatter import SqlFormatter
 
 
 def test_get_tokens():
