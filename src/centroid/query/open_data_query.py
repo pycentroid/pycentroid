@@ -22,7 +22,7 @@ def any(expr: callable):
 class OpenDataQueryExpression(QueryExpression):
 
     __expand__: List[QueryExpression]
-
+    
     def __init__(self, collection=None):
         super().__init__(collection)
         self.__expand__ = []
