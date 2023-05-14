@@ -1,8 +1,8 @@
 import pytest
 from os.path import abspath, join, dirname
-from centroid.data.application import DataApplication
-from centroid.data.context import DataContext
-from centroid.data.listeners import MinLengthValidator, MaxLengthValidator,\
+from pycentroid.data.application import DataApplication
+from pycentroid.data.context import DataContext
+from pycentroid.data.listeners import MinLengthValidator, MaxLengthValidator,\
     MinValueValidator, MaxValueValidator, RangeValidator, DataTypeValidator
 
 APP_PATH = abspath(join(dirname(__file__), '..'))

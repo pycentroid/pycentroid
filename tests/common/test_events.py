@@ -2,7 +2,7 @@
 import pytest
 import time
 from unittest import TestCase
-from centroid.common import SyncSeriesEventEmitter, AsyncSeriesEventEmitter, AnyDict
+from pycentroid.common import SyncSeriesEventEmitter, AsyncSeriesEventEmitter, AnyDict
 
 
 def next_handler(event):
@@ -43,6 +43,7 @@ def test_use_subscribe_once():
     subscription1.unsubscribe()
     TestCase().assertEqual(len(event_series.__handlers__), 1)
     subscription2.unsubscribe()
+
 
 async def test_use_async_subscribe():
     series = AsyncSeriesEventEmitter()

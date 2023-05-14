@@ -1,7 +1,7 @@
 from math import floor
 from unittest import TestCase
-from centroid.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
-from centroid.common import year, month
+from pycentroid.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
+from pycentroid.common import year, month
 
 
 # noinspection PyMethodMayBeStatic

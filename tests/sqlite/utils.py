@@ -1,5 +1,5 @@
 from typing import Callable
-from centroid.sqlite import SqliteAdapter
+from pycentroid.sqlite import SqliteAdapter
 
 class ExecuteAndCancel:
     def __init__(self, func: Callable):

@@ -1,9 +1,11 @@
 import pytest
 import requests
-from centroid.client import ClientDataContext, ClientContextOptions
+from pycentroid.client import ClientDataContext, ClientContextOptions
 from urllib.parse import urljoin
+from subprocess import Popen
 
 REMOTE_SERVER = 'http://localhost:3000/api/'
+__popen__ = None
 
 
 @pytest.fixture()

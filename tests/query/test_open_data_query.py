@@ -1,8 +1,8 @@
 # noinspection PyUnresolvedReferences
 from unittest import TestCase
-from centroid.query.query_entity import QueryEntity
-from centroid.query.open_data_query import any, OpenDataQueryExpression
-from centroid.query.open_data_formatter import OpenDataFormatter
+from pycentroid.query.query_entity import QueryEntity
+from pycentroid.query.open_data_query import any, OpenDataQueryExpression
+from pycentroid.query.open_data_formatter import OpenDataFormatter
 
 
 def test_get_any_expression():

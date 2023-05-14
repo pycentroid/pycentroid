@@ -1,6 +1,6 @@
 # noinspection PyUnresolvedReferences
 from unittest import TestCase
-from centroid.query.query_field import QueryField
+from pycentroid.query.query_field import QueryField
 
 
 def test_create_field():
@@ -147,7 +147,7 @@ def test_use_add():
 
 
 def test_use_multiply():
-    field = QueryField('price').from_collection('Product').multiply(0.75).as_('discountPrice')
+    field = QueryField('price').from_collection('Product').multiply(0.75).asattr('discountPrice')
     TestCase().assertDictEqual(field, {
         'discountPrice': {
             '$multiply': [

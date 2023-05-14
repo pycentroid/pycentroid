@@ -1,17 +1,36 @@
-[project]
+[tool.poetry]
 name = "pycentroid"
-version = "1.0.2"
-authors = [
-  { name="Kyriakos Barbounakis", email="k.barbounakis@gmail.com" },
-]
-description = "@themost-framework for python"
+version = "1.1.0"
+description = "@centroid framework for python"
+authors = ["Kyriakos Barbounakis <k.barbounakis@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.7"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+packages = [
+    { include = "pycentroid" }
 ]
 
-[project.urls]
-"Homepage" = "https://github.com/centroid-py/centroid"
-"Bug Tracker" = "https://github.com/centroid-py/centroid/issues"
+[tool.poetry.dependencies]
+python = "^3.9"
+pyyaml = "^6.0"
+asyncio = "^3.4.3"
+dill = "^0.3.6"
+requests = "^2.28.2"
+setuptools = "^65.6.3"
+pytest = "^7.3.0"
+python-dateutil = "^2.8.2"
+requests-async = "^0.6.2"
+pydash = "^7.0.0"
+typing-extensions = "^4.5.0"
+inflect = "^6.0.4"
+sqlglot = "^12.1.0"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^7.3.1"
+pytest-asyncio = "^0.21.0"
+
+[pytest]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+

@@ -6,7 +6,7 @@ adapterTypes:
   -
     name: "SQLite Data Adapter"
     invariantName: "sqlite"
-    type: "centroid.sqlite#SqliteAdapter"
+    type: "pycentroid.sqlite#SqliteAdapter"
 adapters:
   -
     name: "test"

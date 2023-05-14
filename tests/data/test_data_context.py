@@ -1,7 +1,6 @@
 import pytest
-from centroid.data.application import DataApplication
+from pycentroid.data.application import DataApplication
 from os.path import abspath, join, dirname
-from unittest import TestCase
 
 APP_PATH = abspath(join(dirname(__file__), '..'))
 
@@ -13,14 +12,14 @@ def app() -> DataApplication:
 
 def test_create_context(app):
     context = app.create_context()
-    TestCase().assertIsNotNone(context.application)
-    TestCase().assertIsNotNone(context.db)
+    assert context.application is not None
+    assert context.db is not None
     context.finalize()
 
 
 def test_get_model(app):
     context = app.create_context()
     model = context.model('Product')
-    TestCase().assertIsNotNone(model)
-    TestCase().assertEqual(model.properties.name, 'Product')
+    assert model is not None
+    assert model.properties.name == 'Product'
     context.finalize()
