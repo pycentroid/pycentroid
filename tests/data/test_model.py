@@ -61,6 +61,8 @@ async def test_upgrade(context):
     async def execute():
         model: DataModel = context.model('InteractAction')
         await model.migrate()
+        exists = await context.db.table('InteractActionBase').exists()
+        assert exists
     await TestUtils(context.db).execute_in_transaction(execute)
     await context.finalize()
 

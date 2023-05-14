@@ -12,7 +12,7 @@ class DataContext:
 
     def __init__(self, application: ApplicationBase):
         self.application = application
-        pass
+        self.__db__ = None
 
     @property
     @abstractmethod
@@ -44,6 +44,8 @@ class NamedDataContext(DataContext):
 
     @property
     def db(self) -> DataAdapter or None:
+        if self.__db__ is not None:
+            return self.__db__
         # get adapters
         configuration = self.application.services.get(DataConfiguration)
         data_adapters: DataAdapters = configuration.getstrategy(DataAdapters)

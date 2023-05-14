@@ -181,19 +181,19 @@ class DataTypeValidator(DataValidator):
         if typ is None:
             return None
         if typ.properties is not None and typ.properties.pattern is not None:
-            validator = PatternValidator(typ.properties.pattern, self.context)
+            validator = PatternValidator(pattern=typ.properties.pattern, context=self.context)
             if typ.properties.patternMessage is not None:
                 validator.message = typ.properties.patternMessage
             validation = validator.validate(val)
             if validation is not None:
                 return validation
-        
+
         if typ.properties is not None and typ.properties.minValue is not None:
             validator = MinValueValidator(typ.properties.minValue, self.context)
             validation = validator.validate(val)
             if validation is not None:
                 return validation
-        
+
         if typ.properties is not None and typ.properties.maxValue is not None:
             validator = MaxValueValidator(typ.properties.maxValue, self.context)
             validation = validator.validate(val)
@@ -229,7 +229,7 @@ class ValidationListener:
         elif event.state == DataObjectState.UPDATE:
             # get attributes
             attributes: List[DataField] = filter(
-                lambda x: x.model == model.properties.name and x.editable is False and x.primary is False and x.many is False,
+                lambda x: x.model == model.properties.name and x.editable is False and x.primary is False and x.many is False,   # noqa:E501
                 model.attributes
                 )
         # enumerate attributes

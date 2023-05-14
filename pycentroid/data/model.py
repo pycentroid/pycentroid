@@ -64,7 +64,7 @@ class DataModel(DataModelBase):
         if self.properties is not None and self.properties.inherits is not None:
             return self.context.model(self.properties.inherits)
         return None
-    
+
     @property
     def attributes(self) -> List[DataModelAttribute]:
         if hasattr(self, '__attributes__'):
@@ -74,7 +74,7 @@ class DataModel(DataModelBase):
         if base_model is not None:
             attributes = base_model.attributes
         else:
-            implements = self.context.model(self.properties.implements) if self.properties.implements is not None else None
+            implements = self.context.model(self.properties.implements)if self.properties.implements is not None else None  # noqa:E501
             if implements is not None:
                 attributes = list(map(lambda x: assign(DataModelAttribute(**x), {
                     'model': self.properties.name
@@ -94,10 +94,10 @@ class DataModel(DataModelBase):
             attributes.append(attr)
         self.__attributes__ = attributes
         return self.__attributes__
-    
+
     def as_queryable(self):
         return DataQueryable(self)
-    
+
     def where(self, *args, **kwargs):
         return DataQueryable(self).where(*args, **kwargs)
 
@@ -255,7 +255,7 @@ class DataModel(DataModelBase):
                     # todo: resolve value
                     result[attribute.name] = obj[prop]
         return result
-    
+
     def __pre_update__(self, obj: object) -> dict:
         result = {}
         attributes = list(
@@ -342,7 +342,7 @@ class DataModel(DataModelBase):
             else:
                 await self.__insert__(o)
         await self.context.execute_in_transaction(execute)
-    
+
     async def save(self, o: object or List[object]):
         pass
 
