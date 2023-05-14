@@ -1,5 +1,4 @@
 from math import floor
-from unittest import TestCase
 from pycentroid.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
 from pycentroid.common import year, month
 
@@ -78,7 +77,7 @@ def test_format_insert():
         'name': 'Lenovo Yoga 2'
     }).into(products)
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'INSERT INTO ProductData(name) VALUES (\'Lenovo Yoga 2\')')
+    assert sql == 'INSERT INTO ProductData(name) VALUES (\'Lenovo Yoga 2\')'
 
 
 def test_format_join():
