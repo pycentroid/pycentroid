@@ -2,7 +2,6 @@ import pytest
 from pycentroid.sqlite import SqliteAdapter
 from pycentroid.common import AnyObject
 from pycentroid.query import QueryEntity, QueryExpression
-from unittest import TestCase
 from os.path import abspath, join, dirname
 
 Products = QueryEntity('ProductData')
@@ -20,13 +19,13 @@ async def test_select(db):
     items = await db.execute(QueryExpression(Products).select(
         lambda x: (x.id, x.name, x.category)
     ))
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
     properties = list(items[0].__dict__.keys())
-    TestCase().assertEqual(properties, [
+    assert properties == [
         'id',
         'name',
         'category'
-    ])
+    ]
 
 
 # noinspection PyShadowingNames
@@ -37,9 +36,9 @@ async def test_take(db):
         lambda x: x.category == 'Laptops'
     ).take(10)
     items = await db.execute(query)
-    TestCase().assertEqual(len(items), 10)
+    assert len(items) == 10
     for item in items:
-        TestCase().assertEqual(item.category, 'Laptops')
+        assert item.category == 'Laptops'
 
 
 # noinspection PyShadowingNames
@@ -51,7 +50,7 @@ async def test_and(db):
     )
     items = await db.execute(query)
     for item in items:
-        TestCase().assertEqual(item.category, 'Laptops')
+        assert item.category == 'Laptops'
 
 
 # noinspection PyShadowingNames
@@ -63,7 +62,7 @@ async def test_or(db):
     )
     items = await db.execute(query)
     for item in items:
-        TestCase().assertEqual(item.category in ['Laptops', 'Desktops'], True)
+        assert item.category in ['Laptops', 'Desktops']
 
 
 # noinspection PyShadowingNames
@@ -74,10 +73,10 @@ async def test_complex_logical(db):
         lambda x: (x.category == 'Laptops' or x.category == 'Desktops') and x.price <= 800
     )
     items = await db.execute(query)
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
     for item in items:
-        TestCase().assertEqual(item.category in ['Laptops', 'Desktops'], True)
-        TestCase().assertLessEqual(item.price, 800)
+        assert item.category in ['Laptops', 'Desktops']
+        assert item.price <= 800
 
 
 # noinspection PyShadowingNames
@@ -88,10 +87,10 @@ async def test_complex_logical_or(db):
         lambda x: (x.category == 'Laptops' or x.category == 'Desktops') and x.price <= 800
     )
     items = await db.execute(query)
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
     for item in items:
-        TestCase().assertEqual(item.category in ['Laptops', 'Desktops'], True)
-        TestCase().assertLessEqual(item.price, 800)
+        assert item.category in ['Laptops', 'Desktops']
+        assert item.price <= 800
 
 
 # noinspection PyShadowingNames
@@ -102,10 +101,10 @@ async def test_order_by(db):
         lambda x: (x.price,)
     )
     items = await db.execute(query)
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
     for index, item in enumerate(items):
         if index > 0:
-            TestCase().assertGreaterEqual(item.price, items[index - 1].price)
+            assert item.price >= items[index - 1].price
 
 
 # noinspection PyShadowingNames
@@ -116,10 +115,10 @@ async def test_order_by_descending(db):
         lambda x: (x.price,)
     )
     items = await db.execute(query)
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
     for index, item in enumerate(items):
         if index > 0:
-            TestCase().assertLessEqual(item.price, items[index - 1].price)
+            assert item.price <= items[index - 1].price
 
 
 # noinspection PyShadowingNames
@@ -130,6 +129,6 @@ async def test_where_with_args(db):
         lambda x, category: x.category == category
     ), category='Laptops')
     items = await db.execute(query)
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
     for item in items:
-        TestCase().assertEqual(item.category, 'Laptops')
+        assert item.category == 'Laptops'
