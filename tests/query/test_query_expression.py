@@ -1,43 +1,40 @@
-from unittest import TestCase
 from pycentroid.query import QueryExpression, QueryField, select, QueryEntity, SqlFormatter, SelectExpressionEncoder
 import json
 
 
 def test_create_expr():
     q = QueryExpression('Person')
-    TestCase().assertEqual(q.__collection__, {
+    assert q.__collection__ == {
         'Person': 1
-    })
+    }
     q.select('id', 'familyName', {
         'givenName': 1
     }, QueryField('dateCreated'))
-    TestCase().assertEqual(q.__select__, {
+    assert q.__select__ == {
         'id': 1,
         'familyName': 1,
         'givenName': 1,
         'dateCreated': 1
-    })
+    }
 
 
 def test_use_equal():
     q = QueryExpression('Person').select(
         'id', 'familyName', 'givenName'
     ).where('familyName').equal('Rees')
-
-    TestCase().assertEqual(q.__where__, {
+    assert q.__where__ == {
         '$eq': [
             '$familyName',
             'Rees'
         ]
-    })
+    }
 
 
 def test_use_and():
     q = QueryExpression('Person').select(
         'id', 'familyName', 'givenName'
     ).where('familyName').equal('Rees').and_also('givenName').equal('Alexis')
-
-    TestCase().assertEqual(q.__where__, {
+    assert q.__where__ == {
         '$and': [
             {
                 '$eq': [
@@ -52,15 +49,14 @@ def test_use_and():
                 ]
             }
         ]
-    })
+    }
 
 
 def test_use_or():
     q = QueryExpression('Product').select(
         'name', 'releaseDate', 'price', 'category'
     ).where('category').equal('Laptops').or_else('category').equal('Desktops')
-
-    TestCase().assertEqual(q.__where__, {
+    assert q.__where__ == {
         '$or': [
             {
                 '$eq': [
@@ -75,33 +71,31 @@ def test_use_or():
                 ]
             }
         ]
-    })
+    }
 
 
 def test_use_not_equal():
     q = QueryExpression('Product').select(
         'name', 'releaseDate', 'price', 'category'
     ).where('category').not_equal('Laptops')
-
-    TestCase().assertEqual(q.__where__, {
+    assert q.__where__ == {
         '$ne': [
             '$category',
             'Laptops'
         ]
-    })
+    }
 
 
 def test_select_map():
     q = QueryExpression('Product').select(
         lambda x: select(id=x.id, name=x.name, category=x.category, price=x.price)
     ).where('category').not_equal('Laptops')
-
-    TestCase().assertEqual(q.__select__, {
+    assert q.__select__ == {
         'id': 1,
         'name': 1,
         'category': 1,
         'price': 1
-    })
+    }
 
 
 def test_where_with_query_field():
@@ -110,16 +104,16 @@ def test_where_with_query_field():
     q = QueryExpression(products).where(
         QueryField('category').from_collection(products.collection)
     ).equal('Desktops')
-    TestCase().assertEqual(q.__where__, {
+    assert q.__where__ == {
         '$eq': [
             '$Product.category',
             'Desktops'
         ]
-    })
+    }
     formatter = SqlFormatter()
 
     sql = formatter.format_where(q.__where__)
-    TestCase().assertEqual(sql, '(Product.category=\'Desktops\')')
+    assert sql == '(Product.category=\'Desktops\')'
 
     orders = QueryEntity('Order')
     q = QueryExpression(orders).where(
@@ -127,22 +121,22 @@ def test_where_with_query_field():
     ).equal(
         QueryField('id').from_collection(products.collection)
     )
-    TestCase().assertEqual(q.__where__, {
+    assert q.__where__ == {
         '$eq': [
             '$Order.orderedItem',
             '$Product.id'
         ]
-    })
+    }
     sql = formatter.format_where(q.__where__)
-    TestCase().assertEqual(sql, '(Order.orderedItem=Product.id)')
-    
+    assert sql == '(Order.orderedItem=Product.id)'
+
 
 def test_encode_query():
     q = QueryExpression('Product').select(
         lambda x: select(id=x.id, name=x.name, category=x.category, price=x.price)
     ).where('category').not_equal('Laptops')
     expr = json.dumps(q, cls=SelectExpressionEncoder)
-    TestCase().assertEqual(expr, json.dumps({
+    assert expr == json.dumps({
         '$project': {
             'id': 1,
             'name': 1,
@@ -155,7 +149,7 @@ def test_encode_query():
                 'Laptops'
             ]
         }
-    }))
+    })
 
 
 def test_join_expression():
@@ -173,9 +167,8 @@ def test_join_expression():
         )
     )
     sql = SqlFormatter().format(q)
-    TestCase().assertEqual(sql, 'SELECT Order.id,Order.customer FROM Order '
-                                'INNER JOIN (SELECT id FROM Person) customer ON (Order.customer=customer.id)')
-    
+    assert sql == 'SELECT Order.id,Order.customer FROM Order INNER JOIN (SELECT id FROM Person) customer ON (Order.customer=customer.id)'  # noqa:E501
+
     Person = QueryEntity('Person')
     Order = QueryEntity('Order')
     q1 = QueryExpression(Person, alias='customer').select(
@@ -187,5 +180,4 @@ def test_join_expression():
         lambda x, customer: x.customer == customer.id
         )
     sql = SqlFormatter().format(q)
-    TestCase().assertEqual(sql, 'SELECT Order.id,Order.customer FROM Order '
-                                'INNER JOIN (SELECT id FROM Person LIMIT 10) customer ON (Order.customer=customer.id)')
+    assert sql == 'SELECT Order.id,Order.customer FROM Order INNER JOIN (SELECT id FROM Person LIMIT 10) customer ON (Order.customer=customer.id)'  # noqa:E501

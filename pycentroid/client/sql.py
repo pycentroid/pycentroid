@@ -35,7 +35,7 @@ PseudoSqlMethods = [
 class PseudoSqlParserDialect:
 
     __methods__: dict
-    
+
     def __init__(self):
         self.__methods__ = dict()
         for method in PseudoSqlMethods:
@@ -74,11 +74,19 @@ class PseudoSqlParser():
         result.from_collection(self.parse_table(table))
         # get select
         exprs: List[QueryField] = []
+        index = 0
         for expression in select.expressions:
             if isinstance(expression, expressions.Star):
                 exprs.append(self.parse_column(expression))
             elif expression.key == 'column' or expression.key == 'alias':
                 exprs.append(self.parse_column(expression))
+            else:
+                col_expression = self.parse_common(expression)
+                index += 1
+                alias = f'field{index}'
+                exprs.append({
+                    alias: col_expression
+                })
         result.select(*exprs)
         # get where
         where: Where = expr.find(exp.Where)
@@ -130,13 +138,13 @@ class PseudoSqlParser():
                 'direction': 'desc' if expression.args['desc'] else 'asc'
             })
         return exprs
-    
+
     def parser_group_by(self, group: Group):
         exprs = []
         for expression in group.expressions:
             exprs.append(self.parse_common(expression))
         return exprs
-    
+
     def parse_common(self, expr):
         if isinstance(expr, expressions.Column):
             event = ResolvingMemberEventArgs(

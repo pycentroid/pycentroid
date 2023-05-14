@@ -1,126 +1,126 @@
-import pytest
-from unittest import TestCase
-from pycentroid.query import ClosureParser, QueryExpression, QueryField, select
+from pycentroid.query import ClosureParser, select
 from dill.source import getsource
 import ast
 
+
 def test_select_func():
 
-    func = lambda x: select( productName = x.name, productCategory = x.category)
+    func = lambda x: select(productName=x.name, productCategory=x.category)  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
-    TestCase().assertEqual(type(body.value.body), ast.Call)
+    assert type(body.value.body) is ast.Call
     # get arguments
-    selectFunc = body.value.body.func;
-    TestCase().assertEqual(type(selectFunc), ast.Name)
-    TestCase().assertEqual(selectFunc.id, 'select')
+    selectFunc = body.value.body.func
+    assert type(selectFunc) is ast.Name
+    assert selectFunc.id == 'select'
 
-    selectArgs = body.value.body.keywords;
-    TestCase().assertEqual(type(selectArgs), list)
+    selectArgs = body.value.body.keywords
+    assert type(selectArgs) is list
 
     arg0 = selectArgs[0]
-    TestCase().assertEqual(type(arg0), ast.keyword)
-    TestCase().assertEqual(arg0.arg, 'productName')
-    TestCase().assertEqual(type(arg0.value), ast.Attribute)
-    
+    assert type(arg0) is ast.keyword
+    assert arg0.arg == 'productName'
+    assert type(arg0.value) is ast.Attribute
+
+
 def test_func():
 
-    func = lambda x,category: x.category == category and x.price + 100 > 900
+    func = lambda x, category: x.category == category and x.price + 100 > 900  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
     # get arguments
-    args = body.value.args.args;
+    args = body.value.args.args
+    assert len(args) == 2
     params = {
         'category': 'Laptops'
     }
-    TestCase().assertEqual(params.get('category'), 'Laptops')
-    TestCase().assertEqual('category' in params, True)
-    TestCase().assertEqual('otherCategory' in params, False)
+    assert params.get('category') == 'Laptops'
+    assert 'category' in params
+
 
 def test_sequence_list():
 
-    func = lambda x: [ x.id, x.name, x.category, x.releaseDate, x.price ]
+    func = lambda x: [x.id, x.name, x.category, x.releaseDate, x.price]  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
     # get attribute
-    select: ast.List = body.value.body;
-    TestCase().assertEqual(type(select), ast.List)
+    select: ast.List = body.value.body
+    assert type(select) is ast.List
     for attribute in select.elts:
-        TestCase().assertEqual(type(attribute), ast.Attribute)
-    
+        assert type(attribute) is ast.Attribute
+
+
 def test_substring_expr():
 
-    func = lambda x:  [x.category[1:]]
+    func = lambda x:  [x.category[1:]]  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
     # get attribute
-    select: ast.List = body.value.body;
-    TestCase().assertEqual(type(select), ast.List)
-    substr = select.elts[0];
-    TestCase().assertEqual(type(substr), ast.Subscript)
+    select: ast.List = body.value.body
+    assert type(select) is ast.List
+    substr = select.elts[0]
+    assert type(substr) is ast.Subscript
+    assert substr.slice.lower.n == 1
 
-    TestCase().assertEqual(substr.slice.lower.n, 1)
-
-    func = lambda x:  [x.category[:5]]
+    func = lambda x:  [x.category[:5]]  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
     # get attribute
-    select: ast.List = body.value.body;
-    TestCase().assertEqual(type(select), ast.List)
-    substr = select.elts[0];
-    TestCase().assertEqual(type(substr), ast.Subscript)
+    select: ast.List = body.value.body
+    assert type(select) is ast.List
+    substr = select.elts[0]
+    assert type(substr) is ast.Subscript
+    assert substr.slice.upper.n == 5
 
-    TestCase().assertEqual(substr.slice.upper.n, 5)
 
 def test_if_then_else_expr():
 
-    func = lambda x: ['active' if x.active == True else 'inactive']
+    func = lambda x: ['active' if x.active is True else 'inactive']  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
     # get attribute
-    select: ast.List = body.value.body;
-    TestCase().assertEqual(type(select), ast.List)
+    select: ast.List = body.value.body
+    assert type(select) is ast.List
 
-    if_expr = select.elts[0];
-    TestCase().assertEqual(type(if_expr), ast.IfExp)
-    TestCase().assertEqual(type(if_expr.test), ast.Compare)
-    TestCase().assertEqual(type(if_expr.body), ast.Constant)
-    TestCase().assertEqual(type(if_expr.orelse), ast.Constant)
-    
-    
+    if_expr = select.elts[0]
+    assert type(if_expr) is ast.IfExp
+    assert type(if_expr.test) is ast.Compare
+    assert type(if_expr.body) is ast.Constant
+    assert type(if_expr.orelse) is ast.Constant
+
 
 def test_sequence_dict():
 
-    func = lambda x: { 'id': x.id, 'name': x.name, 'price': x.price }
+    func = lambda x: {'id': x.id, 'name': x.name, 'price': x.price}  # noqa:E731
     # get module
-    module:ast.Module = ast.parse(getsource(func).strip())
+    module: ast.Module = ast.parse(getsource(func).strip())
     # get function
     body: ast.Assign = module.body[0]
     # get attribute
-    select: ast.List = body.value.body;
-    TestCase().assertEqual(type(select), ast.Dict)
+    select: ast.List = body.value.body
+    assert type(select) is ast.Dict
     for attribute in select.keys:
-        TestCase().assertEqual(type(attribute), ast.Constant)
+        assert type(attribute) is ast.Constant
     for attribute in select.values:
-        TestCase().assertEqual(type(attribute), ast.Attribute)
+        assert type(attribute) is ast.Attribute
+
 
 def test_parse_filter():
     parser = ClosureParser()
-    result = parser.parse_filter(lambda x: x.category == 'Laptops' 
-        and x.price > 900)
-    TestCase().assertEqual(result, {
+    result = parser.parse_filter(lambda x: x.category == 'Laptops' and x.price > 900)
+    assert result == {
         '$and': [
             {
                 '$eq': [
@@ -133,12 +133,13 @@ def test_parse_filter():
                 ]
             }
         ]
-    })
+    }
+
 
 def test_parse_or():
     parser = ClosureParser()
     result = parser.parse_filter(lambda x: x.category == 'Laptops' or x.category == 'Desktops')
-    TestCase().assertEqual(result, {
+    assert result == {
         '$or': [
             {
                 '$eq': [
@@ -151,15 +152,16 @@ def test_parse_or():
                 ]
             }
         ]
-    })
+    }
+
 
 def test_parse_with_params():
     parser = ClosureParser()
-    result = parser.parse_filter(lambda x,category,otherCategory: x.category == category or x.category == otherCategory, {
+    result = parser.parse_filter(lambda x, category, otherCategory: x.category == category or x.category == otherCategory, {  # noqa:E501
         'category': 'Laptops',
         'otherCategory': 'Desktops'
     })
-    TestCase().assertEqual(result, {
+    assert result == {
         '$or': [
             {
                 '$eq': [
@@ -172,21 +174,22 @@ def test_parse_with_params():
                 ]
             }
         ]
-    })
+    }
+
 
 def test_parse_sequence():
     parser = ClosureParser()
-    result = parser.parse_select(lambda x: [ x.id, x.name, x.price ])
-    TestCase().assertEqual(result, {
+    result = parser.parse_select(lambda x: [x.id, x.name, x.price])
+    assert result == {
         'id': 1,
         'name': 1,
         'price': 1
-    })
+    }
 
-    result = parser.parse_select(lambda x: [ x.id, x.givenName, x.familyName, x.address.streetAddress ])
-    TestCase().assertEqual(result, {
+    result = parser.parse_select(lambda x: [x.id, x.givenName, x.familyName, x.address.streetAddress])
+    assert result == {
         'id': 1,
         'givenName': 1,
         'familyName': 1,
         'address.streetAddress': 1
-    })
+    }
