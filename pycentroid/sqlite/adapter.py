@@ -93,7 +93,7 @@ class SqliteTable(DataTable):
                         existing_field_type += 'NOT NULL'
                     else:
                         existing_field_type += 'NULL'
-                    args = field.__dict__
+                    args = field
                     new_field_type = dialect.format_type(**args)
                     if new_field_type != existing_field_type:
                         # important note: ALTER COLUMN is not supported by SQLite
@@ -166,7 +166,9 @@ class SqliteTable(DataTable):
         if not migration_exists:
             return None
         table = SqliteDialect().escape(self.table)
-        results = await self.__adapter__.execute(f'SELECT MAX(version) AS version FROM migrations WHERE appliesTo={table}')
+        results = await self.__adapter__.execute(
+            f'SELECT MAX(version) AS version FROM migrations WHERE appliesTo={table}'
+            )
         if len(results) > 0:
             return results[0].version
         return None

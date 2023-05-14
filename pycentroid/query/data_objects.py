@@ -24,6 +24,7 @@ class DataAdapterBase:
     async def execute_in_transaction(self, func: Callable):
         pass
 
+
 class DataColumn(AnyDict):
     def __init__(self, **kwargs):
         self.name = None
@@ -154,5 +155,3 @@ class DataAdapter(DataAdapterBase):
     @abstractmethod
     def view(self, view: str) -> DataView:
         pass
-
-

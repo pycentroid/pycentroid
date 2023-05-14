@@ -5,7 +5,6 @@ from pycentroid.data.types import DataModelProperties
 from pycentroid.data.model import DataModel
 from pycentroid.data.context import DataContext
 from os.path import abspath, join, dirname
-from unittest import TestCase
 from pycentroid.query import TestUtils
 
 
@@ -20,45 +19,45 @@ def context() -> DataContext:
 
 def test_get_model(context):
     model = context.application.configuration.getstrategy(SchemaLoaderStrategy).get('Thing')
-    TestCase().assertEqual(model.name, 'Thing')
+    assert model.name == 'Thing'
 
 
 def test_get_attributes(context):
     model: DataModel = context.model('Product')
-    TestCase().assertIsNotNone(model)
-    TestCase().assertIsNotNone(model.attributes)
+    assert model is not None
+    assert model.attributes is not None
     category = next(filter(lambda x: x.name == 'category', model.attributes), None)
-    TestCase().assertIsNotNone(category)
-    TestCase().assertEqual(category.model, 'Product')
+    assert category is not None
+    assert category.model == 'Product'
     name = next(filter(lambda x: x.name == 'name', model.attributes), None)
-    TestCase().assertIsNotNone(category)
-    TestCase().assertEqual(name.model, 'Thing')
+    assert category is not None
+    assert name.model == 'Thing'
     context.finalize()
 
 
 def test_get_primary_key(context):
     model: DataModel = context.model('Product')
-    TestCase().assertIsNotNone(model)
-    TestCase().assertIsNotNone(model.attributes)
+    assert model is not None
+    assert model.attributes is not None
     attr = next(filter(lambda x: x.primary is True, model.attributes), None)
-    TestCase().assertIsNotNone(attr)
+    assert attr is not None
     context.finalize()
 
 
 def test_get_source():
     model = DataModelProperties(name='TestAction')
-    TestCase().assertEqual(model.get_source(), 'TestActionBase')
-    TestCase().assertEqual(model.get_view(), 'TestActionData')
-    TestCase().assertEqual(model, {
+    assert model.get_source() == 'TestActionBase'
+    assert model.get_view() == 'TestActionData'
+    assert model == {
         'name': 'TestAction'
-    })
+    }
     model = DataModelProperties(name='TestAction', source='TestActions')
-    TestCase().assertEqual(model.get_source(), 'TestActions')
+    assert model.get_source() == 'TestActions'
     model.source = 'TestActionBase'
 
 
 async def test_upgrade(context):
-    
+
     async def execute():
         model: DataModel = context.model('InteractAction')
         await model.migrate()
@@ -67,19 +66,19 @@ async def test_upgrade(context):
 
 
 def test_many_to_one(context):
-    
+
     mapping = context.model('Action').infermapping('actionStatus')
-    TestCase().assertIsNotNone(mapping)
-    TestCase().assertEqual(mapping.associationType, 'association')
+    assert mapping is not None
+    assert mapping.associationType == 'association'
 
     mapping = context.model('InteractAction').infermapping('actionStatus')
-    TestCase().assertIsNotNone(mapping)
-    TestCase().assertEqual(mapping.associationType, 'association')
-    TestCase().assertEqual(mapping.childModel, 'InteractAction')
+    assert mapping is not None
+    assert mapping.associationType == 'association'
+    assert mapping.childModel == 'InteractAction'
 
 
 def test_many_to_many(context):
-    
+
     mapping = context.model('AuthClient').infermapping('scopes')
-    TestCase().assertIsNotNone(mapping)
-    TestCase().assertEqual(mapping.associationType, 'junction')
+    assert mapping is not None
+    assert mapping.associationType == 'junction'

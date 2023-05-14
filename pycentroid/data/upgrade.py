@@ -1,4 +1,4 @@
-from .types import DataContextBase, DataModelBase, DataField, DataModelProperties, DataEventArgs, UpgradeEventArgs
+from .types import DataContextBase, DataModelBase, DataField, DataModelProperties, UpgradeEventArgs
 from .configuration import DataConfiguration
 from .loaders import SchemaLoaderStrategy
 from pycentroid.common import expect, DataError
@@ -23,7 +23,7 @@ class DataModelUpgrade:
         # check if the current model is sealed and connot be upgrade
         if event.model.properties.sealed is True:
             loader.loaded.update({
-                event.model.properties.name : 1
+                event.model.properties.name: 1
             })
             # exit
             return
@@ -42,7 +42,7 @@ class DataModelUpgrade:
         if version is not None and version >= event.model.properties.version:
             # set updated
             loader.loaded.update({
-                event.model.properties.name : 1
+                event.model.properties.name: 1
             })
             # and exit
             return
@@ -50,7 +50,7 @@ class DataModelUpgrade:
         base: DataModelBase = event.model.base()
         if base is not None:
             # try to upgrade base model
-            upgrade_event = DataEventArgs(model=base)
+            upgrade_event = UpgradeEventArgs(model=base)
             await base.before.upgrade.emit(upgrade_event)
         # get model attributes
         attributes = list(
@@ -101,7 +101,7 @@ class DataModelUpgrade:
         await context.db.table(event.model.properties.get_source()).change(columns)
         # set loaded
         loader.loaded.update({
-                event.model.properties.name : 1
+                event.model.properties.name: 1
             })
         # emit after upgrade event
         setattr(event, 'done', True)

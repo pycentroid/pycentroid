@@ -57,7 +57,7 @@ class AnyDict(dict):
 
     def __setattr__(self, key, value):
         self[key] = value
-    
+
     def __getattr__(self, name):
         return self.get(name, None)
     

@@ -6,7 +6,7 @@ def test_format_type():
     dialect = SqliteDialect()
     type_str = dialect.format_type(name='description', type='Text')
     TestCase().assertEqual(type_str, '"description" TEXT NULL')
-    
+
     type_str = dialect.format_type(name='description', type='Text', size=255)
     TestCase().assertEqual(type_str, '"description" TEXT(255) NULL')
 

@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from enum import Enum
-from typing import List, Callable, NamedTuple
+from typing import List, Callable
+from types import SimpleNamespace
 from pycentroid.common import ApplicationBase, AsyncSeriesEventEmitter, AnyDict
 from pycentroid.query import DataAdapter, QueryExpression
 
@@ -123,7 +124,7 @@ class DataModelEventListener(AnyDict):
 
 
 class DataModelProperties(AnyDict):
-    
+
     name: str
     """A string which represents the name of this model e.g. Order, Customer, Person etc"""
     title: str
@@ -196,7 +197,7 @@ class DataModelEventEmitter:
 
 
 class DataModelBase:
-    
+
     properties: DataModelProperties
     context: DataContextBase
     before: DataModelEventEmitter
@@ -230,17 +231,17 @@ class DataModelBase:
 
     def key(self):
         return next(filter(lambda x: x.primary is True, self.attributes), None)
-    
+
     def get_attribute(self, name: str):
         return next(filter(lambda x: x.name == name, self.attributes), None)
-    
+
     def getattr(self, name: str):
         return next(filter(lambda x: x.name == name, self.attributes), None)
 
     @abstractmethod
     def get_super_types(self) -> List[str]:
         pass
-    
+
     @abstractmethod
     def infermapping(self, o: object):
         pass
@@ -266,20 +267,20 @@ class DataModelBase:
         pass
 
 
-class UpgradeEventArgs(NamedTuple):
-    
+class UpgradeEventArgs(SimpleNamespace):
+
     model: DataModelBase
     done: bool = False
 
 
-class ExecuteEventArgs(NamedTuple):
+class ExecuteEventArgs(SimpleNamespace):
 
     model: DataModelBase
     emitter: QueryExpression
     results: List[object] = None
 
 
-class DataEventArgs(NamedTuple):
+class DataEventArgs(SimpleNamespace):
 
     model: DataModelBase
     state: DataObjectState
