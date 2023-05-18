@@ -1,5 +1,6 @@
-from .types import DataModelBase, UpgradeEventArgs, ExecuteEventArgs, DataField, DataFieldAssociationMapping, DataAssociationType
-from pycentroid.query import JOIN_DIRECTION, OpenDataQueryExpression, QueryExpression , QueryField,\
+from .types import DataModelBase, UpgradeEventArgs, ExecuteEventArgs,\
+    DataField, DataFieldAssociationMapping, DataAssociationType
+from pycentroid.query import JOIN_DIRECTION, OpenDataQueryExpression, QueryExpression, QueryField,\
      QueryEntity, ResolvingJoinMemberEvent, ResolvingMemberEvent, trim_field_reference
 from pycentroid.common import expect, DataError, is_object_like
 from typing import List
@@ -20,11 +21,11 @@ class DataQueryable(OpenDataQueryExpression):
         self.resolving_join_member.subscribe(self.__on_resolving_join_member__)
         self.__silent__ = False
         self.__levels__ = 2
-    
+
     def __on_resolving_member__(self, event: ResolvingMemberEvent):
         attribute = self.model.getattr(trim_field_reference(event.member))
         expect(attribute).to_be_truthy(
-            DataError(message='Attribute not found.', model=self.model.properties.name, field=event.member, code='ERR_ATTR')
+            DataError(message='Attribute not found.', model=self.model.properties.name, field=event.member, code='ERR_ATTR')  # noqa:E501
             )
 
     def __on_resolving_join_member__(self, event: ResolvingJoinMemberEvent):
@@ -162,6 +163,8 @@ class DataQueryable(OpenDataQueryExpression):
         where = {
             '$and': []
         }
+        index = 0
+        filtered = False
         for attribute in attributes:
             prop = attribute.property or attribute.name
             if hasattr(source, prop):
@@ -172,16 +175,30 @@ class DataQueryable(OpenDataQueryExpression):
                     mapping = self.model.infermapping(prop)
                     # mapping should be defined
                     expect(mapping).to_be_truthy(
-                        DataError('Data association mapping cannot be determined.', model=self.model.properties.name, field=prop)
+                        DataError('Data association mapping cannot be determined.', model=self.model.properties.name, field=prop)  # noqa:E501
                         )
                     associated_model = self.model.context.model(attribute.type)
                     expect(associated_model).to_be_truthy(
                         DataError('Associated model cannot be found', model=self.model.properties.name, field=prop)
                     )
-                    # prepare query for associated object
-                    q: QueryExpression = associated_model.find(value)
-                    # get where statement
-                    raise Exception('Nested query is not supported yet')
+                    assoc_entity = QueryEntity(associated_model.properties.get_view())
+                    assoc_collection = assoc_entity.alias or assoc_entity.collection
+                    # prepare join query of associated object
+                    q: QueryExpression = associated_model.find(value).select(
+                        QueryField(mapping.parentField).from_collection(assoc_collection)
+                    ).take(1)
+                    index += 1
+                    alias = f'{assoc_collection}{index}'
+                    local_entity = QueryEntity(self.model.properties.get_view())
+                    local_collection = local_entity.alias or local_entity.collection
+                    self.join(q, alias).on(
+                        QueryExpression().where(
+                            QueryField(mapping.childField).from_collection(local_collection)
+                        ).equal(
+                            QueryField(mapping.parentField).from_collection(alias)
+                        )
+                    )
+                    filtered = True
                 else:
                     # append comparison expression
                     where['$and'].append({
@@ -190,9 +207,11 @@ class DataQueryable(OpenDataQueryExpression):
                             value
                         ]
                     })
-        if len(where['$and']) == 0:
+                    filtered = True
+        if filtered is False:
             return self.where(key.name).equal(None)
-        self.__where__ = where
+        if len(where['$and']) > 0:
+            self.__where__ = where
         return self
 
     async def count(self) -> int:
@@ -224,7 +243,7 @@ class DataQueryable(OpenDataQueryExpression):
             # stage #3 emit after execute
             await self.model.after.execute.emit(event)
             return results[0]
-        
+
     async def get_items(self) -> List[object]:
         if self.__select__ is None:
             # get attributes

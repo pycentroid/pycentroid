@@ -5,7 +5,7 @@ from pycentroid.common import year, month
 
 # noinspection PyMethodMayBeStatic
 class Product:
-    __test__ = True
+    __test__ = False
 
     def __init__(self, name):
         self.name = name

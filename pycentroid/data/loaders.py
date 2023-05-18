@@ -54,7 +54,7 @@ class FileSchemaLoaderStrategy(SchemaLoaderStrategy):
                 if extension == '.json':
                     results.append(name)
         return results
-    
+
     def get(self, name: str) -> DataModelProperties:
         if self.__items__ is None:
             self.__items__ = self.read()

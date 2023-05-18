@@ -215,6 +215,7 @@ class DataTypeValidator(DataValidator):
 
 class ValidationListener:
 
+    @staticmethod
     async def before_save(event: DataEventArgs):
         # get model
         model: DataModelBase = event.model

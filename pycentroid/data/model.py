@@ -9,6 +9,7 @@ from pycentroid.query import QueryExpression, QueryEntity
 from pycentroid.common import DataError, expect
 from .upgrade import DataModelUpgrade
 from .listeners.expand import ExpandListener
+from .listeners.validator import ValidationListener
 import inflect
 import re
 
@@ -55,6 +56,7 @@ class DataModel(DataModelBase):
         self.after.upgrade.subscribe(DataModelUpgrade.after)
         # append execute listeners
         self.after.execute.subscribe(ExpandListener.after_execute)
+        self.before.save.subscribe(ValidationListener.before_save)
 
     def silent(self, value: bool = True):
         self.__silent__ = value
@@ -86,6 +88,7 @@ class DataModel(DataModelBase):
             else:
                 clone = assign(found, field)
                 attr = DataModelAttribute(**clone)
+                attributes.remove(found)
             # # check many attribute
             if attr.many is None and is_plural(attr.name):
                 attr.many = True
