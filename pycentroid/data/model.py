@@ -6,7 +6,7 @@ from .configuration import DataConfiguration
 from .data_types import DataTypes
 from pydash import assign
 from pycentroid.query import QueryExpression, QueryEntity
-from pycentroid.common import DataError, expect
+from pycentroid.common import DataError, expect, AnyDict
 from .upgrade import DataModelUpgrade
 from .listeners.expand import ExpandListener
 from .listeners.validator import ValidationListener
@@ -75,6 +75,13 @@ class DataModel(DataModelBase):
         attributes: List[DataModelAttribute] = []
         if base_model is not None:
             attributes = base_model.attributes
+            # get base model key
+            key = base_model.key()
+            # if it's an auto increment identity
+            if key.type == 'Counter':
+                # revert type to int
+                attr = next(filter(lambda x: x.name == key.name, attributes), None)
+                attr.type = 'Integer'
         else:
             implements = self.context.model(self.properties.implements)if self.properties.implements is not None else None  # noqa:E501
             if implements is not None:
@@ -230,11 +237,62 @@ class DataModel(DataModelBase):
             await self.before.upgrade.emit(UpgradeEventArgs(model=self))
         await self.context.execute_in_transaction(execute)
 
+    async def inferstate(self, item) -> DataObjectState:
+        exists = await DataQueryable(self).find(item).take(1).count()
+        return DataObjectState.INSERT if exists == 0 else DataObjectState.UPDATE
+
     async def upsert(self, o: object or List[object]):
         pass
 
     async def remove(self, o: object or List[object]):
-        pass
+        # try to find object
+        if isinstance(o, list):
+
+            async def remove_many():
+                results = AnyDict(value=[])
+                for item in o:
+                    result = await self.remove(item)
+                    results.value.append(result)
+
+            # remove items
+            await self.context.db.execute_in_transaction(remove_many)
+        else:
+
+            async def remove_one():
+                # infer state
+                item = await self.silent().find(o)
+                if item is not None:
+                    # emit before remove event
+                    event = DataEventArgs(model=self, state=DataObjectState.DELETE, target=item)
+                    await self.before.remove.emit(event)
+                    # get collection
+                    collection = QueryEntity(self.properties.get_source())
+                    # get primary key
+                    key = self.key()
+                    value = getattr(o, key.name)
+                    # prepare delete query
+                    query = QueryExpression().delete(collection).where(key.name).equal(value)
+                    # raise before execute event
+                    execute_event = ExecuteEventArgs(model=self, emitter=query)
+                    # emit before execute event
+                    await self.before.execute.emit(execute_event)
+                    # execute
+                    await self.context.db.execute(query)
+                    # raise after execute event
+                    await self.after.execute.emit(execute_event)
+                    # emit after remove query
+                    await self.before.remove.emit(event)
+                    # get base model
+                    base = self.base()
+                    if base is not None:
+                        # and try to remove base item
+                        await base.remove(o)
+                    return AnyDict(value={
+                        key.name: value
+                    })
+
+            # remove items
+            await self.context.db.execute_in_transaction(remove_one)
 
     def __pre_insert__(self, obj: object) -> dict:
         result = {}
@@ -253,10 +311,10 @@ class DataModel(DataModelBase):
                 # get mapping
                 mapping = self.infermapping(attribute.name)
                 if mapping is None:
-                    result[attribute.name] = obj[prop]
+                    result[attribute.name] = getattr(obj, prop)
                 else:
                     # todo: resolve value
-                    result[attribute.name] = obj[prop]
+                    result[attribute.name] = getattr(obj, prop)
         return result
 
     def __pre_update__(self, obj: object) -> dict:
@@ -297,10 +355,15 @@ class DataModel(DataModelBase):
             await self.before.execute.emit(execute_event)
             # execute insert
             await self.context.db.execute(query)
+            key = self.key()
+            if key.type == 'Counter':
+                last_insert_id = await self.context.db.last_identity()
+                if last_insert_id is not None:
+                    setattr(o, key.name, last_insert_id)
             # emit after execute event
             await self.after.execute.emit(execute_event)
             # emit after save event
-            await self.before.after.emit(event)
+            await self.after.save.emit(event)
 
         await self.context.execute_in_transaction(execute)
 

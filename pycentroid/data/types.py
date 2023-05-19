@@ -247,7 +247,7 @@ class DataModelBase:
         pass
 
     @abstractmethod
-    async def inferstate(self, o: object):
+    async def inferstate(self, item: object) -> bool:
         pass
 
     @abstractmethod

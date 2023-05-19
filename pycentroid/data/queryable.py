@@ -19,7 +19,12 @@ class DataQueryable(OpenDataQueryExpression):
         self.__collection__ = QueryEntity(model.properties.get_view())
         self.resolving_member.subscribe(self.__on_resolving_member__)
         self.resolving_join_member.subscribe(self.__on_resolving_join_member__)
-        self.__silent__ = False
+        # set silent mode
+        if hasattr(model, '__silent__'):
+            self.__silent__ = getattr(model, '__silent__')
+        else:
+            self.__silent__ = False
+        # set default expand levels
         self.__levels__ = 2
 
     def __on_resolving_member__(self, event: ResolvingMemberEvent):
