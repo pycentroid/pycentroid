@@ -47,7 +47,7 @@ class QueryExpression:
     resolving_member = SyncSeriesEventEmitter()
     resolving_join_member = SyncSeriesEventEmitter()
     resolving_method = SyncSeriesEventEmitter()
-    
+
     def __init__(self, collection=None, alias=None):
         self.__where__ = None
         self.__prepared__ = None
@@ -65,10 +65,11 @@ class QueryExpression:
         self.__last_logical = None
         self.__distinct__ = None
         self.__alias__ = alias
-        
+        self.__fixed__ = False
+
         if collection is not None:
             self.__set_collection__(collection)
-    
+
     def __set_collection__(self, collection):
         if type(collection) is QueryEntity:
             self.__collection__ = collection
@@ -116,7 +117,8 @@ class QueryExpression:
         """Defines a collection of attributes that are going to be collected
 
         Args:
-            func (Callable): A lambda function which returns a list of attributes that are going to be used for selecting items
+            func (Callable): A lambda function which returns a list of attributes
+            which are going to be used for selecting items
             params (*, optional): The parameters of the given select callable. Defaults to None.
 
         Returns:
@@ -168,10 +170,10 @@ class QueryExpression:
             raise Exception('Invalid argument. Expected a string, a lambda function or an instance of query field.')
 
         return self
-    
+
     def prepare(self, useOr=False):
         """Stores the underlying filter expression for further processing
-        
+
         Args:
             useOr (bool, optional): Use logical "or" expression while cancatenating an already stored expression
 
@@ -275,7 +277,7 @@ class QueryExpression:
         self.__left__ = QueryField(name)
         self.__last_logical = '$or'
         return self
-    
+
     def get_year(self, timezone=None):
         self.__left__.get_year(timezone)
         return self
@@ -283,7 +285,7 @@ class QueryExpression:
     def get_date(self, timezone=None):
         self.__left__.get_date(timezone)
         return self
-    
+
     def get_month(self, timezone=None):
         self.__left__.get_month(timezone)
         return self
@@ -291,15 +293,15 @@ class QueryExpression:
     def get_hours(self, timezone=None):
         self.__left__.get_hours(timezone)
         return self
-    
+
     def hour(self, timezone=None):
         self.__left__.get_hours(timezone)
         return self
-    
+
     def get_minutes(self, timezone=None):
         self.__left__.get_year(timezone)
         return self
-    
+
     def minute(self, timezone=None):
         self.__left__.get_minutes(timezone)
         return self
@@ -307,11 +309,11 @@ class QueryExpression:
     def get_seconds(self, timezone=None):
         self.__left__.get_seconds(timezone)
         return self
-    
+
     def second(self, timezone=None):
         self.__left__.get_seconds(timezone)
         return self
-    
+
     def index_of(self, search: str):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.index_of(search)
@@ -319,60 +321,60 @@ class QueryExpression:
 
     def index(self, search: str):
         return self.index_of(search)
-    
+
     def add(self, value):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.add(value)
         return self
-    
+
     def subtract(self, value):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.subtract(value)
         return self
-    
+
     def divide(self, value):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.divide(value)
-    
+
     def multiply(self, value):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.multiply(value)
         return self
-    
+
     def round(self, digits):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.round(digits)
         return self
-    
+
     def ceil(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.ceil()
-    
+
     def floor(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.floor()
-    
+
     def modulo(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.modulo()
-    
+
     def length(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.length()
         return self
-    
+
     def len(self):
         return self.length()
-    
+
     def trim(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.trim()
         return self
-    
+
     def substring(self, start, length):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.substring(start, length)
-    
+
     def concat(self, *args):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.concat(*args)
@@ -381,12 +383,12 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.to_lower()
         return self
-    
+
     def to_upper(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.to_upper()
         return self
-    
+
     def get_min(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.min()
@@ -396,7 +398,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.max()
         return self
-    
+
     def get_count(self):
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.count()
@@ -406,7 +408,7 @@ class QueryExpression:
         expect(self.__left__).to_be_truthy(NoneError)
         self.__left__.average()
         return self
-    
+
     def startswith(self, search):
         expect(self.__left__).to_be_truthy(NoneError)
         left = self.__left__.index_of(search)
@@ -418,7 +420,7 @@ class QueryExpression:
             ]
         }
         return self
-    
+
     def skip(self, n):
         """Defines the number of records to skip on an expression which limits results
 
@@ -430,7 +432,7 @@ class QueryExpression:
         """
         self.__skip__ = n
         return self
-    
+
     def take(self, n):
         """Prepares an expression which limits the number of results
 
@@ -442,7 +444,7 @@ class QueryExpression:
         """
         self.__limit__ = n
         return self
-    
+
     def update(self, collection):
         self.__select__ = None
         self.__insert__ = None
@@ -469,7 +471,7 @@ class QueryExpression:
             for key, value in source.__dict__.items():
                 setattr(self.__insert__, key, value)
         return self
-    
+
     def into(self, collection):
         self.__select__ = None
         self.__update__ = None
@@ -514,7 +516,7 @@ class QueryExpression:
                 }
             }
         return self
-    
+
     def on(self, *args, **kwargs):
         """Finalizes a join expression by appending a lookup expression
 
@@ -545,7 +547,7 @@ class QueryExpression:
         # cleanup joining expression
         self.__joining__ = None
         return self
-        
+
     def left_join(self, collection, local_field, foreign_field, alias=None):
         """Prepares a left join expression with the given collection
 
@@ -618,7 +620,7 @@ class QueryExpression:
         else:
             TypeError('Order by expression must be a string or an instance of dictionary object.')
         return self
-    
+
     def order_by(self, expr):
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
@@ -634,7 +636,7 @@ class QueryExpression:
                 self.__append_order__(arg, -1)
             return self
         return self.__append_order__(expr, -1)
-    
+
     def then_by(self, expr):
         # noqa: E501
         expect(self.__order_by__).to_be_truthy(Exception(

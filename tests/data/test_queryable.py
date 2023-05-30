@@ -48,18 +48,19 @@ async def test_query_association(context: DataContext):
 
 
 async def test_find_by_obj(context: DataContext):
-    results = await context.model('Order').find(
-        {
-            'orderedItem': 84,
+    item = {
+            'orderedItem': {
+                'name': 'Nikon D7100'
+            },
             'orderStatus': {
-                'name': 'Processing'
+                'name': 'Pickup'
             }
         }
-    ).get_items()
+    results = await context.model('Order').find(item).get_items()
     assert len(results) > 0
     for result in results:
-        assert result.orderedItem == 84
-        assert result.orderStatus == 7
+        assert result.orderedItem.id == 84
+        assert result.orderStatus.name == 'Pickup'
 
 
 async def test_expand_parent_object(context: DataContext):

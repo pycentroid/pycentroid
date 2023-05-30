@@ -5,17 +5,21 @@ from dateutil.relativedelta import relativedelta
 from .object_name_validator import ObjectNameValidator
 from .data_objects import DataAdapter
 
+
 class SelectMap:
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+
 def select(**kwargs):
     return SelectMap(**kwargs)
+
 
 class CancelTransactionError(Exception):
     def __init__(self):
         super().__init__('cancel')
+
 
 class TestUtils:
     def __init__(self, db: DataAdapter):
@@ -31,6 +35,7 @@ class TestUtils:
         except Exception as error:
             if type(error) is not CancelTransactionError:
                 raise error
+
 
 class SqlUtils:
 
@@ -85,7 +90,7 @@ class SqlUtils:
 
         Args:
             tz (str): A string which represents a timezone
-        
+
         Returns:
                 (int) An integer which represents the time offset
         """
@@ -153,7 +158,7 @@ class SqlUtils:
         Returns:
             str: The equivalent SQL expression
         """
-        if not type(value) is obj:
+        if not type(value) is object:
             raise TypeError('Expected a valid object')
         result = ''
         for key, value in object.__dict__.items():

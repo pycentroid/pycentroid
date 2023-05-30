@@ -1,5 +1,3 @@
-from unittest import TestCase
-
 import pytest
 
 from pycentroid.common import AnyObject
@@ -25,7 +23,7 @@ async def test_select_and_join(db):
     ).join(PostalAddresses).on(
         lambda x, address: x.address == address.id
     ))
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0
 
 
 async def test_select_with_nested_filter(db):
@@ -42,4 +40,4 @@ async def test_select_with_nested_filter(db):
         lambda x: x.orderStatus == 1
     )
     items = await db.execute(query)
-    TestCase().assertGreater(len(items), 0)
+    assert len(items) > 0

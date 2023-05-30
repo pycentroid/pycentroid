@@ -11,8 +11,12 @@ class ExpandListener:
         query: DataQueryable = event.emitter
         if query.__select__ is None:
             return
+        if event.results is None:
+            return
+        if isinstance(event.results, list) and len(event.results) == 0:
+            return
         model: DataModelBase = event.model
-        # get expand collection alredy defined in query
+        # get expand collection already defined in query
         expands = query.__expand__.copy()
         # get auto expand attributes
         attributes = list(filter(lambda x: x.expandable is True, event.model.attributes))
@@ -95,7 +99,7 @@ class ExpandListener:
                         *list(map(lambda x: x.name, filter(lambda x: x.many is not True, child_model.attributes)))
                         )
                     q.__select__.update(
-                        QueryField(mapping.associationObjectField).from_collection(junction_entity.alias).asattr('__ref__')
+                        QueryField(mapping.associationObjectField).from_collection(junction_entity.alias).asattr('__ref__')  # noqa:E501
                         )
                     # q.__select__.update({
                     #     '__object__' : f'${junction_entity.alias}.{mapping.associationObjectField}'
@@ -141,7 +145,7 @@ class ExpandListener:
                         *list(map(lambda x: x.name, filter(lambda x: x.many is not True, parent_model.attributes)))
                         )
                     q.__select__.update(
-                        QueryField(mapping.associationValueField).from_collection(junction_entity.alias).asattr('__ref__')
+                        QueryField(mapping.associationValueField).from_collection(junction_entity.alias).asattr('__ref__')  # noqa:E501
                         )
                     # add attribute
                     parents = await q.join(
@@ -165,7 +169,7 @@ class ExpandListener:
                             # get parent
                             value = getattr(result, mapping.childField)
                             # filter children
-                            items = list(filter(lambda x: getattr(x, '__ref__') == value, parents))
+                            items = list(filter(lambda x: hasattr(x, '__ref__') and getattr(x, '__ref__') == value, parents))  # noqa:E501
                             for item in items:
                                 delattr(item, '__ref__')
                             # and set property value (an array of items)

@@ -81,7 +81,7 @@ def test_parse_unary_expression():
 def test_parse_function_expression():
 
     parser = PseudoSqlParser()
-    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,FLOOR(price) as price FROM Product WHERE category=\'Laptops\'')
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,FLOOR(price) as price FROM Product WHERE category=\'Laptops\'')  # noqa:E501
     params = OpenDataFormatter().format(expr)
     assert params == {
         '$filter': '(category eq \'Laptops\')',
@@ -92,7 +92,7 @@ def test_parse_function_expression():
 def test_parse_function_expression_with_args():
 
     parser = PseudoSqlParser()
-    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,ROUND(price,2) as price FROM Product WHERE category=\'Laptops\'')
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,ROUND(price,2) as price FROM Product WHERE category=\'Laptops\'')  # noqa:E501
     params = OpenDataFormatter().format(expr)
     assert params == {
         '$filter': '(category eq \'Laptops\')',
@@ -103,7 +103,7 @@ def test_parse_function_expression_with_args():
 def test_parse_order_by_statement():
 
     parser = PseudoSqlParser()
-    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,price FROM Product WHERE category=\'Laptops\' ORDER BY price')
+    expr: OpenDataQueryExpression = parser.parse('SELECT id,name,price FROM Product WHERE category=\'Laptops\' ORDER BY price')  # noqa:E501
     params = OpenDataFormatter().format(expr)
     assert params == {
         '$filter': '(category eq \'Laptops\')',
@@ -142,7 +142,7 @@ def test_parse_aggregate_func():
         '$filter': '(category eq \'Desktops\')',
         '$select': 'max(price) as price'
     }
-    
+
     expr: OpenDataQueryExpression = parser.parse('SELECT COUNT(id) as total FROM Product WHERE category=\'Desktops\'')
     params = OpenDataFormatter().format(expr)
     assert params == {
@@ -249,9 +249,10 @@ def test_parse_select_with_between_expr():
 def test_parse_select1():
 
     parser = PseudoSqlParser()
-    expr: OpenDataQueryExpression = parser.parse("SELECT AVG(grade) FROM StudentGrade WHERE name = 'Artificial Intelligence'")
+    expr: OpenDataQueryExpression = parser.parse("SELECT AVG(grade) FROM StudentGrade WHERE name = 'Artificial Intelligence'")  # noqa:E501
     params = OpenDataFormatter().format(expr)
     assert params is not None
-
-
-    
+    assert params == {
+        '$select': 'avg(grade) as field1',
+        '$filter': '(name eq \'Artificial Intelligence\')'
+    }

@@ -7,3 +7,4 @@ from .queryable import *
 from .configuration import *
 from .loaders import *
 from .data_types import *
+from .functions import *

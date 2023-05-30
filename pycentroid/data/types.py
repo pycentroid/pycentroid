@@ -160,9 +160,19 @@ class DataModelProperties(AnyDict):
         return self.view if self.view is not None else f'{self.name}Data'
 
 
+class ContextUser:
+
+    name: str
+    token: str
+    scope: str
+    authentication_type: str
+    key: object
+
+
 class DataContextBase:
 
     application: ApplicationBase
+    user: ContextUser
 
     @property
     @abstractmethod
@@ -247,7 +257,7 @@ class DataModelBase:
         pass
 
     @abstractmethod
-    async def inferstate(self, o: object):
+    async def inferstate(self, item: object) -> bool:
         pass
 
     @abstractmethod

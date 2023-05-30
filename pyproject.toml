@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 pyyaml = "^6.0"
 asyncio = "^3.4.3"
 dill = "^0.3.6"

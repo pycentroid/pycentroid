@@ -265,7 +265,7 @@ class SqliteAdapter(DataAdapter):
     async def execute(self, query, values=None):
         cur: sqlite3.Cursor or None = None
         try:
-            self.last_insert_id = None
+            self.__last_insert_id__ = None
             # ensure that database connection is open
             await self.open()
             # open cursor
@@ -305,7 +305,7 @@ class SqliteAdapter(DataAdapter):
                 cur.fetchone()
                 insert_id = cur.lastrowid
                 if insert_id is not None:
-                    self.last_insert_id = insert_id
+                    self.__last_insert_id__ = insert_id
             else:
                 cur.fetchone()
             return None
@@ -322,19 +322,19 @@ class SqliteAdapter(DataAdapter):
         Raises:
             ex: Any exception that will be thrown by the callable
         """
-        if self.__transaction__:
+        if self.__transaction__ is True:
             await func()
             return
         await self.open()
         # begin transaction
-        self.__raw_connection__.execute('BEGIN;')
+        await self.execute('BEGIN;')
         self.__transaction__ = True
         # execute callable
         try:
             await func()
-            self.__raw_connection__.execute('COMMIT;')
+            await self.execute('COMMIT;')
         except Exception as error:
-            self.__raw_connection__.execute('ROLLBACK;')
+            await self.execute('ROLLBACK;')
             raise error
         finally:
             self.__transaction__ = False

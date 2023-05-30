@@ -35,6 +35,16 @@ def test_get_attributes(context):
     context.finalize()
 
 
+def test_get_implemented_attributes(context):
+    model: DataModel = context.model('OrderStatusType')
+    assert model is not None
+    assert model.attributes is not None
+    attrs = list(filter(lambda x: x.name == 'name', model.attributes))
+    length = len(attrs)
+    assert length == 1
+    context.finalize()
+
+
 def test_get_primary_key(context):
     model: DataModel = context.model('Product')
     assert model is not None
@@ -61,6 +71,8 @@ async def test_upgrade(context):
     async def execute():
         model: DataModel = context.model('InteractAction')
         await model.migrate()
+        exists = await context.db.table('InteractActionBase').exists()
+        assert exists
     await TestUtils(context.db).execute_in_transaction(execute)
     await context.finalize()
 

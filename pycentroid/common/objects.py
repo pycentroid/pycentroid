@@ -16,9 +16,6 @@ class AnyObject(SimpleNamespace):
                     map(lambda x: AnyObject(**x) if isinstance(x, dict) else x, value))
                         )
 
-    def __getattr__(self, name):
-        return self.__dict__.get(name, None)
-
     def __str__(self):
         return self.__dict__.__str__()
 
@@ -60,7 +57,7 @@ class AnyDict(dict):
 
     def __getattr__(self, name):
         return self.get(name, None)
-    
+
 
 def dict_to_object(d):
     for k, v in d.items():

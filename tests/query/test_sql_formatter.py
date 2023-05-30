@@ -1,11 +1,12 @@
 from math import floor
-from unittest import TestCase
 from pycentroid.query import SqlFormatter, QueryExpression, QueryEntity, QueryField, select
 from pycentroid.common import year, month
 
 
 # noinspection PyMethodMayBeStatic
 class Product:
+    __test__ = False
+
     def __init__(self, name):
         self.name = name
 
@@ -17,11 +18,11 @@ class Product:
 def test_format_where():
     query = QueryExpression().where(lambda x: x.category == 'Laptops')
     sql = SqlFormatter().format_where(query.__where__)
-    TestCase().assertEqual(sql, '(category=\'Laptops\')')
+    assert sql == '(category=\'Laptops\')'
 
     query = QueryExpression('Product').where(lambda x: x.category == 'Laptops' or x.category == 'Desktops')
     sql = SqlFormatter().format_where(query.__where__)
-    TestCase().assertEqual(sql, '((category=\'Laptops\') OR (category=\'Desktops\'))')
+    assert sql == '((category=\'Laptops\') OR (category=\'Desktops\'))'
 
 
 def test_format_select():
@@ -29,7 +30,7 @@ def test_format_select():
         lambda x: x.category == 'Laptops' or x.category == 'Desktops'
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM Product WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
+    assert sql == 'SELECT * FROM Product WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))'
 
 
 def test_format_select_with_lambda():
@@ -39,9 +40,7 @@ def test_format_select_with_lambda():
         lambda x: x.category == 'Laptops' or x.category == 'Desktops'
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql,
-                           'SELECT id,name,category,price FROM ProductData '
-                           'WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
+    assert sql == 'SELECT id,name,category,price FROM ProductData WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))'  # noqa:E501
 
 
 def test_format_select_with_map():
@@ -51,9 +50,7 @@ def test_format_select_with_map():
         lambda x: x.category == 'Laptops' or x.category == 'Desktops'
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql,
-                           'SELECT id,name AS productName,category FROM Product '
-                           'WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))')
+    assert sql == 'SELECT id,name AS productName,category FROM Product WHERE ((category=\'Laptops\') OR (category=\'Desktops\'))'  # noqa:E501
 
 
 def test_format_update():
@@ -63,7 +60,7 @@ def test_format_update():
         lambda x: x.id == 121
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE (id=121)')
+    assert sql == 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE (id=121)'
 
     query = QueryExpression().update('Product').set(
         Product('Macbook Pro 13.3')
@@ -71,7 +68,7 @@ def test_format_update():
         lambda x: x.id == 121
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE (id=121)')
+    assert sql == 'UPDATE Product SET name=\'Macbook Pro 13.3\' WHERE (id=121)'
 
 
 def test_format_insert():
@@ -80,7 +77,7 @@ def test_format_insert():
         'name': 'Lenovo Yoga 2'
     }).into(products)
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'INSERT INTO ProductData(name) VALUES (\'Lenovo Yoga 2\')')
+    assert sql == 'INSERT INTO ProductData(name) VALUES (\'Lenovo Yoga 2\')'
 
 
 def test_format_join():
@@ -94,16 +91,14 @@ def test_format_join():
         )
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT OrderData.id,OrderData.customer,OrderData.orderDate,OrderData.orderedItem FROM OrderData '
-                                'INNER JOIN ProductData ON (OrderData.orderedItem=ProductData.id)')
+    assert sql == 'SELECT OrderData.id,OrderData.customer,OrderData.orderDate,OrderData.orderedItem FROM OrderData INNER JOIN ProductData ON (OrderData.orderedItem=ProductData.id)'  # noqa:E501
 
 
 def test_format_order_by():
     query = QueryExpression().select('id', 'name', 'category', 'releaseDate', 'price') \
         .from_collection('ProductData').order_by('name').then_by('category')
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql,
-                           'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC')
+    assert sql == 'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC'
 
     query = QueryExpression().select(
         lambda x: [x.id, x.name, x.category, x.releaseDate, x.price]
@@ -111,16 +106,14 @@ def test_format_order_by():
         lambda x: [x.name, x.category]
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql,
-                           'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC')
+    assert sql == 'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC'
 
 
 def test_format_limit_select():
     query = QueryExpression().select('id', 'name', 'category', 'releaseDate', 'price') \
         .from_collection('ProductData').take(5).skip(5).order_by('name').then_by('category')
     sql = SqlFormatter().format_limit_select(query)
-    TestCase().assertEqual(sql,
-                           'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC LIMIT 5,5')
+    assert sql == 'SELECT id,name,category,releaseDate,price FROM ProductData ORDER BY name ASC,category ASC LIMIT 5,5'  # noqa:E501
 
 
 def test_format_group_by():
@@ -129,7 +122,7 @@ def test_format_group_by():
         QueryField('category')
     ).from_collection('ProductData').group_by(QueryField('category'))
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT COUNT(id) AS total,category FROM ProductData GROUP BY category')
+    assert sql == 'SELECT COUNT(id) AS total,category FROM ProductData GROUP BY category'
 
 
 def test_use_round():
@@ -137,7 +130,7 @@ def test_use_round():
         lambda x: select(id=x.id, name=x.name, price=round(x.price, 2))
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,ROUND(price,2) AS price FROM ProductData')
+    assert sql == 'SELECT id,name,ROUND(price,2) AS price FROM ProductData'
 
 
 def test_use_floor():
@@ -145,7 +138,7 @@ def test_use_floor():
         lambda x: select(id=x.id, name=x.name, price=floor(x.price))
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,FLOOR(price) AS price FROM ProductData')
+    assert sql == 'SELECT id,name,FLOOR(price) AS price FROM ProductData'
 
 
 def test_use_trim():
@@ -153,7 +146,7 @@ def test_use_trim():
         lambda x: select(id=x.id, name=x.name, category=x.category.upper())
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,UPPER(category) AS category FROM ProductData')
+    assert sql == 'SELECT id,name,UPPER(category) AS category FROM ProductData'
 
 
 def test_use_upper():
@@ -161,7 +154,7 @@ def test_use_upper():
         lambda x: select(id=x.id, name=x.name.strip(), category=x.category.upper())
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT id,TRIM(name) AS name,UPPER(category) AS category FROM ProductData')
+    assert sql == 'SELECT id,TRIM(name) AS name,UPPER(category) AS category FROM ProductData'
 
 
 def test_use_datetime_year():
@@ -169,7 +162,7 @@ def test_use_datetime_year():
         lambda x: select(id=x.id, name=x.name, releaseYear=year(x.releaseDate))
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,YEAR(releaseDate) AS releaseYear FROM ProductData')
+    assert sql == 'SELECT id,name,YEAR(releaseDate) AS releaseYear FROM ProductData'
 
 
 def test_use_datetime_month():
@@ -177,7 +170,7 @@ def test_use_datetime_month():
         lambda x: select(id=x.id, name=x.name, releaseMonth=month(x.releaseDate))
     )
     sql = SqlFormatter().format_select(query)
-    TestCase().assertEqual(sql, 'SELECT id,name,MONTH(releaseDate) AS releaseMonth FROM ProductData')
+    assert sql == 'SELECT id,name,MONTH(releaseDate) AS releaseMonth FROM ProductData'
 
 
 def test_use_substring():
@@ -185,7 +178,7 @@ def test_use_substring():
         lambda x: select(id=x.id, name=x.name[:6])
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT id,SUBSTRING(name,0 + 1,6) AS name FROM ProductData')
+    assert sql == 'SELECT id,SUBSTRING(name,0 + 1,6) AS name FROM ProductData'
 
 
 def test_startswith():
@@ -193,7 +186,7 @@ def test_startswith():
         lambda x: x.name.startswith('Apple') is True
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'^Apple\', \'m\')=1)=true)')
+    assert sql == 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'^Apple\', \'m\')=1)=true)'
 
 
 def test_endswith():
@@ -201,7 +194,7 @@ def test_endswith():
         lambda x: x.name.endswith('Printer') is True
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer$\', \'m\')=1)=true)')
+    assert sql == 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer$\', \'m\')=1)=true)'
 
 
 def test_contains():
@@ -209,7 +202,7 @@ def test_contains():
         lambda x: x.name.__contains__('Printer') is True
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql, 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer\', \'m\')=1)=true)')
+    assert sql == 'SELECT * FROM ProductData WHERE ((REGEXP_LIKE(name, \'Printer\', \'m\')=1)=true)'
 
 
 def test_if_expr():
@@ -217,6 +210,4 @@ def test_if_expr():
         lambda x: select(id=x.id, name=x.name, priceStatus=('expensive' if x.price > 800 else 'normal'))
     )
     sql = SqlFormatter().format(query)
-    TestCase().assertEqual(sql,
-                           'SELECT id,name,(CASE (price>800) WHEN 1 THEN \'expensive\' ELSE \'normal\' END) AS priceStatus FROM '
-                           'ProductData')
+    assert sql == 'SELECT id,name,(CASE (price>800) WHEN 1 THEN \'expensive\' ELSE \'normal\' END) AS priceStatus FROM ProductData'  # noqa:E501

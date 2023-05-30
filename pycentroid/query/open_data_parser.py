@@ -729,7 +729,7 @@ class OpenDataParser:
         if '$expand' in query_options:
             expand = self.parse_expand_sequence(query_options['$expand'])
         # noqa: W391
-        return AnyDict(__where__=where, __select__=select, _order_by__=order_by, __group_by__=group_by, __expand__=expand)
+        return AnyDict(__where__=where, __select__=select, _order_by__=order_by, __group_by__=group_by, __expand__=expand)  # noqa:E501
 
     def parse_syntax(self):
         token = None
