@@ -4,7 +4,7 @@ class NoneError(Exception):
 
 
 class Expected:
-    
+
     def __init__(self, value):
         self.__value__ = value
 
@@ -30,16 +30,16 @@ class Expected:
         if self.__value__ is int and self.__value__ == 0:
             return
         raise error
-    
+
     def to_be_instance_of(self, class_or_tuple, error: Exception):
         if not isinstance(self.__value__, class_or_tuple):
             raise error
-    
+
     def to_equal(self, value, error: Exception):
         if self.__value__ == value:
             return
         raise error
-    
+
     def to_be_greater_than(self, value, error: Exception):
         if self.__value__ > value:
             return

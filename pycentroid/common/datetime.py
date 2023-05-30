@@ -2,7 +2,7 @@ from datetime import datetime, date, timedelta, timezone
 import re
 
 # noinspection PyPep8
-timestamp_pattern = r'^(\d{4})-([01]\d)-([0-3]\d)[\sT]([0-2]\d):([0-5]\d):([0-5]\d)(\.(?P<millisecond>\d+))?((?P<timezone>[+-][0-2]\d:[0-5]\d)|Z)$'
+timestamp_pattern = r'^(\d{4})-([01]\d)-([0-3]\d)[\sT]([0-2]\d):([0-5]\d):([0-5]\d)(\.(?P<millisecond>\d+))?((?P<timezone>[+-][0-2]\d:[0-5]\d)|Z)$'  # noqa:E501
 
 date_only_pattern = r'^(\d{4})-([01]\d)-([0-3]\d)$'
 

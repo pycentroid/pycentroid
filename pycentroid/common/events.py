@@ -34,7 +34,7 @@ class SyncSeriesEventEmitter:
 
     def __init__(self):
         self.__handlers__ = []
-    
+
     def subscribe(self, handler):
         """Appends an event handler and waits for event
         Parameters:
@@ -50,7 +50,7 @@ class SyncSeriesEventEmitter:
         """Appends an event handler and waits for event
         Parameters:
                     handler (Callable): An event handler to include
-        Returns: 
+        Returns:
                 subscription (EventSubscription): An object which represents an event subscription for later use
         """
         handle = OnceSyncEventHandler(handler)
@@ -66,7 +66,7 @@ class SyncSeriesEventEmitter:
         __handler__ = next(filter(lambda x: x.handler == handler, self.__handlers__), None)
         if __handler__ is not None:
             self.__handlers__.remove(__handler__)
-    
+
     def emit(self, *args):
         for handler in self.__handlers__:
             handler.execute(*args)
@@ -98,7 +98,7 @@ class AsyncSeriesEventEmitter:
 
     def __init__(self):
         self.__handlers__ = []
-    
+
     def subscribe(self, handler):
         """Appends an event handler and waits for event
         Parameters:
@@ -114,13 +114,13 @@ class AsyncSeriesEventEmitter:
         """Appends an asynchronous event handler and waits for event
         Parameters:
                     handler (Callable): An asynchronous event handler to include
-        Returns: 
+        Returns:
                 subscription (SyncSubscription): An object which represents an event subscription for later use
         """
         handle = OnceAsyncEventHandler(handler)
         self.__handlers__.append(handle)
         return EventSubscription(self, handle)
-    
+
     def unsubscribe(self, handler):
         """Removes a previously added asynchronous event handler
 
@@ -134,4 +134,3 @@ class AsyncSeriesEventEmitter:
     async def emit(self, *args):
         for handler in self.__handlers__:
             await handler.execute(*args)
-

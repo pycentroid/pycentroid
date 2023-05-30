@@ -583,7 +583,7 @@ class SqlFormatter:
         collection = None
         if query.__collection__ is not None:
             # get collection name (or alias)
-            collection = query.__collection__.alias if query.__collection__.alias is not None else query.__collection__.collection
+            collection = query.__collection__.alias if query.__collection__.alias is not None else query.__collection__.collection  # noqa:E501
 
         # subscriber for resolving collection
         def resolving_collection(event):

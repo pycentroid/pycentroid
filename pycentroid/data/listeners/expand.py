@@ -169,7 +169,7 @@ class ExpandListener:
                             # get parent
                             value = getattr(result, mapping.childField)
                             # filter children
-                            items = list(filter(lambda x: getattr(x, '__ref__') == value, parents))
+                            items = list(filter(lambda x: hasattr(x, '__ref__') and getattr(x, '__ref__') == value, parents))  # noqa:E501
                             for item in items:
                                 delattr(item, '__ref__')
                             # and set property value (an array of items)

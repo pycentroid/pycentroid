@@ -115,7 +115,7 @@ class ClosureParser:
                 attr = '$' + obj.id + '.' + attr[1:]
             event = AnyObject(target=self, member=attr)
             if is_qualified_reference(attr):
-                event.fully_qualified_member = attr
+                event.fully_qualified_name = attr
                 self.resolving_join_member.emit(event)
             else:
                 self.resolving_member.emit(event)
@@ -133,7 +133,7 @@ class ClosureParser:
             # emit event
             event = AnyObject(target=self, member=attr)
             if is_qualified_reference(attr):
-                event.fully_qualified_member = attr
+                event.fully_qualified_name = attr
                 self.resolving_join_member.emit(event)
             else:
                 self.resolving_member.emit(event)
