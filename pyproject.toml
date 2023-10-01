@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycentroid"
-version = "1.1.0"
+version = "1.1.1"
 description = "@centroid framework for python"
 authors = ["Kyriakos Barbounakis <k.barbounakis@gmail.com>"]
 readme = "README.md"
@@ -9,7 +9,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.9"
 pyyaml = "^6.0"
 asyncio = "^3.4.3"
 dill = "^0.3.6"
