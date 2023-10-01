@@ -1,8 +1,8 @@
 from sqlglot import exp, parse_one, Expression
-from sqlglot.expressions import Table, Column, Where, Condition, Func, Order, Group, Limit, Offset
+from sqlglot.expressions import Table, Column, Where, Condition, Func, Order, Group, Limit, Offset, From, Star
 from sqlglot import expressions
 from pycentroid.query import QueryField, QueryEntity, format_field_reference, TokenOperator, OpenDataQueryExpression
-from typing import List
+from typing import List, Any
 from pycentroid.common import SyncSeriesEventEmitter
 from types import SimpleNamespace
 
@@ -46,7 +46,7 @@ class PseudoSqlParserDialect:
             event.method = self.__methods__[event.method]
 
 
-class PseudoSqlParser():
+class PseudoSqlParser:
 
     resolving_member: SyncSeriesEventEmitter
     resolving_join_member: SyncSeriesEventEmitter
@@ -68,12 +68,11 @@ class PseudoSqlParser():
     def parse_select(self, expr: Expression) -> OpenDataQueryExpression:
         result = OpenDataQueryExpression()
         select = expr.find(exp.Select)
-        print(select)
         # get collection
-        table: Table = select.find(exp.From).expressions[0]
+        table: From = select.find(exp.From)
         result.from_collection(self.parse_table(table))
         # get select
-        exprs: List[QueryField] = []
+        exprs: List[QueryField | dict[Any, dict] | Any] = []
         index = 0
         for expression in select.expressions:
             if isinstance(expression, expressions.Star):
@@ -106,13 +105,14 @@ class PseudoSqlParser():
             result.__skip__ = self.parse_literal(offset.args['expression'])
         return result
 
-    def parse_table(self, table: Table) -> QueryEntity:
+    # noinspection PyMethodMayBeStatic
+    def parse_table(self, table: Table | From) -> QueryEntity:
         if not table.alias:
             return QueryEntity(table.name)
         else:
             return QueryEntity(table.name, table.alias)
 
-    def parse_column(self, column: Condition) -> QueryField:
+    def parse_column(self, column: Condition | Star) -> QueryField | dict[Any, dict] | Any:
         if not column.alias:
             return QueryField(column.name)
         else:
@@ -195,7 +195,7 @@ class PseudoSqlParser():
         }
 
     def parse_logical(self, expr):
-        oper: str = None
+        oper: str | None = None
         if type(expr) is expressions.And:
             oper = TokenOperator.And.value
         elif type(expr) is expressions.Or:
@@ -210,7 +210,7 @@ class PseudoSqlParser():
             }
 
     def parse_comparison(self, expr):
-        oper: str = None
+        oper: str | None = None
         if type(expr) is expressions.EQ:
             oper = TokenOperator.Eq.value
         elif type(expr) is expressions.NEQ:
@@ -257,6 +257,7 @@ class PseudoSqlParser():
                 ]
             }
 
+    # noinspection PyMethodMayBeStatic
     def parse_literal(self, expr: expressions.Literal):
         if type(expr) is expressions.Literal:
             if expr.is_int:

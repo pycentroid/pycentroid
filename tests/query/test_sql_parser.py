@@ -204,13 +204,13 @@ def test_parse_limit_select():
         '$top': 10
     }
 
-    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product LIMIT 10, 50')
+    expr: OpenDataQueryExpression = parser.parse('SELECT * FROM Product LIMIT 20, 10')
     params = OpenDataFormatter().format(expr)
     assert params == {
         '$select': '*',
         '$count': True,
         '$top': 10,
-        '$skip': 50
+        '$skip': 20
     }
 
 
