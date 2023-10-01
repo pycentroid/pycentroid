@@ -5,7 +5,7 @@
 
 @themost-framework for Python
 
-[@themost-framework](https://github.com/themost-framework) is a fully-featured end-to-end framework for building scalable data-driven web applications and services. It consists of a wide set of server-side libraries and client-side tools for helping developers creating scalable and configuratable production environments. `pycentroid` is a `@themost-framework` alternative for python.
+[@themost-framework](https://github.com/themost-framework) is a fully-featured end-to-end framework for building scalable data-driven web applications and services under node.js. It consists of a wide set of server-side libraries and client-side tools for helping developers creating scalable and configurable production environments. `pycentroid` is a `@themost-framework` alternative for python.
 
 ## pycentroid.client
 
@@ -13,16 +13,18 @@ A client-side library of [@themost-framework](https://github.com/themost-framewo
 
 ```python
 from typing import List
-from pycentroid.client import ClientDataContext
+from pycentroid.client import ClientDataContext, ClientContextOptions
+from pycentroid.query import select
 
-
-context = ClientDataContext(ClientContextOptions('http://localhost:3000/api/'))
-// get products
-items: List = await context.model('Products').as_queryable().select(
-        lambda x: select(id=x.id, name=x.name, product_model=x.model,)
-    ).where(
-        lambda x: x.category == 'Laptops'
-    ).get_items()
+async def get_products():
+    context = ClientDataContext(ClientContextOptions('http://localhost:3000/api/'))
+    # get products
+    items: List = await context.model('Products').as_queryable().select(
+            lambda x: select(id=x.id, name=x.name, product_model=x.model,)
+        ).where(
+            lambda x: x.category == 'Laptops'
+        ).get_items()
+    return items
 ```
 
 ## pycentroid.query
@@ -30,7 +32,7 @@ items: List = await context.model('Products').as_queryable().select(
 A database-agnostic query module which for writing SQL expressions of any kind
 
 ```python
-from pycentroid.query import QueryExpression, QueryEntity, SqlFormatter
+from pycentroid.query import QueryExpression, QueryEntity, SqlFormatter, select
 
 
 products = QueryEntity('ProductData')
@@ -49,14 +51,17 @@ A next-generation ORM data module for developing data-driven application and ser
 
 ```python
 from pycentroid.data.application import DataApplication
-from pycentroid.data.context import DataContext
+from os.path import abspath, join, dirname
+APP_PATH = abspath(join(dirname(__file__), '..'))
 
 
-app = DataApplication(cwd=APP_PATH)
-context = app.create_context()
-results = await context.model('Order').where(
-    lambda x: x.orderedItem.category == 'Desktops'
-    ).get_items()
+async def main():
+    app = DataApplication(cwd=APP_PATH)
+    context = app.create_context()
+    results = await context.model('Order').where(
+        lambda x: x.orderedItem.category == 'Desktops'
+        ).get_items()
+    print(results)
 ```
 
 
