@@ -45,7 +45,7 @@ sql = SqlFormatter().format(query)
 
 ## pycentroid.data
 
-Next-generation ORM data module of pycentroid for developing data-driven application and services.
+A next-generation ORM data module for developing data-driven application and services.
 
 ```python
 from pycentroid.data.application import DataApplication
