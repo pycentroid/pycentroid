@@ -33,7 +33,7 @@ A database-agnostic query module which for writing SQL expressions of any kind
 from pycentroid.query import QueryExpression, QueryEntity, SqlFormatter
 
 
-products = new QueryEntity('ProductData')
+products = QueryEntity('ProductData')
 query = QueryExpression(products).select(
         lambda x: select(id=x.id, name=x.name, price=round(x.price, 2))
     ).where(
