@@ -60,9 +60,9 @@ def test_substring_expr():
 
     func = lambda x:  [x.category[1:]]  # noqa:E731
     # get module
-    module: ast.Module = ast.parse(getsource(func).strip())
+    module = ast.parse(getsource(func).strip())
     # get function
-    body: ast.Assign = module.body[0]
+    body = module.body[0]
     # get attribute
     select: ast.List = body.value.body
     assert type(select) is ast.List
@@ -107,7 +107,7 @@ def test_sequence_dict():
     # get module
     module: ast.Module = ast.parse(getsource(func).strip())
     # get function
-    body: ast.Assign = module.body[0]
+    body: ast.stmt = module.body[0]
     # get attribute
     select: ast.List = body.value.body
     assert type(select) is ast.Dict

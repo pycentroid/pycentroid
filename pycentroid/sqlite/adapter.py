@@ -14,7 +14,7 @@ class SqliteTableIndex(DataTableIndex):
         super().__init__(table, adapter)
 
     async def create(self, name: str, columns: list):
-        self.drop(name)
+        await self.drop(name)
         sql = 'CREATE INDEX'
         sql += SqliteDialect.Space
         sql += SqliteDialect().escape_name(name)
@@ -33,7 +33,7 @@ class SqliteTableIndex(DataTableIndex):
         return next(filter(lambda x: x.origin == 'c' and x.name == name, results), None) is not None
 
     async def drop(self, name: str):
-        exists = self.exists(name)
+        exists = await self.exists(name)
         if exists:
             index = SqliteDialect().escape_name(name)
             await self.__adapter__.execute(f'DROP INDEX {index}')
@@ -200,7 +200,7 @@ class SqliteView(DataView):
 
     async def create(self, query: QueryExpression):
         # drop view if exists
-        self.drop()
+        await self.drop()
         # and create
         sql = 'CREATE VIEW'
         sql += SqliteDialect.Space
@@ -246,6 +246,7 @@ def regexp(value, pattern):
 class SqliteAdapter(DataAdapter):
 
     def __init__(self, options):
+        super().__init__()
         self.__raw_connection__: sqlite3.Connection
         self.__transaction__ = False
         self.__last_insert_id__ = None

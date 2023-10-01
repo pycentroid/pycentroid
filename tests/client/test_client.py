@@ -1,11 +1,25 @@
+from collections import namedtuple
+from dataclasses import dataclass
+from typing import List, Optional
+from urllib.parse import urljoin
+from pycentroid.query import select
+from pycentroid.common import year
+
 import pytest
 import requests
+
 from pycentroid.client import ClientDataContext, ClientContextOptions
-from urllib.parse import urljoin
-from subprocess import Popen
 
 REMOTE_SERVER = 'http://localhost:3000/api/'
 __popen__ = None
+
+
+@dataclass
+class Product:
+    """Any offered product or service. For example: a pair of shoes; a concert ticket;"""
+    id: Optional[int]
+    name: str
+    model: str
 
 
 @pytest.fixture()
@@ -36,6 +50,77 @@ async def test_get_items(context):
         lambda x: x.category == 'Laptops'
     ).get_items()
     assert items is not None
+    assert len(items) > 0
+
+
+async def test_select_attrs_with_alias(context):
+    items: List = await context.model('Products').as_queryable().select(
+        lambda x: select(id=x.id, name=x.name, product_model=x.model,)
+    ).where(
+        lambda x: x.category == 'Laptops'
+    ).get_items()
+    assert items is not None
+    assert len(items) > 0
+    Product = namedtuple('Product', ['id', 'name', 'product_model'])
+    for item in items:
+        obj = Product(**item)
+        assert obj.product_model is not None
+
+
+async def test_select_attrs(context):
+    items: List = await context.model('Orders').as_queryable().select(
+        lambda x: select(id=x.id,
+                         customer=x.customer.description,
+                         paymentMethod=x.paymentMethod.alternateName,
+                         orderDate=x.orderDate,
+                         product=x.orderedItem.name,)
+    ).where(
+        lambda x: x.paymentMethod.alternateName == 'DirectDebit'
+    ).take(10).get_items()
+    assert items is not None
+    assert len(items) == 10
+    keys = list(items[0].keys())
+    assert keys == [
+        'id',
+        'customer',
+        'paymentMethod',
+        'orderDate',
+        'product'
+    ]
+    for item in items:
+        assert item.get('paymentMethod') == 'DirectDebit'
+
+
+async def test_filter_with_params(context):
+
+    where_stmt = lambda x, category: x.category == category
+    items: List = await (context.model('Products').as_queryable().select(
+        lambda x: select(id=x.id,
+                         name=x.name,
+                         category=x.category,
+                         releaseYear=year(x.releaseDate),
+                         price=round(x.price, 2),)
+    ).where(
+        where_stmt,
+        category='Desktops'
+    ).take(10).get_items())
+    assert items is not None
+    assert len(items) == 10
+    for item in items:
+        assert item.get('category') == 'Desktops'
+
+
+async def test_select_expr(context):
+    items: List = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model,)
+    ).where(
+        lambda x: x.category == 'Laptops'
+    ).get_items()
+    assert items is not None
+    assert len(items) > 0
+    for item in items:
+        obj = Product(**item)
+        assert obj.name is not None
 
 
 async def test_get_metadata(context):

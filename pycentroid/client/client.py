@@ -87,7 +87,7 @@ class ClientDataModel:
         # get response
         return response.json()
 
-    def save(self, data: dict):
+    async def save(self, data: dict):
         return self.execute(data)
 
     async def remove(self, item: str):

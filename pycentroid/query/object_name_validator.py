@@ -20,7 +20,7 @@ class ValidatorPatterns:
 class ObjectNameValidator:
     def __init__(self, pattern=ValidatorPatterns.Default):
         self.pattern = pattern
-        self.qualified_pattern = f'\\*$|^{pattern}((\\.){pattern})*(\\.\\*)?$'
+        self.qualified_pattern = f'\\*$|^{pattern}((\\.|\\/){pattern})*(\\.\\*)?$'
 
     def test(self, name, qualified=True, throw_error=True):
         if qualified:
