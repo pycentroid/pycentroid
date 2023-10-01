@@ -5,13 +5,13 @@
 
 @themost-framework for Python
 
-[@themost-framework](https://github.com/themost-framework) is a fully-featured end-to-end framework for building scalable data-driven web applications and services. It consists of a wide-set of server-side libraries and client-side tools for helping developers creating scalable and configuratable production environments. `pycentroid` is a `@themost-framework` alternative for using its specification under python.
+[@themost-framework](https://github.com/themost-framework) is a fully-featured end-to-end framework for building scalable data-driven web applications and services. It consists of a wide set of server-side libraries and client-side tools for helping developers creating scalable and configuratable production environments. `pycentroid` is a `@themost-framework` alternative for python.
 
 ## pycentroid.client
 
 A client-side library of [@themost-framework](https://github.com/themost-framework) application for python
 
-```
+```python
 from typing import List
 from pycentroid.client import ClientDataContext
 
