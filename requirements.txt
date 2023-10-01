@@ -28,4 +28,13 @@ six==1.16.0 ; python_version >= "3.9" and python_version < "4.0"
 sqlglot==12.4.0 ; python_version >= "3.9" and python_version < "4.0"
 tomli==2.0.1 ; python_version >= "3.9" and python_version < "3.11"
 typing-extensions==4.5.0 ; python_version >= "3.9" and python_version < "4.0"
-urllib3==2.0.2 ; python_version >= "3.9" and python_version < "4.0"
+urllib3==2.0.5 ; python_version >= "3.9" and python_version < "4.0"
+
+pytest~=7.3.1
+dill~=0.3.6
+requests~=2.31.0
+inflect~=6.0.4
+pydash~=7.0.3
+python-dateutil~=2.8.2
+sqlglot~=12.4.0
+PyYAML~=6.0

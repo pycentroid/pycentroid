@@ -293,7 +293,7 @@ class ValidationListener:
                     raise DataError(
                         validation.message, validation.inner_message, model.properties.name, name, validation.code
                         )
-            # if value is missing and object is going to inserted
+            # if value is missing and object is going to be inserted
             elif event.state == DataObjectState.INSERT:
                 # raise error for a required value
                 raise DataError('A value is required', None, model.properties.name, name, 'ERR_REQUIRED')

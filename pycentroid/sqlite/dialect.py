@@ -78,7 +78,7 @@ class SqliteDialect(SqlDialect):
         match_type = 'm'  # support multiline
         if options is not None and options.__contains__('i'):  # ignore case
             match_type += 'i'
-        # allows the dot character (i.e. .) to match all characters including newline characters
+        # allows the dot character to match all characters including newline characters
         if options is not None and options.__contains__('s'):
             match_type += 'n'
         return f'REGEXP_LIKE({self.escape(input)},{self.escape(regex)}, {self.escape(match_type)})'
