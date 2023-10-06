@@ -1,8 +1,28 @@
 import ast
+import re
 from dill.source import getsource
 from pycentroid.common import expect, SyncSeriesEventEmitter, AnyObject
 from .query_field import is_qualified_reference, format_any_field_reference
 from .method_parser import MethodParserDialect, InstanceMethodParserDialect
+
+def try_extract_closure_from(func: callable, throw_error: bool = False):
+    source = getsource(func).strip()
+    final_source = source if re.search('^(\s+)?def\s', source) is not None else ast.parse(f'func0({source})')
+    module: ast.Module = ast.parse(final_source)
+    if type(module.body[0]) is ast.FunctionDef:
+        return module.body[0];
+    expr: ast.Expr = module.body[0]
+    if len(expr.value.args) > 0:
+        for arg in expr.value.args:
+            if type(arg) is ast.Lambda:
+                return arg
+    args = expr.value.keywords
+    for arg in args:
+        if type(arg.value) is ast.Lambda:
+            return arg.value
+    if throw_error is True:
+        raise Exception('Invalid expression. Expected a lambda function.')
+    return None
 
 
 # noinspection PyUnusedLocal
@@ -24,6 +44,17 @@ class ClosureParser:
         ]
 
     def parse_filter(self, func, params: dict = None):
+
+        expr = try_extract_closure_from(func);
+        if expr is not None:
+            self.params = params
+            if type(expr) is ast.Lambda or type(expr) is ast.FunctionDef:
+                self.args = expr.args.args
+            if type(expr) is ast.FunctionDef and type(expr.body[0] is ast.Return):
+                expect(type(expr.body[0].value)).to_equal(ast.Compare, Exception('Invalid def. Expected compare statement.'))
+                return self.parse_common(expr.body[0].value)
+            return self.parse_common(expr.body) 
+
         module: ast.Module = ast.parse(getsource(func).strip())
         # set params
         self.params = params

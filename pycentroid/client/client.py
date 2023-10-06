@@ -1,6 +1,6 @@
 import re
 import xml.etree.ElementTree as ElementTree
-from urllib.parse import urljoin
+from urllib.parse import urljoin, unquote
 
 import requests_async as requests
 from requests.structures import CaseInsensitiveDict
@@ -8,6 +8,7 @@ from requests.structures import CaseInsensitiveDict
 from pycentroid.common import expect
 from pycentroid.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
 from .metadata import EdmSchema
+import logging
 
 NSMAP = {
     'edmx': 'http://docs.oasis-open.org/odata/ns/edmx',
@@ -143,6 +144,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
             ])
         # make request
         response = await requests.get(url, params, headers=headers)
+        logging.debug('GET ' + unquote(response.url));
         result = response.json()
         if 'value' in result and type(result['value']) is list:
             return result['value']

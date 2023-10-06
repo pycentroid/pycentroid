@@ -3,10 +3,12 @@ from dataclasses import dataclass
 from typing import List, Optional
 from urllib.parse import urljoin
 from pycentroid.query import select
-from pycentroid.common import year
+from pycentroid.common import year, AnyDict
 
 import pytest
 import requests
+import logging
+
 
 from pycentroid.client import ClientDataContext, ClientContextOptions
 
@@ -51,6 +53,41 @@ async def test_get_items(context):
     ).get_items()
     assert items is not None
     assert len(items) > 0
+
+
+async def test_get_items_with_query(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: select(name=x.name, price=x.price)
+    ).where(
+        lambda x: x.category == 'Laptops'
+    ).get_items()
+    assert items is not None
+    assert len(items) > 0
+
+def filterable(func):
+    return func
+
+
+async def test_where(context):
+    items = await context.model('Orders').as_queryable().where(
+        where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'
+        ).take(10).get_items()
+    assert items is not None
+    assert len(items) > 0
+    for item in items:
+        assert item.get('orderStatus').get('alternateName') == 'OrderPickup'
+
+async def test_where_with_def(context):
+
+    def filter(x, orderStatus):
+        return x.orderStatus.alternateName == orderStatus;
+
+    items = await context.model('Orders').as_queryable().where(
+        where = filter, orderStatus = 'OrderPickup'
+        ).take(10).get_items()
+    assert len(items) > 0
+    for item in items:
+        assert item.get('orderStatus').get('alternateName') == 'OrderPickup'
 
 
 async def test_select_attrs_with_alias(context):

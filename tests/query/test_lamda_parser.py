@@ -1,6 +1,51 @@
 from pycentroid.query import ClosureParser, select
 from dill.source import getsource
 import ast
+import re
+
+
+def get_closure_from_source(source: str, throw_error: bool = False):
+
+    final_source = source if re.search('^(\s+)?def\s', source) is not None else ast.parse(f'func0({source})')
+    module: ast.Module = ast.parse(final_source)
+    if type(module.body[0]) is ast.FunctionDef:
+        return module.body[0];
+    expr: ast.Expr = module.body[0]
+    if len(expr.value.args) > 0:
+        for arg in expr.value.args:
+            if type(arg) is ast.Lambda:
+                return arg
+    args = expr.value.keywords
+    for arg in args:
+        if type(arg.value) is ast.Lambda:
+            return arg.value
+    if throw_error:
+        raise Exception('Invalid expression. Expected a lambda function.')
+    return None
+        
+    
+def test_find_lambda():
+    str = "orderStatus = 'OrderPickup', where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus"
+    arg0 = get_closure_from_source(str)
+    assert type(arg0) is ast.Lambda
+    str = "lambda x, orderStatus: x.orderStatus.alternateName == orderStatus"
+    arg0 = get_closure_from_source(str)
+    assert type(arg0) is ast.Lambda
+    str = "where=lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'"
+    arg0 = get_closure_from_source(str)
+    assert type(arg0) is ast.Lambda
+    str = "lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'"
+    arg0 = get_closure_from_source(str)
+    assert type(arg0) is ast.Lambda
+
+def test_find_def():
+    
+    def where1(x, orderStatus): 
+        return x.orderStatus.alternateName == orderStatus
+
+    str = getsource(where1).strip()
+    expr = get_closure_from_source(str);
+    assert expr is not None
 
 
 def test_select_func():

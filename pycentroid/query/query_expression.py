@@ -6,7 +6,7 @@ from .query_field import QueryField, get_field_expression, format_field_referenc
 from types import SimpleNamespace
 from enum import Enum
 import json
-
+from typing import overload
 
 class QueryExpressionType(str, Enum):
 
@@ -147,6 +147,15 @@ class QueryExpression:
                 raise 'Expected string, a dictionary object or an instance of QueryField class'
         return self
 
+    @overload
+    def where(self, where: callable, **kwargs):
+        kwargs['where'] = where;
+        return self.where(**kwargs)
+    
+    @overload
+    def where(self, attribute: str | QueryField):
+        return self.where(attribute)
+
     def where(self, *args, **kwargs):
         """Defines a where clause for filtering items
 
@@ -157,6 +166,12 @@ class QueryExpression:
         Returns:
             self: Returns the current query expression for further processing
         """
+        if (len(args) == 0):
+            # try to find kwargs
+            where_param = kwargs.pop('where')
+            expect(inspect.isfunction(where_param)).to_be_truthy(Exception('Where statement must be a callable'))
+            self.__where__ = self.get_closure_parser().parse_filter(where_param, kwargs)
+            return self
         if type(args[0]) is str:
             self.__where__ = None
             # todo: validate object name
