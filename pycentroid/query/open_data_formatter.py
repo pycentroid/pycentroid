@@ -253,12 +253,19 @@ class OpenDataFormatter(SqlFormatter):
         return result
 
     def format_order(self, query):
+
+        def format_direction(direction: int):
+            if direction == -1:
+                return 'desc'
+            return 'asc';
+
         if query.__order_by__ is None:
             return None
         if len(query.__order_by__) == 0:
             return None
-        return ','.join(
-            map(lambda x: self.__dialect__.escape(x.get('$expr')) + ' ' + x.get('direction'), query.__order_by__))
+        res = ','.join(
+            map(lambda x: self.__dialect__.escape(x.get('$expr')) + ' ' + format_direction(x.get('direction')), query.__order_by__))
+        return res
 
     def format_select(self, query):
         result = {}

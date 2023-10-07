@@ -77,6 +77,30 @@ async def test_where(context):
     for item in items:
         assert item.get('orderStatus').get('alternateName') == 'OrderPickup'
 
+async def test_select_nested_attrs(context):
+    items = await context.model('Orders').as_queryable().select(
+        lambda x: select(id=x.id, product=x.orderedItem.name, orderStatus=x.orderStatus.alternateName, orderDate=x.orderDate)
+    ).where(
+        where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'
+        ).take(10).get_items()
+    assert items is not None
+    assert len(items) > 0
+    logging.debug(items)
+    for item in items:
+        assert item.get('orderStatus') == 'OrderPickup'
+
+async def test_select_as_array(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: [x.id, x.name, x.model, x.category]
+    ).where(
+        where = lambda x, category: x.category == category, category = 'Laptops'
+        ).take(10).get_items()
+    assert items is not None
+    assert len(items) > 0
+    logging.debug(items)
+    for item in items:
+        assert item.get('category') == 'Laptops'
+
 async def test_where_with_def(context):
 
     def filter(x, orderStatus):
@@ -159,6 +183,65 @@ async def test_select_expr(context):
         obj = Product(**item)
         assert obj.name is not None
 
+async def test_order_by_items(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price)
+    ).where(
+        lambda x: x.category == 'Laptops'
+        ).order_by(
+            lambda x: [round(x.price, 2)]
+        ).take(10).get_items()
+    assert items is not None
+    assert len(items) > 0
+    for index, item in enumerate(items):
+        if index > 0:
+            current = item.get('price')
+            previous = items[index - 1].get('price')
+            assert current >= previous
+
+async def test_then_by_descnding(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: x.category == 'Laptops'
+        ).order_by(
+            lambda x: (round(x.price, 2),)
+        ).then_by_descending(
+            lambda x: (x.releaseDate,)
+        ).take(10).get_items()
+    assert items is not None
+    assert len(items) > 0
+    for index, item in enumerate(items):
+        if index > 0:
+            current = item.get('price')
+            previous = items[index - 1].get('price')
+            assert current >= previous
+
+async def test_limit_results(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: x.category == 'Laptops'
+        ).order_by(
+            lambda x: (round(x.price, 2),)
+        ).take(5).get_items()
+    assert items is not None
+    assert len(items) > 0
+
+    next_items = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: x.category == 'Laptops'
+        ).order_by(
+            lambda x: (round(x.price, 2),)
+        ).take(5).skip(5).get_items()
+
+    assert next_items is not None
+    assert len(items) > 0
+
+    for index, item in enumerate(next_items):
+        found = next(filter(lambda x: x.get('id') == item.get('id'), items), None)
+        assert found is None
 
 async def test_get_metadata(context):
     schema = await context.get_metadata()

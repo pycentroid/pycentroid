@@ -629,7 +629,7 @@ class QueryExpression:
                     break
                 else:
                     self.__order_by__.append({
-                        '$expr': value,
+                        '$expr': expr,
                         'direction': direction
                     })
         else:
@@ -639,6 +639,9 @@ class QueryExpression:
     def order_by(self, expr):
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
+            if (type(arguments) is dict):
+                self.__append_order__(arguments, 1)
+                return self
             for arg in arguments:
                 self.__append_order__(arg, 1)
             return self
