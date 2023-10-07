@@ -27,6 +27,8 @@ async def get_products():
     return items
 ```
 
+Read more at [pycentroid.client](./pycentroid/client/README.md)
+
 ## pycentroid.query
 
 A database-agnostic query module which for writing SQL expressions of any kind
