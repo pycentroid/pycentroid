@@ -211,7 +211,7 @@ A resultset contains:
 
 > `total`: An integer which represents the number of items which fullfill the given query
 
-> `skip`: An integer which represents the number of items skipped
+> `skip`: An integer which represents the number of items skipped during current paging operation
 
 > `value`: An array of items
 
