@@ -29,6 +29,11 @@ class MethodParserDialect:
             '$length': list(args)
         }
 
+    def __count__(self, *args):
+        return {
+            '$count': list(args)
+        }
+
     def __min__(self, *args):
         return {
             '$min': list(args)

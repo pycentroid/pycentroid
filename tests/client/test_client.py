@@ -2,7 +2,7 @@ from collections import namedtuple
 from dataclasses import dataclass
 from typing import List, Optional
 from urllib.parse import urljoin
-from pycentroid.query import select
+from pycentroid.query import select, count
 from pycentroid.common import year, AnyDict
 
 import pytest
@@ -253,6 +253,15 @@ async def test_count_results(context):
         ).take(5).get_list();
     assert result is not None
     assert result.get('total') is not None
+
+async def test_group_by_results(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: select(category=x.category, total=count(x.id))
+    ).group_by(
+        lambda x: (x.category,)
+    ).get_items()
+    assert items is not None
+    assert len(items) > 0
 
 
 async def test_get_metadata(context):

@@ -227,3 +227,18 @@ an example of a resultset:
 }
 ```
 
+### Grouping
+
+`pycentroid` introduces `$groupby` query option for using aggregated function while getting data.
+
+```python
+async def group_result(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: select(category=x.category, total=count(x.id))
+    ).group_by(
+        lambda x: (x.category,)
+    ).get_items()
+```
+
+> `/Products?$select=category,count(id)+as+total&$groupby=category`
+
