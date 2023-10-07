@@ -190,3 +190,40 @@ async def limit_results(context):
 ```
 
 > `/Products?$select=id,name,model,price,releaseDate&$filter=(category+eq+'Laptops')&$orderby=round(price,2)+asc&$count=True&$top=5&$skip=5`
+
+Use `ClientDataQyeryable.get_list()` to pass `$count` system query option and get a resultset which will contain the count of items that fullfill the given query params.
+
+```python
+async def test_count_results(context):
+    resultset = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: x.category == 'Laptops'
+        ).order_by(
+            lambda x: (round(x.price, 2),)
+        ).take(5).get_list();
+    return resultset
+```
+
+> `/Products?$select=id,name,model,price,releaseDate&$filter=(category+eq+'Laptops')&$orderby=round(price,2)+asc&$count=true&$top=5`
+
+A resultset contains:
+
+> `total`: An integer which represents the number of items which fullfill the given query
+
+> `skip`: An integer which represents the number of items skipped
+
+> `value`: An array of items
+
+an example of a resultset:
+
+```json
+{
+    "total": 16,
+    "skip": 0,
+    "value": [
+        ...
+    ]
+}
+```
+

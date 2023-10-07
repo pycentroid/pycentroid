@@ -243,6 +243,18 @@ async def test_limit_results(context):
         found = next(filter(lambda x: x.get('id') == item.get('id'), items), None)
         assert found is None
 
+async def test_count_results(context):
+    result = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: x.category == 'Laptops'
+        ).order_by(
+            lambda x: (round(x.price, 2),)
+        ).take(5).get_list();
+    assert result is not None
+    assert result.get('total') is not None
+
+
 async def test_get_metadata(context):
     schema = await context.get_metadata()
     assert schema is not None

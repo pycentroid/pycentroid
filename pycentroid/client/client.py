@@ -149,6 +149,41 @@ class ClientDataQueryable(OpenDataQueryExpression):
         if 'value' in result and type(result['value']) is list:
             return result['value']
         return result
+    
+    async def get_list(self):
+        """Returns a collection of items based on the given query
+
+        Returns:
+            list(*): A collection of items 
+        """
+        # get url
+        url = self.url
+        # get headers
+        headers = self.__model__.service.headers.copy()
+        # get query params
+        params = self.params
+        params.update([
+            [
+                '$count', 'true'
+            ]
+        ])
+        # add accept header
+        if 'Accept' not in headers:
+            headers.update([
+                [
+                    'Accept',
+                    'application/json'
+                ]
+            ])
+        # make request
+        response = await requests.get(url, params, headers=headers)
+        logging.debug('GET ' + unquote(response.url));
+        result = response.json()
+        return {
+            'total': result.get('@odata.count'),
+            'skip': result.get('@odata.skip'),
+            'value': result.get('value')
+        }
 
     async def get_item(self):
         """Returns an item based on the given query
