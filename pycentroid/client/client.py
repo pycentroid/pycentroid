@@ -1,5 +1,7 @@
+import logging
 import re
 import xml.etree.ElementTree as ElementTree
+from typing import NamedTuple, List
 from urllib.parse import urljoin, unquote
 
 import requests_async as requests
@@ -8,14 +10,12 @@ from requests.structures import CaseInsensitiveDict
 from pycentroid.common import expect
 from pycentroid.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
 from .metadata import EdmSchema
-import logging
-from collections import namedtuple
-from typing import NamedTuple, List
 
 NSMAP = {
     'edmx': 'http://docs.oasis-open.org/odata/ns/edmx',
     'edm': 'http://docs.oasis-open.org/odata/ns/edm'
 }
+
 
 class ResultSet(NamedTuple):
     total: int
@@ -151,7 +151,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
             ])
         # make request
         response = await requests.get(url, params, headers=headers)
-        logging.debug('GET ' + unquote(response.url));
+        logging.debug('GET ' + unquote(response.url))
         result = response.json()
         if 'value' in result and type(result['value']) is list:
             return result['value']
@@ -184,7 +184,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
             ])
         # make request
         response = await requests.get(url, params, headers=headers)
-        logging.debug('GET ' + unquote(response.url));
+        logging.debug('GET ' + unquote(response.url))
         result = response.json()
         return ResultSet(total=result.get('@odata.count'), skip=result.get('@odata.skip'), value=result.get('value'))
 
