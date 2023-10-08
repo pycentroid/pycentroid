@@ -215,21 +215,21 @@ class ClosureParser:
     def parse_binary(self, expr: ast.BinOp):
         # find binary operator
         op = None
-        if type(expr) is ast.Add:
+        if type(expr.op) is ast.Add:
             op = '$add'
-        if type(expr) is ast.Sub:
+        if type(expr.op) is ast.Sub:
             op = '$subtract'
-        if type(expr) is ast.Mult:
+        if type(expr.op) is ast.Mult:
             op = '$multiply'
-        if type(expr) is ast.Div:
+        if type(expr.op) is ast.Div:
             op = '$divide'
         # validate operator
         expect(op).to_be_truthy(Exception('Binary operator is invalid or has not been implemented yet'))
         result = dict()
-        result[op] = {
+        result[op] = [
             self.parse_common(expr.left),
             self.parse_common(expr.right)
-        }
+        ]
         return result
 
     def parse_identifier(self, expr: ast.Name):

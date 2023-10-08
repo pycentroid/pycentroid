@@ -8,7 +8,7 @@ import pytest
 import requests
 
 from pycentroid.client import ClientDataContext, ClientContextOptions
-from pycentroid.common import year
+from pycentroid.common import year, AnyDict
 from pycentroid.query import select, count
 
 REMOTE_SERVER = 'http://localhost:3000/api/'
@@ -268,7 +268,26 @@ async def test_count_results(context):
         lambda x: (round(x.price, 2),)
     ).take(5).get_list()
     assert result is not None
-    assert result is not None
+
+
+async def test_use_add(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: (x.price + 50) > 500
+    ).take(25).get_items()
+    for item in items:
+        assert item.get('price') + 50 > 500
+
+
+async def test_use_subtract(context):
+    items = await context.model('Products').as_queryable().select(
+        lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
+    ).where(
+        lambda x: x.price - 100 > 500
+    ).take(25).get_items()
+    for item in items:
+        assert item.get('price') - 100 > 500
 
 
 async def test_group_by_results(context):
