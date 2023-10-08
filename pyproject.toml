@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "pycentroid"
-version = "1.1.4"
+version = "1.1.5"
 description = "@themost-framework alternative for python"
 authors = ["Kyriakos Barbounakis <k.barbounakis@gmail.com>"]
 readme = "README.md"
 packages = [
     { include = "pycentroid" }
 ]
+include=["pycentroid/client/README.md"]
 
 [tool.poetry.dependencies]
 python = "^3.9"

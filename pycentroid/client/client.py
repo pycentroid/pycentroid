@@ -9,12 +9,15 @@ from pycentroid.common import expect
 from pycentroid.query import OpenDataQueryExpression, OpenDataFormatter, QueryEntity
 from .metadata import EdmSchema
 import logging
+from collections import namedtuple
+
 
 NSMAP = {
     'edmx': 'http://docs.oasis-open.org/odata/ns/edmx',
     'edm': 'http://docs.oasis-open.org/odata/ns/edm'
 }
 
+ResultSet = namedtuple('ResultSet', ['total', 'skip', 'value'])
 
 class ClientContextOptions:
     remote = None
@@ -179,11 +182,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
         response = await requests.get(url, params, headers=headers)
         logging.debug('GET ' + unquote(response.url));
         result = response.json()
-        return {
-            'total': result.get('@odata.count'),
-            'skip': result.get('@odata.skip'),
-            'value': result.get('value')
-        }
+        return ResultSet(total=result.get('@odata.count'), skip=result.get('@odata.skip'), value=result.get('value'))
 
     async def get_item(self):
         """Returns an item based on the given query
