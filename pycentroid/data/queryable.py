@@ -37,7 +37,7 @@ class DataQueryable(OpenDataQueryExpression):
         # split member expression e.g. [ 'customer', 'address', 'addressLocality' ]
         members = event.member.split('.')
         # get current model
-        model: DataModelBase = self.model
+        model: DataModelBase = event.target.model
         local_entity = QueryEntity(model.properties.get_view())
         index = 0
         while index < len(members) - 1:
@@ -59,7 +59,9 @@ class DataQueryable(OpenDataQueryExpression):
             else:
                 join_model = self.model.context.model(mapping.childModel)
                 foreign_field = join_model.getattr(mapping.childField)
-            if next(filter(lambda x: x['as'] == member, self.__lookup__), None) is not None:
+
+            filter_lookup = lambda x: x['$lookup'] is not None and x['$lookup']['as'] == member
+            if next(filter(filter_lookup, self.__lookup__), None) is not None:
                 return
             if mapping.many is True:
                 self.distinct()

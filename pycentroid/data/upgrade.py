@@ -20,7 +20,7 @@ class DataModelUpgrade:
         # and check if the current model has been already loaded
         if event.model.properties.name in loader.loaded:
             return
-        # check if the current model is sealed and connot be upgrade
+        # check if the current model is sealed and cannot be upgrade
         if event.model.properties.sealed is True:
             loader.loaded.update({
                 event.model.properties.name: 1
@@ -74,6 +74,7 @@ class DataModelUpgrade:
             if types.has(attribute.type):
                 sqltype = types.get(attribute.type).sqltype
                 nullable = attribute.nullable if 'nullable' in attribute else True
+                # noinspection PyUnusedLocal
                 column = DataColumn(name=attribute.name, type=sqltype, nullable=nullable)
                 size = attribute.size if 'size' in attribute else None
                 scale = attribute.scale if 'scale' in attribute else None
@@ -107,6 +108,7 @@ class DataModelUpgrade:
         setattr(event, 'done', True)
         await event.model.after.upgrade.emit(event)
 
+    @staticmethod
     async def after(event: UpgradeEventArgs):
         items = event.model.properties.seed
         if isinstance(items, list) and len(items) > 0:
