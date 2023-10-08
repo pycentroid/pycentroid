@@ -117,12 +117,12 @@ class QueryExpression:
 
     @overload
     def select(self, expr: callable, **kwargs) -> Self:
-        kwargs['expr'] = expr;
-        return self.select(**kwargs);
+        kwargs['expr'] = expr
+        return self.select(**kwargs)
     
     @overload
     def select(self, *args: str | QueryField) -> Self:
-        return self.select(attribute)
+        return self.select(*args)
 
     def select(self, *args, **kwargs) -> Self:
         self.__update__ = None
@@ -150,7 +150,7 @@ class QueryExpression:
 
     @overload
     def where(self, where: callable, **kwargs) -> Self:
-        kwargs['where'] = where;
+        kwargs['where'] = where
         return self.where(**kwargs)
     
     @overload
@@ -158,7 +158,7 @@ class QueryExpression:
         return self.where(attribute)
 
     def where(self, *args, **kwargs) -> Self:
-        if (len(args) == 0):
+        if len(args) == 0:
             # try to find kwargs
             where_param = kwargs.pop('where')
             expect(inspect.isfunction(where_param)).to_be_truthy(Exception('Where statement must be a callable'))
@@ -178,11 +178,11 @@ class QueryExpression:
 
         return self
 
-    def prepare(self, useOr=False):
+    def prepare(self, use_or=False):
         """Stores the underlying filter expression for further processing
 
         Args:
-            useOr (bool, optional): Use logical "or" expression while cancatenating an already stored expression
+            use_or (bool, optional): Use logical "or" expression while concatenating an already stored expression
 
         Returns:
             _type_: Query
@@ -190,7 +190,7 @@ class QueryExpression:
         if self.__where__ is not None:
             if self.__prepared__ is not None:
                 prepared = self.__prepared__
-                if useOr is False:
+                if use_or is False:
                     self.__prepared__ = {
                         '$and': [
                             prepared,
@@ -486,16 +486,7 @@ class QueryExpression:
         self.__set_collection__(collection)
         return self
 
-    def join(self, collection, alias: str = None, direction: JOIN_DIRECTION = JOIN_DIRECTION.INNER):
-        """Prepares a join expression with the given collection
-
-        Args:
-            collection (str | QueryEntity | QueryExpression): The collection to join
-            alias (str, optional): Specifies the alias of the given collection in join expression. Defaults to None.
-
-        Returns:
-            self
-        """
+    def join(self, collection, alias: str = None, direction: JOIN_DIRECTION = JOIN_DIRECTION.INNER) -> Self:
         if isinstance(collection, QueryExpression):
             self.__joining__ = {
                 '$lookup': {
@@ -525,15 +516,6 @@ class QueryExpression:
         return self
 
     def on(self, *args, **kwargs):
-        """Finalizes a join expression by appending a lookup expression
-
-        Args:
-            expr (QueryExpression): An instance of query expression which contains a where expression
-            that is going to be used while combining collections
-
-        Returns:
-            QueryExpression
-        """
         expect(self.__joining__).to_be_truthy(Exception('Joining expression is empty'))
         lookup = self.__joining__['$lookup']
         if inspect.isfunction(args[0]):
@@ -609,7 +591,7 @@ class QueryExpression:
                 '$expr': format_field_reference(expr),
                 'direction': direction
             })
-        elif type(expr) is dict:
+        elif isinstance(expr, dict):
             for key in expr:
                 value = expr[key]
                 if type(value) is int and expr[key] == 1:
@@ -625,7 +607,7 @@ class QueryExpression:
                         'direction': direction
                     })
         else:
-            TypeError('Order by expression must be a string or an instance of dictionary object.')
+            raise TypeError('Order by expression must be a string or an instance of dictionary object.')
         return self
 
     @overload
@@ -639,7 +621,7 @@ class QueryExpression:
     def order_by(self, expr) -> Self:
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
-            if (type(arguments) is dict):
+            if type(arguments) is dict:
                 self.__append_order__(arguments, 1)
                 return self
             for arg in arguments:

@@ -1,17 +1,15 @@
+import logging
 from collections import namedtuple
-from dataclasses import dataclass
+from dataclasses import dataclass, make_dataclass
 from typing import List, Optional
 from urllib.parse import urljoin
-from pycentroid.query import select, count
-from pycentroid.common import year, AnyDict
-import typing_extensions
 
 import pytest
 import requests
-import logging
-
 
 from pycentroid.client import ClientDataContext, ClientContextOptions
+from pycentroid.common import year
+from pycentroid.query import select, count
 
 REMOTE_SERVER = 'http://localhost:3000/api/'
 __popen__ = None
@@ -65,51 +63,65 @@ async def test_get_items_with_query(context):
     assert items is not None
     assert len(items) > 0
 
-def filterable(func):
-    return func
+
+async def test_get_items_as_dataclass(context):
+    Product = make_dataclass('Product', ['name', 'price', 'category'])
+    items = await context.model('Products').as_queryable().select(
+        lambda x: select(name=x.name, price=x.price, category=x.category)
+    ).where(
+        lambda x: x.category == 'Laptops'
+    ).get_items()
+    products = list(map(lambda x: Product(**x), items))
+    assert products is not None
+    assert len(products) > 0
+    for product in products:
+        assert product.name is not None
 
 
 async def test_where(context):
     items = await context.model('Orders').as_queryable().where(
-        where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'
-        ).take(10).get_items()
+        where=lambda x, order_status: x.orderStatus.alternateName == order_status, order_status='OrderPickup'
+    ).take(10).get_items()
     assert items is not None
     assert len(items) > 0
     for item in items:
         assert item.get('orderStatus').get('alternateName') == 'OrderPickup'
 
+
 async def test_select_nested_attrs(context):
     items = await context.model('Orders').as_queryable().select(
-        lambda x: select(id=x.id, product=x.orderedItem.name, orderStatus=x.orderStatus.alternateName, orderDate=x.orderDate)
+        lambda x: select(id=x.id, product=x.orderedItem.name, orderStatus=x.orderStatus.alternateName,
+                         orderDate=x.orderDate)
     ).where(
-        where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'
-        ).take(10).get_items()
+        where=lambda x, order_status: x.orderStatus.alternateName == order_status, order_status='OrderPickup'
+    ).take(10).get_items()
     assert items is not None
     assert len(items) > 0
     logging.debug(items)
     for item in items:
         assert item.get('orderStatus') == 'OrderPickup'
 
+
 async def test_select_as_array(context):
     items = await context.model('Products').as_queryable().select(
         lambda x: [x.id, x.name, x.model, x.category]
     ).where(
-        where = lambda x, category: x.category == category, category = 'Laptops'
-        ).take(10).get_items()
+        where=lambda x, category: x.category == category, category='Laptops'
+    ).take(10).get_items()
     assert items is not None
     assert len(items) > 0
     logging.debug(items)
     for item in items:
         assert item.get('category') == 'Laptops'
 
-async def test_where_with_def(context):
 
-    def filter(x, orderStatus):
-        return x.orderStatus.alternateName == orderStatus;
+async def test_where_with_def(context):
+    def filter(x, order_status):
+        return x.orderStatus.alternateName == order_status
 
     items = await context.model('Orders').as_queryable().where(
-        where = filter, orderStatus = 'OrderPickup'
-        ).take(10).get_items()
+        where=filter, order_status='OrderPickup'
+    ).take(10).get_items()
     assert len(items) > 0
     for item in items:
         assert item.get('orderStatus').get('alternateName') == 'OrderPickup'
@@ -117,7 +129,7 @@ async def test_where_with_def(context):
 
 async def test_select_attrs_with_alias(context):
     items: List = await context.model('Products').as_queryable().select(
-        lambda x: select(id=x.id, name=x.name, product_model=x.model,)
+        lambda x: select(id=x.id, name=x.name, product_model=x.model, )
     ).where(
         lambda x: x.category == 'Laptops'
     ).get_items()
@@ -135,7 +147,7 @@ async def test_select_attrs(context):
                          customer=x.customer.description,
                          paymentMethod=x.paymentMethod.alternateName,
                          orderDate=x.orderDate,
-                         product=x.orderedItem.name,)
+                         product=x.orderedItem.name, )
     ).where(
         lambda x: x.paymentMethod.alternateName == 'DirectDebit'
     ).take(10).get_items()
@@ -154,14 +166,13 @@ async def test_select_attrs(context):
 
 
 async def test_filter_with_params(context):
-
     where_stmt = lambda x, category: x.category == category
     items: List = await (context.model('Products').as_queryable().select(
         lambda x: select(id=x.id,
                          name=x.name,
                          category=x.category,
                          releaseYear=year(x.releaseDate),
-                         price=round(x.price, 2),)
+                         price=round(x.price, 2), )
     ).where(
         where_stmt,
         category='Desktops'
@@ -184,14 +195,15 @@ async def test_select_expr(context):
         obj = Product(**item)
         assert obj.name is not None
 
+
 async def test_order_by_items(context):
     items = await context.model('Products').as_queryable().select(
         lambda x: (x.id, x.name, x.model, x.price)
     ).where(
         lambda x: x.category == 'Laptops'
-        ).order_by(
-            lambda x: [round(x.price, 2)]
-        ).take(10).get_items()
+    ).order_by(
+        lambda x: [round(x.price, 2)]
+    ).take(10).get_items()
     assert items is not None
     assert len(items) > 0
     for index, item in enumerate(items):
@@ -200,16 +212,17 @@ async def test_order_by_items(context):
             previous = items[index - 1].get('price')
             assert current >= previous
 
-async def test_then_by_descnding(context):
+
+async def test_then_by_descending(context):
     items = await context.model('Products').as_queryable().select(
         lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
     ).where(
         lambda x: x.category == 'Laptops'
-        ).order_by(
-            lambda x: (round(x.price, 2),)
-        ).then_by_descending(
-            lambda x: (x.releaseDate,)
-        ).take(10).get_items()
+    ).order_by(
+        lambda x: (round(x.price, 2),)
+    ).then_by_descending(
+        lambda x: (x.releaseDate,)
+    ).take(10).get_items()
     assert items is not None
     assert len(items) > 0
     for index, item in enumerate(items):
@@ -217,15 +230,16 @@ async def test_then_by_descnding(context):
             current = item.get('price')
             previous = items[index - 1].get('price')
             assert current >= previous
+
 
 async def test_limit_results(context):
     items = await context.model('Products').as_queryable().select(
         lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
     ).where(
         lambda x: x.category == 'Laptops'
-        ).order_by(
-            lambda x: (round(x.price, 2),)
-        ).take(5).get_items()
+    ).order_by(
+        lambda x: (round(x.price, 2),)
+    ).take(5).get_items()
     assert items is not None
     assert len(items) > 0
 
@@ -233,9 +247,9 @@ async def test_limit_results(context):
         lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
     ).where(
         lambda x: x.category == 'Laptops'
-        ).order_by(
-            lambda x: (round(x.price, 2),)
-        ).take(5).skip(5).get_items()
+    ).order_by(
+        lambda x: (round(x.price, 2),)
+    ).take(5).skip(5).get_items()
 
     assert next_items is not None
     assert len(items) > 0
@@ -244,16 +258,18 @@ async def test_limit_results(context):
         found = next(filter(lambda x: x.get('id') == item.get('id'), items), None)
         assert found is None
 
+
 async def test_count_results(context):
     result = await context.model('Products').as_queryable().select(
         lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
     ).where(
         lambda x: x.category == 'Laptops'
-        ).order_by(
-            lambda x: (round(x.price, 2),)
-        ).take(5).get_list();
+    ).order_by(
+        lambda x: (round(x.price, 2),)
+    ).take(5).get_list()
     assert result is not None
     assert result is not None
+
 
 async def test_group_by_results(context):
     items = await context.model('Products').as_queryable().select(
