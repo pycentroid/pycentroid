@@ -252,7 +252,7 @@ async def test_count_results(context):
             lambda x: (round(x.price, 2),)
         ).take(5).get_list();
     assert result is not None
-    assert result.get('total') is not None
+    assert result.total is not None
 
 async def test_group_by_results(context):
     items = await context.model('Products').as_queryable().select(
