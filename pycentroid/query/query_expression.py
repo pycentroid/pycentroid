@@ -7,6 +7,8 @@ from types import SimpleNamespace
 from enum import Enum
 import json
 from typing import overload
+from typing_extensions import Self
+
 
 class QueryExpressionType(str, Enum):
 
@@ -113,17 +115,16 @@ class QueryExpression:
 
         return parser
 
-    def select(self, *args, **kwargs):
-        """Defines a collection of attributes that are going to be collected
+    @overload
+    def select(self, expr: callable, **kwargs) -> Self:
+        kwargs['expr'] = expr;
+        return self.select(**kwargs);
+    
+    @overload
+    def select(self, *args: str | QueryField) -> Self:
+        return self.select(attribute)
 
-        Args:
-            func (Callable): A lambda function which returns a list of attributes
-            which are going to be used for selecting items
-            params (*, optional): The parameters of the given select callable. Defaults to None.
-
-        Returns:
-            self: Returns the current query expression for further processing
-        """
+    def select(self, *args, **kwargs) -> Self:
         self.__update__ = None
         self.__insert__ = None
         self.___delete___ = None
@@ -148,24 +149,15 @@ class QueryExpression:
         return self
 
     @overload
-    def where(self, where: callable, **kwargs):
+    def where(self, where: callable, **kwargs) -> Self:
         kwargs['where'] = where;
         return self.where(**kwargs)
     
     @overload
-    def where(self, attribute: str | QueryField):
+    def where(self, attribute: str | QueryField) -> Self:
         return self.where(attribute)
 
-    def where(self, *args, **kwargs):
-        """Defines a where clause for filtering items
-
-        Args:
-            func (Callable): A lambda function which is going to be used for filtering objects
-            params (*, optional): The parameters of the given where callable. Defaults to None.
-
-        Returns:
-            self: Returns the current query expression for further processing
-        """
+    def where(self, *args, **kwargs) -> Self:
         if (len(args) == 0):
             # try to find kwargs
             where_param = kwargs.pop('where')
@@ -609,7 +601,7 @@ class QueryExpression:
         })
         return self
 
-    def __append_order__(self, expr, direction):
+    def __append_order__(self, expr, direction) -> Self:
         if self.__order_by__ is None:
             self.__order_by__ = []
         if type(expr) is str:
@@ -636,7 +628,15 @@ class QueryExpression:
             TypeError('Order by expression must be a string or an instance of dictionary object.')
         return self
 
-    def order_by(self, expr):
+    @overload
+    def order_by(self, expr: callable) -> Self:
+        return self.order_by(expr)
+    
+    @overload
+    def order_by(self, expr: str | QueryField) -> Self:
+        return self.order_by(expr)
+
+    def order_by(self, expr) -> Self:
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
             if (type(arguments) is dict):
@@ -645,17 +645,37 @@ class QueryExpression:
             for arg in arguments:
                 self.__append_order__(arg, 1)
             return self
+        if type(expr) is str:
+            return self.__append_order__(QueryField(expr), 1)
         return self.__append_order__(expr, 1)
 
-    def order_by_descending(self, expr):
+    @overload
+    def order_by_descending(self, expr: callable) -> Self:
+        return self.order_by_descending(expr)
+    
+    @overload
+    def order_by_descending(self, expr: str | QueryField) -> Self:
+        return self.order_by_descending(expr)
+
+    def order_by_descending(self, expr) -> Self:
         if inspect.isfunction(expr):
             arguments = self.get_closure_parser().parse_select(expr)
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
+        if type(expr) is str:
+            return self.__append_order__(QueryField(expr), -1)
         return self.__append_order__(expr, -1)
 
-    def then_by(self, expr):
+    @overload
+    def then_by(self, expr: callable) -> Self:
+        return self.then_by(expr)
+    
+    @overload
+    def then_by(self, expr: str | QueryField) -> Self:
+        return self.then_by(expr)
+
+    def then_by(self, expr) -> Self:
         # noqa: E501
         expect(self.__order_by__).to_be_truthy(Exception(
             'Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'
@@ -665,9 +685,19 @@ class QueryExpression:
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
+        if type(expr) is str:
+            return self.__append_order__(QueryField(expr), 1)
         return self.__append_order__(expr, 1)
 
-    def then_by_descending(self, expr):
+    @overload
+    def then_by_descending(self, expr: callable) -> Self:
+        return self.then_by_descending(expr)
+    
+    @overload
+    def then_by_descending(self, expr: str | QueryField) -> Self:
+        return self.then_by_descending(expr)
+
+    def then_by_descending(self, expr) -> Self:
         expect(self.__order_by__).to_be_truthy(Exception(
             'Order by expression has not been initialized yet. Use order_by() or order_by_descending() first.'
             ))
@@ -676,6 +706,8 @@ class QueryExpression:
             for arg in arguments:
                 self.__append_order__(arg, -1)
             return self
+        if type(expr) is str:
+            return self.__append_order__(QueryField(expr), -1)
         return self.__append_order__(expr, -1)
 
     def group_by(self, *args, **kwargs):

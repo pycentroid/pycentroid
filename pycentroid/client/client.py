@@ -10,14 +10,18 @@ from pycentroid.query import OpenDataQueryExpression, OpenDataFormatter, QueryEn
 from .metadata import EdmSchema
 import logging
 from collections import namedtuple
-
+from typing import NamedTuple, List
 
 NSMAP = {
     'edmx': 'http://docs.oasis-open.org/odata/ns/edmx',
     'edm': 'http://docs.oasis-open.org/odata/ns/edm'
 }
 
-ResultSet = namedtuple('ResultSet', ['total', 'skip', 'value'])
+class ResultSet(NamedTuple):
+    total: int
+    skip: int
+    value: List[object]
+
 
 class ClientContextOptions:
     remote = None
@@ -153,7 +157,7 @@ class ClientDataQueryable(OpenDataQueryExpression):
             return result['value']
         return result
     
-    async def get_list(self):
+    async def get_list(self) -> ResultSet:
         """Returns a collection of items based on the given query
 
         Returns:

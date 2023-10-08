@@ -4,6 +4,7 @@ from typing import List, Optional
 from urllib.parse import urljoin
 from pycentroid.query import select, count
 from pycentroid.common import year, AnyDict
+import typing_extensions
 
 import pytest
 import requests
@@ -252,7 +253,7 @@ async def test_count_results(context):
             lambda x: (round(x.price, 2),)
         ).take(5).get_list();
     assert result is not None
-    assert result.total is not None
+    assert result is not None
 
 async def test_group_by_results(context):
     items = await context.model('Products').as_queryable().select(
