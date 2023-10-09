@@ -37,7 +37,7 @@ class DataQueryable(OpenDataQueryExpression):
         # split member expression e.g. [ 'customer', 'address', 'addressLocality' ]
         members = event.member.split('.')
         # get current model
-        model: DataModelBase = event.target.model
+        model: DataModelBase = self.model
         local_entity = QueryEntity(model.properties.get_view())
         index = 0
         while index < len(members) - 1:

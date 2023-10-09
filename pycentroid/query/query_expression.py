@@ -46,9 +46,9 @@ class JOIN_DIRECTION(str, Enum):
 
 class QueryExpression:
 
-    resolving_member = SyncSeriesEventEmitter()
-    resolving_join_member = SyncSeriesEventEmitter()
-    resolving_method = SyncSeriesEventEmitter()
+    resolving_member: SyncSeriesEventEmitter
+    resolving_join_member: SyncSeriesEventEmitter
+    resolving_method: SyncSeriesEventEmitter
 
     def __init__(self, collection=None, alias=None):
         self.__where__ = None
@@ -68,6 +68,9 @@ class QueryExpression:
         self.__distinct__ = None
         self.__alias__ = alias
         self.__fixed__ = False
+        self.resolving_member = SyncSeriesEventEmitter()
+        self.resolving_join_member = SyncSeriesEventEmitter()
+        self.resolving_method = SyncSeriesEventEmitter()
 
         if collection is not None:
             self.__set_collection__(collection)
