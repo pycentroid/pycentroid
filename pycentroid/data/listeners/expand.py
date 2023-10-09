@@ -1,11 +1,12 @@
-from ..types import DataModelBase, ExecuteEventArgs, DataFieldAssociationMapping, DataAssociationType
-from ..queryable import DataQueryable
-from pycentroid.query import JOIN_DIRECTION, QueryExpression, QueryField, QueryEntity
 from pycentroid.common import expect, DataError
+from pycentroid.query import JOIN_DIRECTION, QueryExpression, QueryField, QueryEntity
+from ..queryable import DataQueryable
+from ..types import DataModelBase, ExecuteEventArgs, DataFieldAssociationMapping, DataAssociationType
 
 
 class ExpandListener:
 
+    @staticmethod
     async def after_execute(event: ExecuteEventArgs):
         # get current query
         query: DataQueryable = event.emitter

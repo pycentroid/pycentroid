@@ -206,7 +206,7 @@ class QueryField(dict):
         return self.__use_method_call__('$toUpper')
 
     def __search__(self, pattern):
-        field: str = get_first_key(self)
+        field: str | None = get_first_key(self)
         value = self.__getitem__(field)
         # check if field expression is simple e.g. { "givenName": 1 }
         if type(value) is int and value == 1:

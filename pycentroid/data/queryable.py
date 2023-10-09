@@ -46,10 +46,12 @@ class DataQueryable(OpenDataQueryExpression):
             expect(mapping).to_be_truthy(
                 Exception('The data association mapping cannot be empty while resolving nested attributes.')
                 )
-            join_model: DataModelBase = None
+            # noinspection PyUnusedLocal
+            join_model: DataModelBase | None = None
             # get local field
             local_field: DataField = model.getattr(member)
-            foreign_field: DataField = None
+            # noinspection PyUnusedLocal
+            foreign_field: DataField | None = None
             # get join model and foreign field
             if mapping.parentModel != model.properties.name:
                 join_model = self.model.context.model(mapping.parentModel)
@@ -57,7 +59,9 @@ class DataQueryable(OpenDataQueryExpression):
             else:
                 join_model = self.model.context.model(mapping.childModel)
                 foreign_field = join_model.getattr(mapping.childField)
-            if next(filter(lambda x: x['as'] == member, self.__lookup__), None) is not None:
+
+            filter_lookup = lambda x: x['$lookup'] is not None and x['$lookup']['as'] == member
+            if next(filter(filter_lookup, self.__lookup__), None) is not None:
                 return
             if mapping.many is True:
                 self.distinct()
@@ -225,6 +229,7 @@ class DataQueryable(OpenDataQueryExpression):
         result = await self.select(
                 QueryField(key.name).count().asattr('length')
             ).get_item()
+        # noinspection PyUnresolvedReferences
         return result.length
 
     async def get_item(self) -> object:

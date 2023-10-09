@@ -122,7 +122,7 @@ class DataModel(DataModelBase):
             model = model.base()
         return results
 
-    def infermapping(self, name: str) -> DataFieldAssociationMapping:
+    def infermapping(self, name: str) -> DataFieldAssociationMapping | None:
         attribute: DataModelAttribute = self.getattr(name)
         expect(attribute).to_be_truthy(
             DataError(message='Attribute not found.', model=self.properties.name, field=name, code='ERR_ATTR')

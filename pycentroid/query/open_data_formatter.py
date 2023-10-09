@@ -254,10 +254,10 @@ class OpenDataFormatter(SqlFormatter):
 
     def format_order(self, query):
 
-        def format_direction(direction: int):
-            if direction == -1:
+        def format_direction(direction: int | str):
+            if direction == -1 or direction == 'desc':
                 return 'desc'
-            return 'asc';
+            return 'asc'
 
         if query.__order_by__ is None:
             return None

@@ -224,11 +224,16 @@ class DataModelBase:
         pass
 
     @property
+    @abstractmethod
     def attributes(self) -> List[DataField]:
         pass
 
     @abstractmethod
     def silent(self, value=True):
+        pass
+
+    @abstractmethod
+    def as_queryable(self):
         pass
 
     @abstractmethod

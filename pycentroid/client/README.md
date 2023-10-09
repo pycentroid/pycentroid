@@ -16,7 +16,7 @@ async def get_items(context):
     ).where(
         lambda x: x.category == 'Laptops'
     ).get_items()
-    return items;
+    return items
 
 ```
 > `/Products?$select=name,price&$filter=(category+eq+'Laptops')`
@@ -34,9 +34,10 @@ context = ClientDataContext(ClientContextOptions('http://localhost:3000/api/'))
 and start getting or pushing data
 
 ```python
-context.model('Products').as_queryable().order_by(
-    lambda x: x.price
-).take(25).get_items()
+def get_items(context):
+    context.model('Products').as_queryable().order_by(
+        lambda x: x.price
+    ).take(25).get_items()
 ```
 
 `ClientDataContext.model(entity_set).as_queryable()` returns an instance of `ClientDataQueryable` class for further processing:
@@ -44,7 +45,7 @@ context.model('Products').as_queryable().order_by(
 - [select attributes](#select)
 - [sort results](#sorting)
 - [use paging](#paging)
-- [grouping resuls](#grouping) 
+- [grouping results](#grouping) 
 
 ## System query options
 
@@ -53,9 +54,9 @@ context.model('Products').as_queryable().order_by(
 ```python
 async def get_items(context):
     items = await context.model('Orders').as_queryable().where(
-        where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'
-        ).take(10).get_items()
-    return items;
+        where=lambda x, order_status: x.orderStatus.alternateName == order_status, order_status='OrderPickup'
+    ).take(10).get_items()
+    return items
 ```
 > `/Orders?$filter=(orderStatus/alternateName+eq+'OrderPickup')&$count=True&$top=10`
 
@@ -70,7 +71,7 @@ async def select_items(context):
     items = await context.model('Orders').as_queryable().select(
         lambda x: select(id=x.id, product=x.orderedItem.name, orderStatus=x.orderStatus.alternateName, orderDate=x.orderDate)
     ).where(
-        where = lambda x, orderStatus: x.orderStatus.alternateName == orderStatus, orderStatus = 'OrderPickup'
+        where = lambda x, order_status: x.orderStatus.alternateName == order_status, order_status = 'OrderPickup'
         ).take(10).get_items()
     return items
 ```
@@ -86,7 +87,6 @@ The response will contain only the selected attributes:
         "orderStatus": "OrderPickup",
         "orderDate": "2019-02-11T14:16:25.000Z"
     },
-    ...
     {
         "id": 121,
         "product": "Apple iMac (27-Inch, 2013 Version)",
@@ -108,7 +108,7 @@ async def select_attributes(context):
     ).where(
         where = lambda x, category: x.category == category, category = 'Laptops'
         ).take(10).get_items()
-    return items;
+    return items
 ```
 
 ### Sorting
@@ -128,7 +128,7 @@ async def order_results(context):
         ).order_by(
             lambda x: (round(x.price, 2),)
         ).take(10).get_items()
-    return items;
+    return items
 ```
 > `/Products?$select=id,name,model,price&$filter=(category+eq+'Laptops')&$orderby=round(price,2)+asc&$count=True&$top=10`
 
@@ -191,38 +191,37 @@ async def limit_results(context):
 
 > `/Products?$select=id,name,model,price,releaseDate&$filter=(category+eq+'Laptops')&$orderby=round(price,2)+asc&$count=True&$top=5&$skip=5`
 
-Use `ClientDataQyeryable.get_list()` to pass `$count` system query option and get a resultset which will contain the count of items that fullfill the given query params.
+Use `ClientDataQyeryable.get_list()` to pass `$count` system query option and get a result set which will contain the count of items that fulfill the given query params.
 
 ```python
 async def test_count_results(context):
-    resultset = await context.model('Products').as_queryable().select(
+    result_set = await context.model('Products').as_queryable().select(
         lambda x: (x.id, x.name, x.model, x.price, x.releaseDate)
     ).where(
         lambda x: x.category == 'Laptops'
         ).order_by(
             lambda x: (round(x.price, 2),)
-        ).take(5).get_list();
-    return resultset
+        ).take(5).get_list()
+    return result_set
 ```
 
 > `/Products?$select=id,name,model,price,releaseDate&$filter=(category+eq+'Laptops')&$orderby=round(price,2)+asc&$count=true&$top=5`
 
-A resultset contains:
+A result set contains:
 
-> `total`: An integer which represents the number of items which fullfill the given query
+> `total`: An integer which represents the number of items which fulfill the given query
 
 > `skip`: An integer which represents the number of items skipped during current paging operation
 
 > `value`: An array of items
 
-an example of a resultset:
+an example of a result set:
 
 ```json
 {
     "total": 16,
     "skip": 0,
     "value": [
-        ...
     ]
 }
 ```
@@ -232,12 +231,16 @@ an example of a resultset:
 `pycentroid` introduces `$groupby` query option for using aggregated function while getting data.
 
 ```python
+from pycentroid.query import select, count
+
+
 async def group_result(context):
     items = await context.model('Products').as_queryable().select(
         lambda x: select(category=x.category, total=count(x.id))
     ).group_by(
         lambda x: (x.category,)
     ).get_items()
+    return items
 ```
 
 > `/Products?$select=category,count(id)+as+total&$groupby=category`

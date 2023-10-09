@@ -3,9 +3,13 @@ from os.path import abspath, join, dirname
 from pycentroid.data.application import DataApplication
 from pycentroid.data.context import DataContext
 from types import SimpleNamespace
-
+import logging
+from os import getcwd
 
 APP_PATH = abspath(join(dirname(__file__), '..'))
+
+logging.debug(f'Current path: {getcwd()}')
+logging.debug(f'Application path: {APP_PATH}')
 
 
 @pytest.fixture()
@@ -41,7 +45,8 @@ async def test_find(context: DataContext):
 
 
 async def test_query_association(context: DataContext):
-    results = await context.model('Order').where(
+    model = context.model('Order')
+    results = await model.where(
         lambda x: x.orderedItem.category == 'Desktops'
         ).get_items()
     assert len(results) > 0

@@ -1,3 +1,5 @@
+import unittest
+
 import pytest
 from pycentroid.query import SqlFormatter, OpenDataFormatter, OpenDataQueryExpression
 from pycentroid.client import PseudoSqlParser
@@ -116,8 +118,8 @@ def test_parse_order_by_statement():
     params = OpenDataFormatter().format(expr)
     assert params == {
         '$filter': '(category eq \'Laptops\')',
-        '$select': 'id,name,price',
-        '$orderby': 'price asc,dateReleased desc'
+        '$orderby': 'price asc,dateReleased desc',
+        '$select': 'id,name,price'
     }
 
 
