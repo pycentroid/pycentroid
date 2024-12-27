@@ -1,4 +1,3 @@
-import unittest
 
 import pytest
 from pycentroid.query import SqlFormatter, OpenDataFormatter, OpenDataQueryExpression
@@ -19,6 +18,7 @@ def test_parse_simple_select():
     }
 
     with pytest.raises(Exception) as e:
+        # noinspection PyUnusedLocal
         expr: OpenDataQueryExpression = parser.parse('UPDATE Thing SET description=\'test\' WHERE id=50')
     assert type(e.value) is Exception
 
