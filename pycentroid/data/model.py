@@ -62,7 +62,7 @@ class DataModel(DataModelBase):
         self.__silent__ = value
         return self
 
-    def base(self) -> DataModelBase:
+    def base(self) -> DataModelBase | None:
         if self.properties is not None and self.properties.inherits is not None:
             return self.context.model(self.properties.inherits)
         return None
@@ -301,7 +301,7 @@ class DataModel(DataModelBase):
         key = self.key()
         # if primary key is not auto increment
         if key.type != 'Counter':
-            # add attribte
+            # add attribute
             attributes.insert(0, key)
         # enumerate attributes
         for attribute in attributes:
@@ -328,9 +328,9 @@ class DataModel(DataModelBase):
             )
         # enumerate attributes
         for attribute in attributes:
-            property = attribute.property or attribute.name
-            if hasattr(obj, property):
-                result[attribute.name] = obj[property]
+            name = attribute.property or attribute.name
+            if hasattr(obj, name):
+                result[attribute.name] = getattr(obj, name)
         return result
 
     async def __insert__(self, o: object):
@@ -384,10 +384,10 @@ class DataModel(DataModelBase):
             # get object for insert
             source = self.__pre_update__(o)
             primary = self.key().name
-            id = source[primary]
-            if id is None:
+            identifier = source[primary]
+            if identifier is None:
                 raise DataError('Primary key cannot be empty during update', None, self.properties.name, primary)
-            query = QueryExpression().update(collection).set(source).where(primary).equal(id)
+            query = QueryExpression().update(collection).set(source).where(primary).equal(identifier)
             execute_event = ExecuteEventArgs(model=self, emitter=query)
             # emit before execute event
             await self.before.execute.emit(execute_event)
@@ -396,7 +396,7 @@ class DataModel(DataModelBase):
             # emit after execute event
             await self.after.execute.emit(execute_event)
             # emit after save event
-            await self.before.after.emit(event)
+            await self.after.save.emit(event)
 
         await self.context.execute_in_transaction(execute)
 
