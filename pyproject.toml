@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycentroid"
-version = "1.1.6"
+version = "2.0.0"
 description = "@themost-framework alternative for python"
 authors = ["Kyriakos Barbounakis <k.barbounakis@gmail.com>"]
 readme = "README.md"
