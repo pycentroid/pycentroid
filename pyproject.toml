@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pycentroid"
-version = "1.1.6"
+version = "2.0.0"
 description = "@themost-framework alternative for python"
 authors = ["Kyriakos Barbounakis <k.barbounakis@gmail.com>"]
 readme = "README.md"
@@ -14,14 +14,14 @@ python = "^3.9"
 pyyaml = "^6.0"
 asyncio = "^3.4.3"
 dill = "^0.3.6"
-requests = "2.31.0"
+requests = "2.32.0"
 python-dateutil = "^2.8.2"
 requests-async = "^0.6.2"
 pydash = "^7.0.0"
 typing-extensions = "^4.5.0"
 inflect = "^7.0.0"
 sqlglot = "^18.10.1"
-urllib3 = "2.0.5"
+urllib3 = "2.2.2"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.3.1"
@@ -33,4 +33,6 @@ asyncio_mode = "auto"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+
 

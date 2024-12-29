@@ -1,16 +1,18 @@
 from abc import abstractmethod
 from typing import Callable
 from pycentroid.common import ApplicationBase, expect
+from .types import DataContextBase
 from .configuration import DataConfiguration, DataAdapters
 from pycentroid.query import DataAdapter
 from .loaders import SchemaLoaderStrategy
 from .model import DataModel
 
 
-class DataContext:
-    __db__: DataAdapter = None
+class DataContext(DataContextBase):
+    __db__: DataAdapter | None = None
 
     def __init__(self, application: ApplicationBase):
+        super().__init__()
         self.application = application
         self.__db__ = None
 

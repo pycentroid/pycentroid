@@ -17,7 +17,7 @@ class ServiceContainer:
     def __init__(self):
         pass
 
-    # noinspection PyPep8Naming
+    # noinspection PyPep8Naming,PyShadowingNames
     def get(self, T) -> T:
         expect(inspect.isclass(T)).to_be_truthy(TypeError('Application service must be a type'))
         return self.__services__.get(T.__name__)

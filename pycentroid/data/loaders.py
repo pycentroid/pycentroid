@@ -100,7 +100,7 @@ class DefaultSchemaLoaderStrategy(FileSchemaLoaderStrategy):
                         loader['loaderClass'] = LoaderClass
                         self.loaders.append(LoaderClass(configuration))
 
-    def get(self, name: str) -> DataModelProperties:
+    def get(self, name: str) -> DataModelProperties | None:
         model = super().get(name)
         if model is not None:
             return model
